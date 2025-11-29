@@ -25,7 +25,7 @@ export default function IncomeCalculator() {
   const [invites, setInvites] = useState(10)
   const [sales, setSales] = useState(5)
   
-  const inviteCommission = 25000
+  const inviteCommission = 40000
   const productCommission = 50000
   
   const totalIncome = (invites * inviteCommission) + (sales * productCommission)
@@ -37,14 +37,17 @@ export default function IncomeCalculator() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <motion.h2 
+        <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600"
+            className="text-center mb-12"
         >
-          Simulasi Keuntungan
-        </motion.h2>
+            <h2 className="text-4xl font-bold bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600 mb-2">
+              Kalkulator Penghasilan
+            </h2>
+            <p className="text-slate-400">Hitung sendiri potensi cuan yang bisa kamu dapatkan.</p>
+        </motion.div>
 
         <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl ring-1 ring-white/20">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -61,7 +64,7 @@ export default function IncomeCalculator() {
                           onChange={(e) => setInvites(parseInt(e.target.value))}
                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                        />
-                       <p className="text-xs text-slate-400 mt-1">Komisi: Rp 25.000 / invite</p>
+                       <p className="text-xs text-slate-400 mt-1">Komisi: Rp 40.000 / invite</p>
                    </div>
                    
                    <div>

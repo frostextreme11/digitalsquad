@@ -1,6 +1,17 @@
 import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Sphere, MeshDistortMaterial } from '@react-three/drei'
+import { motion } from 'framer-motion'
+
+const AuroraBackground = () => {
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-[50%] -left-[10%] w-[120%] h-[120%] bg-gradient-to-br from-purple-900/40 via-slate-900 to-blue-900/40 animate-aurora opacity-50 filter blur-[80px]"></div>
+      <div className="absolute top-[20%] left-[10%] w-96 h-96 bg-cyan-500/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+      <div className="absolute bottom-[20%] right-[10%] w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] animate-pulse-slow delay-1000"></div>
+    </div>
+  )
+}
 
 const AnimatedSphere = () => {
   const ref = useRef<any>(null)
@@ -8,7 +19,7 @@ const AnimatedSphere = () => {
     const t = state.clock.getElapsedTime()
     // @ts-ignore
     if (ref.current) {
-        ref.current.distort = 0.4 + Math.sin(t) * 0.2
+        ref.current.distort = 0.3 + Math.sin(t * 0.5) * 0.2
     }
   })
   
@@ -16,8 +27,8 @@ const AnimatedSphere = () => {
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
     if (meshRef.current) {
-        meshRef.current.rotation.x = t * 0.2
-        meshRef.current.rotation.y = t * 0.2
+        meshRef.current.rotation.x = t * 0.1
+        meshRef.current.rotation.y = t * 0.15
     }
   })
 
@@ -25,12 +36,12 @@ const AnimatedSphere = () => {
     <Sphere ref={meshRef} args={[1, 100, 200]} scale={2.2}>
       <MeshDistortMaterial
         ref={ref}
-        color="#6366f1"
+        color="#4f46e5" // Indigo-600
         attach="material"
         distort={0.4}
         speed={1.5}
-        roughness={0.1}
-        metalness={0.9}
+        roughness={0.2}
+        metalness={0.8}
       />
     </Sphere>
   )
@@ -38,28 +49,65 @@ const AnimatedSphere = () => {
 
 export default function Hero3D() {
   return (
-    <div className="h-[80vh] w-full relative bg-slate-900 overflow-hidden">
-       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-       <Canvas camera={{ position: [0, 0, 6] }}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 5]} intensity={1.5} color="#a855f7" />
-          <pointLight position={[-10, -10, -10]} color="#3b82f6" intensity={1} />
-          <AnimatedSphere />
-          <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-       </Canvas>
-       <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center pointer-events-none px-4">
-          <h1 className="text-6xl md:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-center drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] z-10 animate-pulse">
-            DIGITAL SQUAD
-          </h1>
-          <p className="text-lg md:text-2xl text-slate-200 mt-6 max-w-3xl text-center drop-shadow-md z-10 font-medium">
-            Platform Affiliate Paling Cuan di 2025. <br/>
-            <span className="text-blue-400">Modal 50rb, Potensi 5-10 Juta!</span>
-          </p>
-          <div className="mt-8 pointer-events-auto z-20">
-            <a href="#register" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-10 rounded-full shadow-lg transform hover:scale-105 transition duration-300 text-xl border border-white/20 backdrop-blur-sm">
-              Join Sekarang
+    <div className="h-[90vh] w-full relative bg-slate-950 overflow-hidden flex items-center justify-center">
+       <AuroraBackground />
+       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay z-0"></div>
+       
+       {/* 3D Background Layer */}
+       <div className="absolute inset-0 z-0 opacity-60">
+         <Canvas camera={{ position: [0, 0, 6] }}>
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[10, 10, 5]} intensity={1.5} color="#818cf8" />
+            <pointLight position={[-10, -10, -10]} color="#c084fc" intensity={1} />
+            <AnimatedSphere />
+            <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
+         </Canvas>
+       </div>
+
+       {/* Content Layer */}
+       <div className="relative z-10 max-w-4xl mx-auto px-4 text-center flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+             <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 drop-shadow-2xl">
+                Bebas Hutang<br/> Bersama<br/> 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Squad!</span>
+             </h1>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+             <h2 className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto font-light">
+                Ubah <span className="text-yellow-400 font-bold">Modal 50 Ribu</span> Jadi Solusi Lunas Hutang & Bebas Teror Pinjol. Bergabunglah dengan DigitalSquad: cara termudah hasilkan jutaan rupiah hanya dari menyebar link. <span className="italic">Bukan sulap, ini strategi digital.</span>
+             </h2>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="relative group"
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+            <a href="#register" className="relative flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-5 px-12 rounded-full text-lg md:text-xl shadow-2xl transform transition duration-200 hover:scale-[1.02]">
+              Saya Mau Lunasi Hutang Sekarang
             </a>
-          </div>
+          </motion.div>
+          
+          <motion.p 
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             transition={{ delay: 0.8 }}
+             className="mt-4 text-sm text-slate-500 font-medium flex items-center gap-2"
+          >
+             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+             Sudah dibuktikan oleh 1.000+ member.
+          </motion.p>
        </div>
     </div>
   )
