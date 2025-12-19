@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Copy, CheckCircle, Users, TrendingUp, MousePointer } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import StatsChart from './StatsChart'
+import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
 
 export default function AgentOverview({ profile }: { profile: any }) {
   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0 })
+  const [chartData, setChartData] = useState<any[]>([])
   const [copied, setCopied] = useState(false)
 
   const affiliateLink = `${window.location.origin}/?ref=${profile.affiliate_code || 'generating...'}`
@@ -30,9 +34,56 @@ export default function AgentOverview({ profile }: { profile: any }) {
          setStats(prev => ({
              ...prev,
              visits: visits || 0,
-             leads: leads || 0,
+             leads: (leads || 0) - (sales || 0), // Pending leads = Total referred - Sales
              sales: sales || 0,
          }))
+
+         // Fetch Chart Data (Last 6 Months)
+         const endDate = new Date()
+         const startDate = subMonths(endDate, 5) // 6 months total including current
+         
+         // 1. Visits by date
+         const { data: visitsData } = await supabase
+            .from('visits')
+            .select('created_at')
+            .eq('affiliate_code', profile.affiliate_code)
+            .gte('created_at', startDate.toISOString())
+            
+         // 2. Leads (Registered) by date
+         const { data: leadsData } = await supabase
+            .from('profiles')
+            .select('created_at')
+            .eq('referred_by', profile.id)
+            .gte('created_at', startDate.toISOString())
+
+         // 3. Sales (Commissions) by date
+         const { data: salesData } = await supabase
+            .from('commissions')
+            .select('created_at')
+            .eq('agent_id', profile.id)
+            .gte('created_at', startDate.toISOString())
+
+         // Aggregate by month
+         const months = eachMonthOfInterval({ start: startDate, end: endDate })
+         
+         const aggregatedData = months.map(month => {
+             const monthStart = startOfMonth(month)
+             const monthEnd = endOfMonth(month)
+             
+             const filterByMonth = (items: any[]) => items?.filter(item => {
+                 const d = new Date(item.created_at)
+                 return d >= monthStart && d <= monthEnd
+             }).length || 0
+
+             return {
+                 name: format(month, 'MMM'),
+                 clicks: filterByMonth(visitsData || []),
+                 leads: filterByMonth(leadsData || []), // This is "Total Signups" for chart
+                 sales: filterByMonth(salesData || [])
+             }
+         })
+         
+         setChartData(aggregatedData)
      }
      if (profile.id) fetchStats()
   }, [profile])
@@ -43,58 +94,85 @@ export default function AgentOverview({ profile }: { profile: any }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  }
+
   return (
-    <div className="space-y-8">
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="bg-gradient-to-br from-blue-600 to-purple-700 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
+           <motion.div variants={item} className="bg-gradient-to-br from-blue-600 to-purple-700 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
               <div className="relative z-10">
                   <h2 className="text-xl font-medium mb-2 opacity-90">Saldo Dompet</h2>
                   <div className="text-5xl font-bold tracking-tight">Rp {profile.balance?.toLocaleString()}</div>
                   <p className="mt-4 text-sm opacity-75">Siap ditarik kapan saja.</p>
               </div>
               <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-10 translate-y-10 pointer-events-none"></div>
-           </div>
+           </motion.div>
 
-           <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 flex flex-col justify-center">
+           <motion.div variants={item} className="bg-slate-900 p-8 rounded-3xl border border-slate-800 flex flex-col justify-center">
               <label className="block text-slate-400 mb-3 text-sm font-medium uppercase tracking-wide">Link Affiliate Anda</label>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                  <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 font-mono text-sm truncate flex items-center">
                     {affiliateLink}
                  </div>
-                 <button onClick={copyLink} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 transition duration-200 border border-slate-700">
+                 <button onClick={copyLink} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 border border-slate-700 shrink-0">
                    {copied ? <CheckCircle size={20} className="text-green-400" /> : <Copy size={20} />}
                  </button>
               </div>
               <p className="text-xs text-slate-500 mt-3">Bagikan link ini untuk mendapatkan komisi.</p>
-           </div>
+           </motion.div>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition">
+          <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition">
              <div className="flex items-center gap-4 mb-2">
                 <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><MousePointer size={24} /></div>
                 <h3 className="text-slate-400 font-medium">Total Clicks</h3>
              </div>
              <p className="text-3xl font-bold text-white pl-1">{stats.visits}</p>
-          </div>
+          </motion.div>
           
-          <Link to="/dashboard/leads" className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-purple-500/30 transition cursor-pointer">
-             <div className="flex items-center gap-4 mb-2">
-                <div className="p-3 bg-purple-500/10 rounded-lg text-purple-400"><Users size={24} /></div>
-                <h3 className="text-slate-400 font-medium">Total Leads</h3>
-             </div>
-             <p className="text-3xl font-bold text-white pl-1">{stats.leads}</p>
-             <p className="text-xs text-purple-400 mt-2">Klik untuk lihat detail</p>
+          <Link to="/dashboard/leads" className="block">
+            <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-purple-500/30 transition cursor-pointer h-full">
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="p-3 bg-purple-500/10 rounded-lg text-purple-400"><Users size={24} /></div>
+                    <h3 className="text-slate-400 font-medium">Total Leads</h3>
+                </div>
+                <p className="text-3xl font-bold text-white pl-1">{stats.leads}</p>
+                <p className="text-xs text-purple-400 mt-2">Klik untuk lihat detail</p>
+            </motion.div>
           </Link>
 
-          <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-green-500/30 transition">
+          <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-green-500/30 transition">
              <div className="flex items-center gap-4 mb-2">
                 <div className="p-3 bg-green-500/10 rounded-lg text-green-400"><TrendingUp size={24} /></div>
                 <h3 className="text-slate-400 font-medium">Total Sales</h3>
              </div>
              <p className="text-3xl font-bold text-white pl-1">{stats.sales}</p>
-          </div>
+          </motion.div>
        </div>
-    </div>
+
+       <motion.div variants={item}>
+          <StatsChart data={chartData} />
+       </motion.div>
+    </motion.div>
   )
 }
+

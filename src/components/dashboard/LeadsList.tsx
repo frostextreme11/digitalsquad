@@ -12,45 +12,19 @@ export default function LeadsList() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            // 1. Get current user's affiliate code
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('affiliate_code')
-                .eq('id', user.id)
-                .single()
+            // Use RPC to fetch leads with payment status (bypassing RLS on transactions)
+            const { data: leadsData, error } = await supabase
+                .rpc('get_agent_leads', { agent_id: user.id })
             
-            if (!profile?.affiliate_code) {
+            if (error) {
+                console.error("Error fetching leads:", error)
                 setLoading(false)
                 return
             }
-
-            // 2. Fetch profiles referred by this user
-            // We want users who are referred by me (via profile.referred_by OR leads.referred_by_code)
-            // But specifically "potential new user who are register but doesn't do the payment"
-            // This means: Profile exists, referred_by = me, NO successful transaction.
             
-            // Step 2a: Get all profiles referred by me
-            const { data: referredProfiles } = await supabase
-                .from('profiles')
-                .select(`
-                    id, 
-                    full_name, 
-                    email, 
-                    phone, 
-                    created_at,
-                    transactions!transactions_user_id_fkey (status, type)
-                `)
-                .eq('referred_by', user.id)
-                .order('created_at', { ascending: false })
-            
-            if (referredProfiles) {
-                // Filter those who have NOT paid successfully for registration
-                const unpaidLeads = referredProfiles.filter((p: any) => {
-                    const hasSuccessRegistration = p.transactions?.some(
-                        (t: any) => t.type === 'registration' && (t.status === 'success' || t.status === 'settlement')
-                    )
-                    return !hasSuccessRegistration
-                })
+            if (leadsData) {
+                // Filter for pending/unpaid only
+                const unpaidLeads = leadsData.filter((l: any) => l.payment_status === 'pending')
                 setLeads(unpaidLeads)
             }
             

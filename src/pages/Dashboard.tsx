@@ -6,6 +6,7 @@ import AgentOverview from '../components/dashboard/AgentOverview'
 import AdminOverview from '../components/dashboard/AdminOverview'
 import ProductList from '../components/dashboard/ProductList'
 import LeadsList from '../components/dashboard/LeadsList'
+import AdminLeadsList from '../components/dashboard/AdminLeadsList'
 
 // Placeholder for sub-pages
 const Placeholder = ({ title }: { title: string }) => <div className="text-white text-xl">{title}</div>
@@ -64,7 +65,7 @@ export default function Dashboard() {
       <Routes>
         <Route path="/" element={profile.role === 'admin' ? <AdminOverview /> : <AgentOverview profile={profile} />} />
         <Route path="/users" element={<Placeholder title="User Management (Admin)" />} />
-        <Route path="/leads" element={profile.role === 'admin' ? <Placeholder title="Leads Management (Admin)" /> : <LeadsList />} />
+        <Route path="/leads" element={profile.role === 'admin' ? <AdminLeadsList /> : <LeadsList />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/wallet" element={<Placeholder title="Wallet & Withdrawals" />} />
       </Routes>
