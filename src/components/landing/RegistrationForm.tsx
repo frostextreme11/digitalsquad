@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function RegistrationForm() {
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -35,6 +37,20 @@ export default function RegistrationForm() {
     setLoading(true)
     
     try {
+      // 0. Get Referral from localStorage (set by useAffiliateTracker)
+      const referredByCode = localStorage.getItem('affiliate_ref')
+      let referrerId = null
+      
+      if (referredByCode) {
+         // Resolve referrer ID from code
+         const { data: refProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('affiliate_code', referredByCode)
+            .single()
+         if (refProfile) referrerId = refProfile.id
+      }
+
       // 0. Sign Up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -48,7 +64,29 @@ export default function RegistrationForm() {
         }
       })
 
-      if (authError) throw authError
+      if (authError) {
+        if (authError.message.includes("already registered") || authError.message.includes("already exists")) {
+            // Try auto-login
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                email: formData.email,
+                password: formData.password
+            })
+            
+            if (loginError) {
+                 alert("Email sudah terdaftar. Silakan login jika Anda sudah punya akun.")
+                 setLoading(false)
+                 return
+            }
+            
+            if (loginData.user) {
+                // Check payment status by redirecting to payment page which handles the check
+                navigate('/payment')
+                return
+            }
+        }
+        throw authError
+      }
+
       if (!authData.user) throw new Error("Gagal membuat akun")
 
       // 0.5. Create Profile Entry Manually - Force it!
@@ -61,7 +99,8 @@ export default function RegistrationForm() {
           email: formData.email,
           full_name: formData.fullName,
           phone: formData.phone,
-          role: 'agent'
+          role: 'agent',
+          referred_by: referrerId // Explicitly set referrer
       })
 
       if (profileError) {
@@ -85,6 +124,7 @@ export default function RegistrationForm() {
           amount: 50000,
           userId: authData.user.id, // Pass newly created User ID
           type: 'registration',
+          referralCode: referredByCode, // Pass referral code explicitly for patching
           customerDetails: {
              first_name: formData.fullName,
              email: formData.email,
@@ -201,6 +241,11 @@ export default function RegistrationForm() {
             <p className="text-xs text-slate-500 text-center mt-4">
                 Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.
             </p>
+            <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+              <p className="text-slate-400">
+                Sudah join? akses ke sini: <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline">Login</Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>

@@ -11,13 +11,33 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
+    
+    try {
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+
+      if (user) {
+        // Check transaction status
+        const { data: transaction } = await supabase
+          .from('transactions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('type', 'registration')
+          .eq('status', 'success') // Only check success for now, as settlement is not in enum
+          .limit(1)
+          .maybeSingle()
+        
+        if (transaction) {
+          navigate('/dashboard')
+        } else {
+          navigate('/payment')
+        }
+      }
+    } catch (error: any) {
       alert(error.message)
-    } else {
-      navigate('/dashboard')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

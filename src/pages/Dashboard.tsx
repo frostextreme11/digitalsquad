@@ -5,6 +5,7 @@ import DashboardLayout from '../components/dashboard/DashboardLayout'
 import AgentOverview from '../components/dashboard/AgentOverview'
 import AdminOverview from '../components/dashboard/AdminOverview'
 import ProductList from '../components/dashboard/ProductList'
+import LeadsList from '../components/dashboard/LeadsList'
 
 // Placeholder for sub-pages
 const Placeholder = ({ title }: { title: string }) => <div className="text-white text-xl">{title}</div>
@@ -20,6 +21,21 @@ export default function Dashboard() {
       if (!user) {
         navigate('/login')
         return
+      }
+      
+      // Check transaction status for payment
+      const { data: transaction } = await supabase
+          .from('transactions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('type', 'registration')
+          .eq('status', 'success')
+          .limit(1)
+          .maybeSingle()
+
+      if (!transaction) {
+          navigate('/payment')
+          return
       }
       
       const { data, error } = await supabase
@@ -48,7 +64,7 @@ export default function Dashboard() {
       <Routes>
         <Route path="/" element={profile.role === 'admin' ? <AdminOverview /> : <AgentOverview profile={profile} />} />
         <Route path="/users" element={<Placeholder title="User Management (Admin)" />} />
-        <Route path="/leads" element={<Placeholder title="Leads Management (Admin)" />} />
+        <Route path="/leads" element={profile.role === 'admin' ? <Placeholder title="Leads Management (Admin)" /> : <LeadsList />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/wallet" element={<Placeholder title="Wallet & Withdrawals" />} />
       </Routes>

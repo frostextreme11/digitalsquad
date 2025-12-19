@@ -6,14 +6,45 @@ export default function AdminOverview() {
 
   useEffect(() => {
      const fetchStats = async () => {
+         // Total Users (All profiles)
          const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-         const { count: leads } = await supabase.from('leads').select('*', { count: 'exact', head: true })
          
+         // Total Leads (Registered users who have NOT paid)
+         // Since we can't easily join in a count query, we might need a different approach or just count all 'agent' profiles 
+         // and subtract those with sales? 
+         // Simpler proxy: Count profiles created recently?
+         // Better: Let's assume "Leads" = "Total Users" for now, or "Users - Active Users".
+         // But the user specifically asked for "leads".
+         // Let's count profiles who don't have a successful transaction.
+         
+         // Fetch all profiles and their transactions status (this might be heavy for large DB, but fine for now)
+         const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, transactions!transactions_user_id_fkey(status, type)')
+         
+         let activeSales = 0
+         let potentialLeads = 0
+         
+         if (profiles) {
+             profiles.forEach((p: any) => {
+                 const hasPaid = p.transactions?.some((t: any) => t.type === 'registration' && (t.status === 'success' || t.status === 'settlement'))
+                 if (hasPaid) {
+                     activeSales++
+                 } else {
+                     potentialLeads++
+                 }
+             })
+         }
+
          // Income logic: sum of registration fees (approx)
          const { data: transactions } = await supabase.from('transactions').select('amount').eq('status', 'success')
          const income = transactions?.reduce((acc, curr) => acc + curr.amount, 0) || 0
          
-         setStats({ users: users || 0, leads: leads || 0, income })
+         setStats({ 
+             users: users || 0, 
+             leads: potentialLeads, // Use calculated leads 
+             income 
+         })
      }
      fetchStats()
   }, [])

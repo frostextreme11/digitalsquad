@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Copy, CheckCircle, Users, TrendingUp, MousePointer } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function AgentOverview({ profile }: { profile: any }) {
   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0 })
@@ -16,9 +17,13 @@ export default function AgentOverview({ profile }: { profile: any }) {
          // Visits
          const { count: visits } = await supabase.from('visits').select('*', { count: 'exact', head: true }).eq('affiliate_code', profile.affiliate_code)
          
-         // Leads
-         const { count: leads } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('referred_by_code', profile.affiliate_code)
-
+         // Leads (People referred by me who haven't paid or are just starting)
+         // Note: We count profiles referred by me.
+         const { count: leads } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('referred_by', profile.id)
+            
          // Sales (Commissions count)
          const { count: sales } = await supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id)
          
@@ -72,13 +77,16 @@ export default function AgentOverview({ profile }: { profile: any }) {
              </div>
              <p className="text-3xl font-bold text-white pl-1">{stats.visits}</p>
           </div>
-          <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-purple-500/30 transition">
+          
+          <Link to="/dashboard/leads" className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-purple-500/30 transition cursor-pointer">
              <div className="flex items-center gap-4 mb-2">
                 <div className="p-3 bg-purple-500/10 rounded-lg text-purple-400"><Users size={24} /></div>
                 <h3 className="text-slate-400 font-medium">Total Leads</h3>
              </div>
              <p className="text-3xl font-bold text-white pl-1">{stats.leads}</p>
-          </div>
+             <p className="text-xs text-purple-400 mt-2">Klik untuk lihat detail</p>
+          </Link>
+
           <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-green-500/30 transition">
              <div className="flex items-center gap-4 mb-2">
                 <div className="p-3 bg-green-500/10 rounded-lg text-green-400"><TrendingUp size={24} /></div>
