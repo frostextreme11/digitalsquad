@@ -19,24 +19,22 @@ export default function LeadsList() {
 
         try {
             // Fetch filtered leads
-            const { data: leadsData, error } = await supabase
-                .rpc('get_agent_leads_paginated', { 
-                    p_agent_id: user.id,
-                    search_query: search,
-                    page_limit: limit,
-                    page_offset: page * limit
-                })
-            
+            const { data: leadsData, error } = await (supabase.rpc as any)('get_agent_leads_paginated', {
+                p_agent_id: user.id,
+                search_query: search,
+                page_limit: limit,
+                page_offset: page * limit
+            })
+
             if (error) throw error
             setLeads(leadsData || [])
 
             // Fetch count
-            const { data: countData } = await supabase
-                .rpc('get_agent_leads_count', { 
-                    p_agent_id: user.id,
-                    search_query: search 
-                })
-            
+            const { data: countData } = await (supabase.rpc as any)('get_agent_leads_count', {
+                p_agent_id: user.id,
+                search_query: search
+            })
+
             setTotalCount(countData || 0)
 
         } catch (error) {
@@ -65,14 +63,14 @@ export default function LeadsList() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <h2 className="text-2xl font-bold text-white">Potential Leads (Belum Bayar)</h2>
-                
+
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     {/* Search */}
                     <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                        <input 
-                            type="text" 
-                            placeholder="Search leads..." 
+                        <input
+                            type="text"
+                            placeholder="Search leads..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500 transition"
@@ -81,7 +79,7 @@ export default function LeadsList() {
 
                     {/* Limit Filter */}
                     <div className="relative">
-                        <select 
+                        <select
                             value={limit}
                             onChange={(e) => {
                                 setLimit(Number(e.target.value))
@@ -98,7 +96,7 @@ export default function LeadsList() {
                     </div>
                 </div>
             </div>
-            
+
             {loading ? (
                 <div className="text-slate-500 bg-slate-900/50 p-8 rounded-2xl text-center border border-slate-800">
                     Loading leads...
@@ -111,8 +109,8 @@ export default function LeadsList() {
                 <>
                     <div className="grid gap-4">
                         {leads.map((lead, index) => (
-                            <motion.div 
-                                key={lead.id} 
+                            <motion.div
+                                key={lead.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
@@ -147,7 +145,7 @@ export default function LeadsList() {
                             Showing {leads.length} of {totalCount} leads
                         </span>
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={() => setPage(p => Math.max(0, p - 1))}
                                 disabled={page === 0}
                                 className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -157,7 +155,7 @@ export default function LeadsList() {
                             <span className="text-sm text-slate-400 px-2">
                                 Page {page + 1} of {totalPages || 1}
                             </span>
-                            <button 
+                            <button
                                 onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                                 disabled={page >= totalPages - 1}
                                 className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"

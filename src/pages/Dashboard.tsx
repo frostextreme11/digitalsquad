@@ -9,9 +9,10 @@ import LeadsList from '../components/dashboard/LeadsList'
 import AdminLeadsList from '../components/dashboard/AdminLeadsList'
 import UserManagement from '../components/dashboard/UserManagement'
 import ProductManagement from '../components/dashboard/ProductManagement'
+import Wallet from '../components/dashboard/Wallet'
+import AdminWithdrawals from '../components/dashboard/AdminWithdrawals'
 
-// Placeholder for sub-pages
-const Placeholder = ({ title }: { title: string }) => <div className="text-white text-xl">{title}</div>
+
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -25,34 +26,34 @@ export default function Dashboard() {
         navigate('/login')
         return
       }
-      
+
       // Check transaction status for payment
       const { data: transaction } = await supabase
-          .from('transactions')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('type', 'registration')
-          .eq('status', 'success')
-          .limit(1)
-          .maybeSingle()
+        .from('transactions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('type', 'registration')
+        .eq('status', 'success')
+        .limit(1)
+        .maybeSingle()
 
       if (!transaction) {
-          navigate('/payment')
-          return
+        navigate('/payment')
+        return
       }
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
-      
+
       if (error || !data) {
-          // Handle case where profile doesn't exist yet (e.g. created via Auth but trigger failed)
-          // Or just show loading
-          console.error(error)
+        // Handle case where profile doesn't exist yet (e.g. created via Auth but trigger failed)
+        // Or just show loading
+        console.error(error)
       }
-      
+
       setProfile(data)
       setLoading(false)
     }
@@ -69,7 +70,7 @@ export default function Dashboard() {
         <Route path="/users" element={<UserManagement />} />
         <Route path="/leads" element={profile.role === 'admin' ? <AdminLeadsList /> : <LeadsList />} />
         <Route path="/products" element={profile.role === 'admin' ? <ProductManagement /> : <ProductList />} />
-        <Route path="/wallet" element={<Placeholder title="Wallet & Withdrawals" />} />
+        <Route path="/wallet" element={profile.role === 'admin' ? <AdminWithdrawals /> : <Wallet />} />
       </Routes>
     </DashboardLayout>
   )
