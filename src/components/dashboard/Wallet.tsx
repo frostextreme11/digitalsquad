@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
-import { CreditCard, History, AlertCircle, CheckCircle, Clock, XCircle, Wallet as WalletIcon, ArrowRight } from 'lucide-react'
+import { CreditCard, History, AlertCircle, CheckCircle, Clock, XCircle, Wallet as WalletIcon, ArrowRight, ChevronDown } from 'lucide-react'
 
 export default function Wallet() {
     const [balance, setBalance] = useState(0)
@@ -9,6 +9,7 @@ export default function Wallet() {
     const [withdrawals, setWithdrawals] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [limit, setLimit] = useState(10)
     const [formData, setFormData] = useState({
         amount: '',
         bank_name: '',
@@ -28,7 +29,13 @@ export default function Wallet() {
             if (profile) setBalance(profile.balance || 0)
 
             // Get withdrawal history
-            const { data: withdrawalData } = await supabase.from('withdrawals').select('*').eq('agent_id', user.id).order('created_at', { ascending: false })
+            const { data: withdrawalData } = await supabase
+                .from('withdrawals')
+                .select('*')
+                .eq('agent_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(limit)
+
             setWithdrawals(withdrawalData || [])
 
             // Get saved bank accounts
@@ -44,7 +51,7 @@ export default function Wallet() {
 
     useEffect(() => {
         fetchWalletData()
-    }, [])
+    }, [limit])
 
     const removeSavedAccount = async (id: string, e: React.MouseEvent) => {
         e.preventDefault()
@@ -349,9 +356,25 @@ export default function Wallet() {
                 {/* Withdrawal History */}
                 <motion.div variants={item} className="lg:col-span-2">
                     <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-6 h-full">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><History size={20} /></div>
-                            <h3 className="text-lg font-bold text-white">Riwayat Penarikan</h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><History size={20} /></div>
+                                <h3 className="text-lg font-bold text-white">Riwayat Penarikan</h3>
+                            </div>
+
+                            {/* Limit Selector */}
+                            <div className="relative">
+                                <select
+                                    value={limit}
+                                    onChange={(e) => setLimit(Number(e.target.value))}
+                                    className="appearance-none bg-slate-900 border border-slate-800 text-slate-300 pl-3 pr-8 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                    <option value={10}>10 items</option>
+                                    <option value={50}>50 items</option>
+                                    <option value={100}>100 items</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
+                            </div>
                         </div>
 
                         <div className="overflow-x-auto">
