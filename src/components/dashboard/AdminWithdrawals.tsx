@@ -193,7 +193,8 @@ export default function AdminWithdrawals() {
                 </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -306,6 +307,104 @@ export default function AdminWithdrawals() {
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {loading ? (
+                    <div className="text-center text-slate-500 py-12">Loading data...</div>
+                ) : withdrawals.length === 0 ? (
+                    <div className="text-center text-slate-500 py-12">No withdrawal requests found.</div>
+                ) : (
+                    withdrawals.map((item) => (
+                        <div
+                            key={item.id}
+                            className={`bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden ${item.status === 'success' ? 'bg-gradient-to-br from-slate-900 to-emerald-900/10 border-emerald-500/20' :
+                                    item.status === 'failed' ? 'bg-gradient-to-br from-slate-900 to-red-900/10 border-red-500/20' : ''
+                                }`}
+                        >
+                            {/* Header: Date & Status */}
+                            <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
+                                <div>
+                                    <div className="text-slate-300 font-medium text-sm">
+                                        {format(new Date(item.created_at), 'dd MMM yyyy, HH:mm')}
+                                    </div>
+                                    <div className="text-xs text-slate-500 mt-0.5 font-mono">ID: {item.id.slice(0, 8)}...</div>
+                                </div>
+                                <div>
+                                    {getStatusBadge(item.status)}
+                                </div>
+                            </div>
+
+                            {/* Main Content Grid */}
+                            <div className="space-y-4">
+                                {/* Agent Info */}
+                                <div>
+                                    <h4 className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Agent Details</h4>
+                                    <div className="text-white font-medium">{item.profiles?.full_name || 'Unknown'}</div>
+                                    <div className="text-slate-400 text-xs">{item.profiles?.email}</div>
+                                    <div className="text-blue-400 text-xs font-mono mt-0.5">{item.profiles?.affiliate_code}</div>
+                                </div>
+
+                                {/* Bank Info */}
+                                <div className="bg-slate-950/50 rounded-xl p-3 border border-slate-800/50">
+                                    <h4 className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-2">Bank Destination</h4>
+                                    <div className="text-slate-300 font-medium">{item.bank_details?.bank_name}</div>
+                                    <div className="flex items-center gap-2 my-1">
+                                        <span className="text-white font-mono text-sm bg-slate-800 px-1.5 py-0.5 rounded">{item.bank_details?.account_number}</span>
+                                        <CopyButton text={item.bank_details?.account_number} label="account number" />
+                                    </div>
+                                    <div className="text-slate-400 text-xs text-right italic">a.n. {item.bank_details?.account_name}</div>
+                                </div>
+
+                                {/* Amount */}
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <h4 className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Total Amount</h4>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl font-bold text-white tracking-tight">Rp {item.amount.toLocaleString()}</span>
+                                            <CopyButton text={item.amount.toString()} label="amount" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Actions Footer */}
+                            <div className="mt-5 pt-4 border-t border-slate-800 flex justify-end gap-2">
+                                {item.status !== 'success' && (
+                                    <button
+                                        onClick={() => handleStatusChange(item.id, item.status, 'success', item.agent_id, item.amount)}
+                                        disabled={processing === item.id}
+                                        className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 py-2 rounded-xl border border-emerald-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <Check size={16} /> Approve
+                                    </button>
+                                )}
+
+                                {item.status !== 'pending' && (
+                                    <button
+                                        onClick={() => handleStatusChange(item.id, item.status, 'pending', item.agent_id, item.amount)}
+                                        disabled={processing === item.id}
+                                        className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 py-2 rounded-xl border border-amber-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCcw size={16} /> Reset
+                                    </button>
+                                )}
+
+                                {item.status !== 'failed' && item.status !== 'cancelled' && (
+                                    <button
+                                        onClick={() => handleStatusChange(item.id, item.status, 'failed', item.agent_id, item.amount)}
+                                        disabled={processing === item.id}
+                                        className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2 rounded-xl border border-red-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <X size={16} /> Reject
+                                    </button>
+                                )}
+                            </div>
+                            {processing === item.id && <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center text-white text-sm font-medium">Processing...</div>}
+                        </div>
+                    ))
+                )}
             </div>
         </motion.div>
     )
