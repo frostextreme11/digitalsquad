@@ -18,7 +18,7 @@ export default function DashboardLayout({ children, role }: { children: React.Re
     { path: '/dashboard', icon: LayoutDashboard, label: 'Overview', roles: ['agent', 'admin'] },
     { path: '/dashboard/users', icon: Users, label: 'Members', roles: ['admin'] },
     { path: '/dashboard/leads', icon: Users, label: 'Leads', roles: ['admin'] },
-    { path: '/dashboard/products', icon: ShoppingBag, label: 'Products', roles: ['agent'] },
+    { path: '/dashboard/products', icon: ShoppingBag, label: 'Products', roles: ['agent', 'admin'] },
     { path: '/dashboard/wallet', icon: Wallet, label: role === 'admin' ? 'Withdrawals' : 'My Wallet', roles: ['agent', 'admin'] },
   ]
 
