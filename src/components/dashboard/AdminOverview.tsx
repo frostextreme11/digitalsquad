@@ -12,7 +12,9 @@ export default function AdminOverview() {
         leads: 0,
         incomeTotal: 0,
         incomeAffiliate: 0,
-        incomeOrganic: 0
+        incomeOrganic: 0,
+        totalWithdrawal: 0,
+        netProfit: 0
     })
     const [chartData, setChartData] = useState<any[]>([])
 
@@ -22,7 +24,6 @@ export default function AdminOverview() {
             const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
 
             // 2. Leads (Unpaid Organic)
-            // Fetch all organic profiles (no referrer) and check their transaction status
             const { data: organicProfiles } = await supabase
                 .from('profiles')
                 .select('id, transactions!transactions_user_id_fkey(status, type)')
@@ -37,12 +38,6 @@ export default function AdminOverview() {
             }
 
             // 3. Income Split (Affiliate vs Organic)
-            // We need to check transactions. If user has referrer -> Affiliate income (50% cut, but total is 100%). 
-            // Wait, "total omset from affiliate transaction who are 50% cut". This implies we want the GROSS or NET?
-            // Usually Omset = Gross. 
-            // "total omset from user without reference affiliate id".
-
-            // Let's fetch all successful transactions with user info
             const { data: transactions } = await supabase
                 .from('transactions')
                 .select(`
@@ -68,15 +63,30 @@ export default function AdminOverview() {
 
             const incomeTotal = incomeAffiliate + incomeOrganic
 
+            // 4. Total Withdrawal
+            const { data: withdrawals } = await supabase
+                .from('withdrawals')
+                .select('amount, created_at')
+                .eq('status', 'success')
+
+            const totalWithdrawal = withdrawals?.reduce((sum, w) => sum + (w.amount + 2500), 0) || 0
+
+            // 5. Net Profit (Omset - Withdrawal)
+            // Note: Withdrawals here are Net Payouts. Ideally we might want to subtract (Withdrawal + Fee).
+            // But prompt asks strictly "omset - withdrawal".
+            const netProfit = incomeTotal - totalWithdrawal
+
             setStats({
                 users: users || 0,
                 leads: organicLeadsCount,
                 incomeTotal,
                 incomeAffiliate,
-                incomeOrganic
+                incomeOrganic,
+                totalWithdrawal,
+                netProfit
             })
 
-            // 4. Chart Data
+            // 6. Chart Data
             const endDate = new Date()
             const startDate = subMonths(endDate, 5)
             const months = eachMonthOfInterval({ start: startDate, end: endDate })
@@ -91,16 +101,16 @@ export default function AdminOverview() {
                 })
 
                 const monthTransactions = filterByMonth(transactions || [])
-                // monthLeads removed
-                // Actually we can calculate NEW organic signups (leads) per month
-                // But we only fetched current unpaid organic.
-                // Let's just track Sales Count vs Month for now.
+                const monthWithdrawals = filterByMonth(withdrawals || [])
+
+                const monthIncome = monthTransactions.reduce((sum, t) => sum + t.amount, 0)
+                const monthWithdrawalTotal = monthWithdrawals.reduce((sum, w) => sum + (w.amount + 2500), 0)
 
                 return {
                     name: format(month, 'MMM'),
-                    clicks: 0, // Admin doesn't track clicks globally easily yet
-                    leads: 0, // Placeholder
-                    sales: monthTransactions.length
+                    income: monthIncome,
+                    withdrawal: monthWithdrawalTotal,
+                    net: monthIncome - monthWithdrawalTotal
                 }
             })
 
@@ -133,7 +143,7 @@ export default function AdminOverview() {
                 <h2 className="text-2xl font-bold text-white">Admin Dashboard</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><Users size={20} /></div>
@@ -161,14 +171,35 @@ export default function AdminOverview() {
                     <p className="text-3xl font-bold text-green-400">Rp {stats.incomeTotal.toLocaleString()}</p>
                     <div className="mt-4 space-y-1 text-xs">
                         <div className="flex justify-between text-slate-400">
-                            <span>Organic (100%):</span>
+                            <span>Organic:</span>
                             <span className="text-white">Rp {stats.incomeOrganic.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-slate-400">
-                            <span>Affiliate (Gross):</span>
+                            <span>Affiliate:</span>
                             <span className="text-white">Rp {stats.incomeAffiliate.toLocaleString()}</span>
                         </div>
                     </div>
+                </motion.div>
+
+                {/* Total Withdrawal */}
+                <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-red-500/10 rounded-lg text-red-400"><TrendingUp size={20} className="rotate-180" /></div>
+                        <h3 className="text-slate-400 text-sm font-medium">Total Withdrawal</h3>
+                    </div>
+                    <p className="text-3xl font-bold text-red-400">Rp {stats.totalWithdrawal.toLocaleString()}</p>
+                </motion.div>
+
+                {/* Net Profit */}
+                <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 lg:col-span-2">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><TrendingUp size={20} /></div>
+                        <h3 className="text-slate-400 text-sm font-medium">Net Profit (Omset - Withdrawal)</h3>
+                    </div>
+                    <p className="text-3xl font-bold text-emerald-400">Rp {stats.netProfit.toLocaleString()}</p>
+                    <p className="text-slate-500 text-xs mt-2">
+                        Profit bersih dari selisih total pemasukan dan total penarikan affiliate.
+                    </p>
                 </motion.div>
             </div>
 
