@@ -283,10 +283,7 @@ export default function Wallet() {
                                                 <span>Biaya Admin (BI-FAST):</span>
                                                 <span className="text-red-400">- Rp 2.500</span>
                                             </div>
-                                            <div className="border-t border-slate-800 pt-1 flex justify-between font-bold text-white">
-                                                <span>Diterima Bersih:</span>
-                                                <span>Rp {(parseFloat(formData.amount) - 2500).toLocaleString()}</span>
-                                            </div>
+
                                         </div>
                                     )}
                                 </div>

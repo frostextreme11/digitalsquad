@@ -93,13 +93,13 @@ export default function AdminWithdrawals() {
             // 2. Handle Balance Adjustments
             let balanceChange = 0
 
-            // If moving TO success (Paid), we deduct balance
+            // If moving TO success (Paid), we deduct balance (Amount + Admin Fee 2500)
             if (newStatus === 'success' && currentStatus !== 'success') {
-                balanceChange = -amount
+                balanceChange = -(amount + 2500)
             }
-            // If moving FROM success (Un-paying), we refund balance
+            // If moving FROM success (Un-paying), we refund balance (Amount + Admin Fee 2500)
             else if (currentStatus === 'success' && newStatus !== 'success') {
-                balanceChange = amount
+                balanceChange = (amount + 2500)
             }
 
             if (balanceChange !== 0) {
@@ -320,7 +320,7 @@ export default function AdminWithdrawals() {
                         <div
                             key={item.id}
                             className={`bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden ${item.status === 'success' ? 'bg-gradient-to-br from-slate-900 to-emerald-900/10 border-emerald-500/20' :
-                                    item.status === 'failed' ? 'bg-gradient-to-br from-slate-900 to-red-900/10 border-red-500/20' : ''
+                                item.status === 'failed' ? 'bg-gradient-to-br from-slate-900 to-red-900/10 border-red-500/20' : ''
                                 }`}
                         >
                             {/* Header: Date & Status */}
