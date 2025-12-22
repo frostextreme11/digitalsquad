@@ -342,6 +342,33 @@ export type Database = {
           }
         ]
       }
+      video_testimonials: {
+        Row: {
+          id: string
+          created_at: string
+          video_url: string
+          title: string
+          description: string | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          video_url: string
+          title: string
+          description?: string | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          video_url?: string
+          title?: string
+          description?: string | null
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
