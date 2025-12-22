@@ -11,6 +11,8 @@ import UserManagement from '../components/dashboard/UserManagement'
 import ProductManagement from '../components/dashboard/ProductManagement'
 import Wallet from '../components/dashboard/Wallet'
 import AdminWithdrawals from '../components/dashboard/AdminWithdrawals'
+import AdminAcademy from '../components/dashboard/AdminAcademy'
+import AcademyList from '../components/dashboard/AcademyList'
 
 
 
@@ -71,6 +73,7 @@ export default function Dashboard() {
         <Route path="/leads" element={profile.role === 'admin' ? <AdminLeadsList /> : <LeadsList />} />
         <Route path="/products" element={profile.role === 'admin' ? <ProductManagement /> : <ProductList />} />
         <Route path="/wallet" element={profile.role === 'admin' ? <AdminWithdrawals /> : <Wallet />} />
+        <Route path="/academy" element={profile.role === 'admin' ? <AdminAcademy /> : <AcademyList />} />
       </Routes>
     </DashboardLayout>
   )

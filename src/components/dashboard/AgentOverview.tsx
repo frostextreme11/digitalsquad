@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Copy, CheckCircle, Users, TrendingUp, MousePointer } from 'lucide-react'
+import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import StatsChart from './StatsChart'
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
 
 export default function AgentOverview({ profile }: { profile: any }) {
-   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0 })
+   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0, academy: { total: 0, completed: 0, percentage: 0 } })
    const [chartData, setChartData] = useState<any[]>([])
    const [copied, setCopied] = useState(false)
 
@@ -31,11 +31,20 @@ export default function AgentOverview({ profile }: { profile: any }) {
          // Sales (Commissions count)
          const { count: sales } = await supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id)
 
+         // Academy Stats
+         const { count: totalModules } = await supabase.from('academy_posts').select('*', { count: 'exact', head: true }).eq('is_active', true)
+         const { count: completedModules } = await supabase.from('academy_progress').select('*', { count: 'exact', head: true }).eq('user_id', profile.id)
+
          setStats(prev => ({
             ...prev,
             visits: visits || 0,
             leads: (leads || 0) - (sales || 0), // Pending leads = Total referred - Sales
             sales: sales || 0,
+            academy: {
+               total: totalModules || 0,
+               completed: completedModules || 0,
+               percentage: totalModules ? Math.round(((completedModules || 0) / totalModules) * 100) : 0
+            }
          }))
 
          // Fetch Chart Data (Last 6 Months)
@@ -145,7 +154,25 @@ export default function AgentOverview({ profile }: { profile: any }) {
             </motion.div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Link to="/dashboard/academy" className="block">
+               <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition cursor-pointer h-full relative overflow-hidden">
+                  <div className="flex items-center gap-4 mb-2 relative z-10">
+                     <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><GraduationCap size={24} /></div>
+                     <h3 className="text-slate-400 font-medium">Academy Level</h3>
+                  </div>
+                  <div className="relative z-10">
+                     <p className="text-3xl font-bold text-white pl-1">{stats.academy.percentage}%</p>
+                     <div className="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${stats.academy.percentage}%` }}></div>
+                     </div>
+                  </div>
+                  {/* Background Decoration */}
+                  <div className="absolute -right-4 -bottom-4 text-slate-800/20 rotate-[-15deg]">
+                     <GraduationCap size={100} />
+                  </div>
+               </motion.div>
+            </Link>
             <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition">
                <div className="flex items-center gap-4 mb-2">
                   <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><MousePointer size={24} /></div>

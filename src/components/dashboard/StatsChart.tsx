@@ -74,7 +74,7 @@ export default function StatsChart({ data, currency = false }: { data: any[], cu
           <Tooltip
             contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }}
             itemStyle={{ color: '#fff' }}
-            formatter={(value: number) => currency ? `Rp ${value.toLocaleString()}` : `${value}`}
+            formatter={(value: any) => currency ? `Rp ${Number(value).toLocaleString()}` : `${value}`}
           />
 
           {/* Agent Areas */}
