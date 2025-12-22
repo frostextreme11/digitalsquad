@@ -7,7 +7,7 @@ import StatsChart from './StatsChart'
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
 
 export default function AgentOverview({ profile }: { profile: any }) {
-   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0, academy: { total: 0, completed: 0, percentage: 0 } })
+   const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0, academy: { total: 0, completed: 0, percentage: 0, currentBadge: 'Novice' } })
    const [chartData, setChartData] = useState<any[]>([])
    const [copied, setCopied] = useState(false)
 
@@ -32,8 +32,39 @@ export default function AgentOverview({ profile }: { profile: any }) {
          const { count: sales } = await supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id)
 
          // Academy Stats
-         const { count: totalModules } = await supabase.from('academy_posts').select('*', { count: 'exact', head: true }).eq('is_active', true)
-         const { count: completedModules } = await supabase.from('academy_progress').select('*', { count: 'exact', head: true }).eq('user_id', profile.id)
+         // Fetch all active posts to determine levels
+         const { data: allModules } = await supabase
+            .from('academy_posts')
+            .select('id, level_badge, order_index')
+            .eq('is_active', true)
+            .order('order_index', { ascending: true })
+
+         const { data: userProgress } = await supabase
+            .from('academy_progress')
+            .select('post_id')
+            .eq('user_id', profile.id)
+
+         const totalModules = allModules?.length || 0
+         const completedModules = userProgress?.length || 0
+
+         // Determine current badge
+         // Logic: Find the highest order_index module that is completed and has a badge
+         let currentBadge = 'Novice' // Default Starting Badge
+
+         if (allModules && userProgress) {
+            const completedPostIds = new Set(userProgress.map(p => p.post_id))
+
+            // Iterate through modules in order. 
+            // If a module is completed and has a badge, update currentBadge.
+            // This assumes modules are linear.
+            for (const module of allModules) {
+               if (completedPostIds.has(module.id)) {
+                  if (module.level_badge) {
+                     currentBadge = module.level_badge
+                  }
+               }
+            }
+         }
 
          setStats(prev => ({
             ...prev,
@@ -43,7 +74,8 @@ export default function AgentOverview({ profile }: { profile: any }) {
             academy: {
                total: totalModules || 0,
                completed: completedModules || 0,
-               percentage: totalModules ? Math.round(((completedModules || 0) / totalModules) * 100) : 0
+               percentage: totalModules ? Math.round(((completedModules || 0) / totalModules) * 100) : 0,
+               currentBadge: currentBadge
             }
          }))
 
@@ -159,7 +191,10 @@ export default function AgentOverview({ profile }: { profile: any }) {
                <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition cursor-pointer h-full relative overflow-hidden">
                   <div className="flex items-center gap-4 mb-2 relative z-10">
                      <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><GraduationCap size={24} /></div>
-                     <h3 className="text-slate-400 font-medium">Academy Level</h3>
+                     <div className="flex flex-col">
+                        <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Rank</h3>
+                        <span className="text-white font-bold text-lg leading-tight">{stats.academy.currentBadge}</span>
+                     </div>
                   </div>
                   <div className="relative z-10">
                      <p className="text-3xl font-bold text-white pl-1">{stats.academy.percentage}%</p>
