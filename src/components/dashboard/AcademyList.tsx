@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import type { AcademyPostWithProgress, AcademyPost } from '../../types/academy'
-import { CheckCircle, FileText, Download, Copy, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, FileText, Download, Copy, ChevronDown, ChevronUp, Lock } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 export default function AcademyList() {
@@ -127,131 +127,146 @@ export default function AcademyList() {
             </div>
 
             <div className="grid gap-4">
-                {modules.map((module, index) => (
-                    <motion.div
-                        key={module.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`bg-slate-900 border ${module.is_completed ? 'border-green-500/30' : 'border-slate-800'} rounded-xl overflow-hidden`}
-                    >
-                        <div
-                            onClick={() => toggleExpand(module.id)}
-                            className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition-colors"
+                {modules.map((module, index) => {
+                    const isLocked = index > 0 && !modules[index - 1].is_completed
+
+                    return (
+                        <motion.div
+                            key={module.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className={`bg-slate-900 border ${module.is_completed ? 'border-green-500/30' : 'border-slate-800'} rounded-xl overflow-hidden ${isLocked ? 'opacity-60' : ''}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${module.is_completed ? 'bg-green-500/20 text-green-400' : 'bg-slate-800 text-slate-400'}`}>
-                                    {module.is_completed ? <CheckCircle size={20} /> : <span className="font-bold">{index + 1}</span>}
+                            <div
+                                onClick={() => !isLocked && toggleExpand(module.id)}
+                                className={`p-4 flex items-center justify-between transition-colors ${isLocked ? 'cursor-not-allowed bg-slate-800/30' : 'cursor-pointer hover:bg-slate-800/50'}`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${module.is_completed
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : isLocked
+                                            ? 'bg-slate-800/50 text-slate-500'
+                                            : 'bg-slate-800 text-slate-400'
+                                        }`}>
+                                        {module.is_completed ? (
+                                            <CheckCircle size={20} />
+                                        ) : isLocked ? (
+                                            <Lock size={18} />
+                                        ) : (
+                                            <span className="font-bold">{index + 1}</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className={`font-semibold ${module.is_completed ? 'text-green-400' : 'text-white'}`}>
+                                            {module.title}
+                                        </h3>
+                                        {module.level_badge && (
+                                            <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 mt-1 inline-block">
+                                                {module.level_badge}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div>
-                                    <h3 className={`font-semibold ${module.is_completed ? 'text-green-400' : 'text-white'}`}>
-                                        {module.title}
-                                    </h3>
-                                    {module.level_badge && (
-                                        <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 mt-1 inline-block">
-                                            {module.level_badge}
-                                        </span>
-                                    )}
+                                    {expandedId === module.id ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
                                 </div>
                             </div>
-                            <div>
-                                {expandedId === module.id ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
-                            </div>
-                        </div>
 
-                        <AnimatePresence>
-                            {expandedId === module.id && (
-                                <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: 'auto' }}
-                                    exit={{ height: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="p-4 pt-0 border-t border-slate-800/50 space-y-4">
+                            <AnimatePresence>
+                                {expandedId === module.id && (
+                                    <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: 'auto' }}
+                                        exit={{ height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="p-4 pt-0 border-t border-slate-800/50 space-y-4">
 
-                                        {/* Video Section */}
-                                        {module.video_url && (
-                                            <div className="aspect-video bg-black rounded-lg overflow-hidden mt-4">
-                                                <iframe
-                                                    src={module.video_url.replace('watch?v=', 'embed/')}
-                                                    className="w-full h-full"
-                                                    allowFullScreen
-                                                    title={module.title}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Description */}
-                                        {module.description && (
-                                            <div className="prose prose-invert max-w-none text-sm text-slate-300 mt-4" dangerouslySetInnerHTML={{ __html: module.description }} />
-                                        )}
-
-                                        {/* Copyable Text */}
-                                        {module.copyable_text && (
-                                            <div className="bg-slate-950 p-4 rounded-lg flex items-start justify-between gap-4 border border-slate-800">
-                                                <code className="text-sm text-blue-300 font-mono break-all">
-                                                    {module.copyable_text}
-                                                </code>
-                                                <button
-                                                    onClick={() => copyToClipboard(module.copyable_text!)}
-                                                    className="p-2 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors"
-                                                    title="Copy to clipboard"
-                                                >
-                                                    <Copy size={16} />
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Attachment */}
-                                        {module.attachment_url && (
-                                            <a
-                                                href={module.attachment_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium p-3 bg-blue-500/10 rounded-lg border border-blue-500/20"
-                                            >
-                                                <Download size={16} />
-                                                Download Resource
-                                            </a>
-                                        )}
-
-                                        {/* Mission */}
-                                        {module.mission_text && (
-                                            <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg">
-                                                <h4 className="text-yellow-500 font-bold mb-2 flex items-center gap-2">
-                                                    <FileText size={16} /> Mission
-                                                </h4>
-                                                <p className="text-slate-300 text-sm">{module.mission_text}</p>
-                                            </div>
-                                        )}
-
-                                        {/* Action */}
-                                        {!module.is_completed && (
-                                            <div className="pt-4 flex justify-end">
-                                                <button
-                                                    onClick={() => handleComplete(module.id)}
-                                                    disabled={completingId === module.id}
-                                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    {completingId === module.id ? 'Completing...' : 'Mark as Complete'}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {module.is_completed && (
-                                            <div className="pt-4 flex justify-end">
-                                                <div className="px-4 py-2 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
-                                                    <CheckCircle size={16} /> Completed
+                                            {/* Video Section */}
+                                            {module.video_url && (
+                                                <div className="aspect-video bg-black rounded-lg overflow-hidden mt-4">
+                                                    <iframe
+                                                        src={module.video_url.replace('watch?v=', 'embed/')}
+                                                        className="w-full h-full"
+                                                        allowFullScreen
+                                                        title={module.title}
+                                                    />
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                ))}
+                                            {/* Description */}
+                                            {module.description && (
+                                                <div className="prose prose-invert max-w-none text-sm text-slate-300 mt-4" dangerouslySetInnerHTML={{ __html: module.description }} />
+                                            )}
+
+                                            {/* Copyable Text */}
+                                            {module.copyable_text && (
+                                                <div className="bg-slate-950 p-4 rounded-lg flex items-start justify-between gap-4 border border-slate-800">
+                                                    <code className="text-sm text-blue-300 font-mono break-all">
+                                                        {module.copyable_text}
+                                                    </code>
+                                                    <button
+                                                        onClick={() => copyToClipboard(module.copyable_text!)}
+                                                        className="p-2 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors"
+                                                        title="Copy to clipboard"
+                                                    >
+                                                        <Copy size={16} />
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Attachment */}
+                                            {module.attachment_url && (
+                                                <a
+                                                    href={module.attachment_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium p-3 bg-blue-500/10 rounded-lg border border-blue-500/20"
+                                                >
+                                                    <Download size={16} />
+                                                    Download Resource
+                                                </a>
+                                            )}
+
+                                            {/* Mission */}
+                                            {module.mission_text && (
+                                                <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg">
+                                                    <h4 className="text-yellow-500 font-bold mb-2 flex items-center gap-2">
+                                                        <FileText size={16} /> Mission
+                                                    </h4>
+                                                    <p className="text-slate-300 text-sm">{module.mission_text}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Action */}
+                                            {!module.is_completed && (
+                                                <div className="pt-4 flex justify-end">
+                                                    <button
+                                                        onClick={() => handleComplete(module.id)}
+                                                        disabled={completingId === module.id}
+                                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {completingId === module.id ? 'Completing...' : 'Mark as Complete'}
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {module.is_completed && (
+                                                <div className="pt-4 flex justify-end">
+                                                    <div className="px-4 py-2 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
+                                                        <CheckCircle size={16} /> Completed
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    )
+                })}
             </div>
         </div>
     )
