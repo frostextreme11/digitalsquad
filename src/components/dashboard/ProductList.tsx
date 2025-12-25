@@ -1,25 +1,61 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Download } from 'lucide-react'
+import { Download, Search } from 'lucide-react'
 
 export default function ProductList() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [limit, setLimit] = useState(50)
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await supabase.from('products').select('*').eq('is_active', true)
+      let query = supabase.from('products').select('*').eq('is_active', true)
+
+      if (searchTerm) {
+        query = query.ilike('title', `%${searchTerm}%`)
+      }
+
+      const { data } = await query.limit(limit)
       setProducts(data || [])
       setLoading(false)
     }
-    fetchProducts()
-  }, [])
+
+    const timeoutId = setTimeout(() => {
+      fetchProducts()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, limit])
 
   if (loading) return <div className="text-white">Loading products...</div>
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Digital Products</h2>
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Digital Products</h2>
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 transition"
+            />
+          </div>
+          <select
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition"
+          >
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={500}>500</option>
+          </select>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map(product => (
           <div key={product.id} className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden hover:border-blue-500/50 transition group">
