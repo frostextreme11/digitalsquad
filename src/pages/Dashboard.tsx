@@ -16,6 +16,7 @@ import AdminAcademy from '../components/dashboard/AdminAcademy'
 import AcademyList from '../components/dashboard/AcademyList'
 import AdminTestimonials from '../components/dashboard/AdminTestimonials'
 import AgentTestimonials from '../components/dashboard/AgentTestimonials'
+import FreeZone from '../components/dashboard/FreeZone'
 
 
 
@@ -78,6 +79,7 @@ export default function Dashboard() {
         <Route path="/wallet" element={profile.role === 'admin' ? <AdminWithdrawals /> : <Wallet />} />
         <Route path="/academy" element={profile.role === 'admin' ? <AdminAcademy /> : <AcademyList />} />
         <Route path="/testimonials" element={profile.role === 'admin' ? <AdminTestimonials /> : <AgentTestimonials />} />
+        <Route path="/free-zone" element={<FreeZone />} />
       </Routes>
     </DashboardLayout>
   )

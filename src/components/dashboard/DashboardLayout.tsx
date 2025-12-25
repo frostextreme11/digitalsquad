@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { LogOut, LayoutDashboard, Users, Wallet, ShoppingBag, Menu, X, GraduationCap, Video } from 'lucide-react'
+import { LogOut, LayoutDashboard, Users, Wallet, ShoppingBag, Menu, X, GraduationCap, Video, Gift } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function DashboardLayout({ children, role }: { children: React.ReactNode, role: 'agent' | 'admin' }) {
@@ -19,6 +19,7 @@ export default function DashboardLayout({ children, role }: { children: React.Re
     { path: '/dashboard/users', icon: Users, label: 'Members', roles: ['admin'] },
     { path: '/dashboard/leads', icon: Users, label: 'Leads', roles: ['admin'] },
     { path: '/dashboard/products', icon: ShoppingBag, label: 'Products', roles: ['agent', 'admin'] },
+    { path: '/dashboard/free-zone', icon: Gift, label: 'Free Zone', roles: ['agent'] },
     { path: '/dashboard/wallet', icon: Wallet, label: role === 'admin' ? 'Withdrawals' : 'My Wallet', roles: ['agent', 'admin'] },
     { path: '/dashboard/academy', icon: GraduationCap, label: 'Academy', roles: ['agent', 'admin'] },
     { path: '/dashboard/testimonials', icon: Video, label: 'Testimonials', roles: ['agent', 'admin'] },
