@@ -7,13 +7,35 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [limit, setLimit] = useState(50)
+  const [orderBy, setOrderBy] = useState('title_asc')
 
   useEffect(() => {
     const fetchProducts = async () => {
       let query = supabase.from('products').select('*').eq('is_active', true)
 
+      // Filter out free products (price > 0)
+      query = query.gt('price', 0)
+
       if (searchTerm) {
         query = query.ilike('title', `%${searchTerm}%`)
+      }
+
+      // Apply sorting
+      switch (orderBy) {
+        case 'price_asc':
+          query = query.order('price', { ascending: true })
+          break
+        case 'price_desc':
+          query = query.order('price', { ascending: false })
+          break
+        case 'title_asc':
+          query = query.order('title', { ascending: true })
+          break
+        case 'title_desc':
+          query = query.order('title', { ascending: false })
+          break
+        default:
+          query = query.order('title', { ascending: true })
       }
 
       const { data } = await query.limit(limit)
@@ -26,7 +48,7 @@ export default function ProductList() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, limit])
+  }, [searchTerm, limit, orderBy])
 
   if (loading) return <div className="text-white">Loading products...</div>
 
@@ -53,6 +75,16 @@ export default function ProductList() {
             <option value={50}>50</option>
             <option value={100}>100</option>
             <option value={500}>500</option>
+          </select>
+          <select
+            value={orderBy}
+            onChange={(e) => setOrderBy(e.target.value)}
+            className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition"
+          >
+            <option value="title_asc">Name (A-Z)</option>
+            <option value="title_desc">Name (Z-A)</option>
+            <option value="price_asc">Price (Low to High)</option>
+            <option value="price_desc">Price (High to Low)</option>
           </select>
         </div>
       </div>
