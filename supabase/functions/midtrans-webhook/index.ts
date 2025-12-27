@@ -13,7 +13,9 @@ serve(async (req) => {
 
   try {
     const notification = await req.json()
-    console.log("Midtrans Notification:", JSON.stringify(notification)) // Log incoming webhook
+    console.log("----------------------------------------")
+    console.log("Midtrans Notification Received:", JSON.stringify(notification))
+    console.log("----------------------------------------")
 
     const { order_id, transaction_status, fraud_status } = notification
 
@@ -22,7 +24,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Check if transaction exists first
+    // Check if transaction exists
     const { data: existingTx, error: findError } = await supabase
       .from('transactions')
       .select('*')
@@ -30,16 +32,20 @@ serve(async (req) => {
       .maybeSingle()
 
     if (findError) {
-      console.error("Error finding transaction:", findError)
+      console.error("CRITICAL: Error finding transaction:", findError)
       throw new Error("Database error finding transaction")
     }
 
     if (!existingTx) {
-      console.error("Transaction not found for order_id:", order_id)
-      // If not found, we can't update. 
-      throw new Error("Transaction not found")
+      console.error("CRITICAL: Transaction NOT FOUND for order_id:", order_id)
+      return new Response("Transaction not found", { status: 404, headers: corsHeaders })
     }
 
+    console.log(`Transaction Found: ${existingTx.id} | Type: ${existingTx.type} | Current Status: ${existingTx.status}`)
+
+    console.log(`Processing Order ID: ${order_id} | Status: ${transaction_status} | Fraud: ${fraud_status}`)
+
+    // Determine New Status
     let status = 'pending'
     if (transaction_status == 'capture') {
       if (fraud_status == 'challenge') {
@@ -49,15 +55,24 @@ serve(async (req) => {
       }
     } else if (transaction_status == 'settlement') {
       status = 'success'
-    } else if (transaction_status == 'cancel' || transaction_status == 'deny' || transaction_status == 'expire') {
+    } else if (transaction_status == 'success') {
+      // While not standard Midtrans, some gateways might send this
+      status = 'success'
+    } else if (transaction_status == 'cancel' || transaction_status == 'deny' || transaction_status == 'expire' || transaction_status == 'failure') {
       status = 'failed'
     } else if (transaction_status == 'pending') {
       status = 'pending'
     }
 
-    console.log(`Updating transaction ${order_id} to status: ${status}`)
+    console.log(`Mapped Status: ${transaction_status} (+ ${fraud_status}) -> ${status}`)
 
-    // Update transaction
+    // Force success if settlement (redundant safety check)
+    if (transaction_status === 'settlement') status = 'success'
+
+    console.log(`Mapped Status: ${transaction_status} (+ ${fraud_status}) -> ${status}`)
+
+    // Only update if status changed? Or always update to be safe?
+    // Always update to capture latest Midtrans status
     const { data: transaction, error: txError } = await supabase
       .from('transactions')
       .update({ status: status, midtrans_id: order_id })
@@ -66,141 +81,23 @@ serve(async (req) => {
       .single()
 
     if (txError) {
-      console.error("Transaction update failed", txError)
-      throw new Error("Transaction update failed: " + txError.message)
+      console.error("CRITICAL: Transaction update failed", txError)
+      throw new Error("Transaction update failed")
     }
 
-    // If success and type is registration, process registration logic
+    console.log(`Transaction Updated to: ${status}`)
+
+    // LOGIC ROUTING BASED ON TYPE
     if (status === 'success') {
       if (transaction.type === 'registration') {
-        // 1. Find referrer
-        let referrerId = null
-
-        // Check if user has referred_by in profile
-        if (transaction.user_id) {
-          const { data: profile } = await supabase.from('profiles').select('referred_by').eq('id', transaction.user_id).single()
-          if (profile?.referred_by) referrerId = profile.referred_by
-        }
-
-        // If not found in profile, maybe in lead?
-        if (!referrerId && transaction.lead_id) {
-          const { data: lead } = await supabase.from('leads').select('referred_by_code').eq('id', transaction.lead_id).single()
-          if (lead?.referred_by_code) {
-            const { data: referrer } = await supabase.from('profiles').select('id').eq('affiliate_code', lead.referred_by_code).single()
-            if (referrer) referrerId = referrer.id
-          }
-        }
-
-        if (referrerId) {
-          // Check if commission already exists for this transaction
-          const { data: existing } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
-
-          if (!existing) {
-            // Create commission
-            const commissionAmount = transaction.amount * 0.5 // 50% commission
-
-            const { error: commError } = await supabase.from('commissions').insert({
-              agent_id: referrerId,
-              source_transaction_id: transaction.id,
-              amount: commissionAmount
-            })
-
-            if (!commError) {
-              // Update balance using RPC
-              await supabase.rpc('increment_balance', { user_id: referrerId, amount: commissionAmount })
-            }
-          }
-        }
-
-        // Generate affiliate code if not exists
-        if (transaction.user_id) {
-          const { data: profile } = await supabase.from('profiles').select('email, affiliate_code').eq('id', transaction.user_id).single()
-          if (profile && !profile.affiliate_code) {
-            // Generate code from email username
-            let code = profile.email.split('@')[0].toUpperCase()
-
-            // Check for duplicates
-            const { data: existing } = await supabase.from('profiles').select('id').eq('affiliate_code', code).single()
-            if (existing) {
-              // If duplicate, append random number
-              code = code + Math.floor(Math.random() * 1000)
-            }
-
-            await supabase.from('profiles').update({ affiliate_code: code }).eq('id', transaction.user_id)
-          }
-        }
+        console.log("Processing REGISTRATION success logic...")
+        await handleRegistrationSuccess(supabase, transaction)
       } else if (transaction.type === 'product_purchase') {
-        // Handle Product Purchase
-
-        // 1. Update product_purchases status
-        const { data: purchase, error: purchaseError } = await supabase
-          .from('product_purchases')
-          .update({ status: 'success' })
-          .eq('transaction_id', transaction.id)
-          .select()
-          .single()
-
-        if (purchaseError) console.error("Error updating purchase status:", purchaseError)
-
-        // 2. Process Commission if agent_code exists
-        if (purchase && purchase.agent_code) {
-          const { data: agent } = await supabase.from('profiles').select('id').eq('affiliate_code', purchase.agent_code).single()
-
-          if (agent) {
-            // Check existing commission
-            const { data: existingComm } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
-
-            if (!existingComm) {
-              // Get product commission rate
-              const { data: product } = await supabase.from('products').select('commission_rate').eq('id', purchase.product_id).single()
-              const rate = product?.commission_rate || 0.5
-              const commissionAmount = transaction.amount * rate
-
-              const { error: commError } = await supabase.from('commissions').insert({
-                agent_id: agent.id,
-                source_transaction_id: transaction.id,
-                amount: commissionAmount
-              })
-
-              if (!commError) {
-                await supabase.rpc('increment_balance', { user_id: agent.id, amount: commissionAmount })
-              }
-            }
-          }
-        }
-
-        // 3. Send Email
-        if (purchase) {
-          const { data: product } = await supabase.from('products').select('*').eq('id', purchase.product_id).single()
-
-          if (product) {
-            // Call send-email function
-            const emailFunctionUrl = `${supabaseUrl}/functions/v1/send-email`
-
-            // We need to fetch with SERVICE ROLE KEY to authorization
-            // But usually functions allow anon if we set it, but we might want to be secure.
-            // Let's rely on the internal invoke or just fetch.
-
-            await fetch(emailFunctionUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${supabaseKey}` // Use Service Role Key to bypass potential RLS/Auth checks? Or Anon.
-              },
-              body: JSON.stringify({
-                to: purchase.customer_email,
-                subject: `Akses Produk: ${product.title}`,
-                type: 'product_delivery',
-                data: {
-                  customerName: purchase.customer_name,
-                  productTitle: product.title,
-                  fileUrl: product.file_url // Ensure this is not null
-                }
-              })
-            })
-          }
-        }
+        console.log("Processing PRODUCT PURCHASE success logic...")
+        await handleProductPurchaseSuccess(supabase, transaction, supabaseUrl, supabaseKey)
       }
+    } else {
+      console.log(`Status is ${status}, skipping success logic.`)
     }
 
     return new Response(
@@ -208,10 +105,151 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   } catch (error) {
-    console.error(error)
+    console.error("WEBHOOK ERROR:", error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   }
 })
+
+async function handleRegistrationSuccess(supabase: any, transaction: any) {
+  // 1. Find referrer
+  let referrerId = null
+
+  if (transaction.user_id) {
+    const { data: profile } = await supabase.from('profiles').select('referred_by').eq('id', transaction.user_id).single()
+    if (profile?.referred_by) referrerId = profile.referred_by
+  }
+
+  if (!referrerId && transaction.lead_id) {
+    const { data: lead } = await supabase.from('leads').select('referred_by_code').eq('id', transaction.lead_id).single()
+    if (lead?.referred_by_code) {
+      const { data: referrer } = await supabase.from('profiles').select('id').eq('affiliate_code', lead.referred_by_code).single()
+      if (referrer) referrerId = referrer.id
+    }
+  }
+
+  if (referrerId) {
+    // Check duplication
+    const { data: existing } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
+
+    if (!existing) {
+      const commissionAmount = transaction.amount * 0.5 // 50%
+      const { error: commError } = await supabase.from('commissions').insert({
+        agent_id: referrerId,
+        source_transaction_id: transaction.id,
+        amount: commissionAmount
+      })
+
+      if (!commError) {
+        console.log(`Commission created for agent ${referrerId}. Updating balance...`)
+        await supabase.rpc('increment_balance', { user_id: referrerId, amount: commissionAmount })
+      } else {
+        console.error("Error creating commission:", commError)
+      }
+    }
+  }
+
+  // Generate affiliate code
+  if (transaction.user_id) {
+    const { data: profile } = await supabase.from('profiles').select('email, affiliate_code').eq('id', transaction.user_id).single()
+    if (profile && !profile.affiliate_code) {
+      let code = profile.email.split('@')[0].toUpperCase()
+      const { data: existing } = await supabase.from('profiles').select('id').eq('affiliate_code', code).single()
+      if (existing) code = code + Math.floor(Math.random() * 1000)
+      await supabase.from('profiles').update({ affiliate_code: code }).eq('id', transaction.user_id)
+      console.log(`Generated affiliate code for user ${transaction.user_id}: ${code}`)
+    }
+  }
+}
+
+async function handleProductPurchaseSuccess(supabase: any, transaction: any, supabaseUrl: string, supabaseKey: string) {
+  // 1. Update status in product_purchases
+  const { data: purchase, error: purchaseError } = await supabase
+    .from('product_purchases')
+    .update({ status: 'success' })
+    .eq('transaction_id', transaction.id)
+    .select()
+    .single()
+
+  if (purchaseError) {
+    console.error("CRITICAL: Error updating product_purchases status:", purchaseError)
+    return // Can't proceed without purchase record
+  }
+
+  if (!purchase) {
+    console.error("CRITICAL: product_purchases record not found for transaction:", transaction.id)
+    return
+  }
+
+  console.log("Product Purchase Updated to SUCCESS")
+
+  // 2. Commission Logic
+  if (purchase.agent_code) {
+    const { data: agent } = await supabase.from('profiles').select('id, email').eq('affiliate_code', purchase.agent_code).single()
+
+    if (agent) {
+      const { data: existingComm } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
+
+      if (!existingComm) {
+        const { data: product } = await supabase.from('products').select('commission_rate').eq('id', purchase.product_id).single()
+        const rate = product?.commission_rate || 0.5
+        const commissionAmount = transaction.amount * rate
+
+        console.log(`Creating Commission: ${transaction.amount} * ${rate} = ${commissionAmount} for agent ${agent.email}`)
+
+        const { error: commError } = await supabase.from('commissions').insert({
+          agent_id: agent.id,
+          source_transaction_id: transaction.id,
+          amount: commissionAmount
+        })
+
+        if (!commError) {
+          const { error: rpcError } = await supabase.rpc('increment_balance', { user_id: agent.id, amount: commissionAmount })
+          if (rpcError) console.error("RPC Error:", rpcError)
+          else console.log("Agent Balance Updated")
+        } else {
+          console.error("Commission Insert Error:", commError)
+        }
+      } else {
+        console.log("Commission already exists.")
+      }
+    } else {
+      console.log(`Agent code ${purchase.agent_code} provided but agent not found.`)
+    }
+  }
+
+  // 3. Send Email
+  console.log("Serving Email...")
+  const { data: product } = await supabase.from('products').select('*').eq('id', purchase.product_id).single()
+
+  if (product) {
+    try {
+      const emailFunctionUrl = `${supabaseUrl}/functions/v1/send-email`
+      await fetch(emailFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify({
+          to: purchase.customer_email,
+          subject: `Akses Produk: ${product.title}`,
+          type: 'product_delivery',
+          data: {
+            customerName: purchase.customer_name,
+            productTitle: product.title,
+            fileUrl: product.file_url,
+            amount: transaction.amount
+          }
+        })
+      })
+      console.log("Email request sent to send-email function.")
+    } catch (emailErr) {
+      console.error("Error sending email:", emailErr)
+    }
+  } else {
+    console.log("Product not found for email sending.")
+  }
+}

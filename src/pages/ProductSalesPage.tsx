@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Loader2, AlertCircle } from 'lucide-react'
+import { CheckCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function ProductSalesPage() {
     const { productId } = useParams()
@@ -14,6 +14,8 @@ export default function ProductSalesPage() {
     const [error, setError] = useState('')
     const [processing, setProcessing] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+    const [currentTxId, setCurrentTxId] = useState<string | null>(null)
 
     const [formData, setFormData] = useState({
         name: '',
@@ -55,6 +57,63 @@ export default function ProductSalesPage() {
         fetchProduct()
     }, [productId])
 
+    // Load persisted transaction on mount
+    useEffect(() => {
+        if (!productId) return
+        const persistedTxId = localStorage.getItem(`tx_${productId}`)
+        if (persistedTxId) {
+            setCurrentTxId(persistedTxId)
+            // Immediately check status
+            checkPaymentStatus(persistedTxId)
+        }
+    }, [productId])
+
+    // Polling for status when Payment is Open or we have a TxId but no success yet
+    useEffect(() => {
+        let interval: any
+
+        if ((isPaymentOpen || (currentTxId && !showSuccess))) {
+            interval = setInterval(() => {
+                checkPaymentStatus(currentTxId)
+            }, 5000)
+        }
+
+        return () => clearInterval(interval)
+    }, [isPaymentOpen, currentTxId, showSuccess])
+
+    const checkPaymentStatus = async (txId = currentTxId) => {
+        if (!txId) return
+
+        try {
+            const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-payment-status`
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+                },
+                body: JSON.stringify({ transaction_id: txId })
+            })
+
+            const result = await response.json()
+
+            if (result.status === 'success' || (result.data && result.data.status === 'success')) {
+                if (result.data?.file_url) {
+                    setProduct((prev: any) => ({ ...prev, file_url: result.data.file_url }))
+                }
+                setIsPaymentOpen(false)
+                setShowSuccess(true)
+                // Clear persistence if you want, or keep it to allow refresh? 
+                // We keep it so refresh works. logic handles it.
+            } else {
+                // Still pending, do nothing (polling will continue)
+            }
+        } catch (err) {
+            console.error("Error checking status:", err)
+            // Silent fail for polling
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setProcessing(true)
@@ -85,29 +144,36 @@ export default function ProductSalesPage() {
             }
 
             const data = await response.json()
+            setCurrentTxId(data.transaction_id)
+            localStorage.setItem(`tx_${product.id}`, data.transaction_id)
+
+            setProcessing(false)
+            setIsPaymentOpen(true)
 
             // @ts-ignore
             window.snap.pay(data.token, {
                 onSuccess: function (result: any) {
                     console.log('success', result)
+                    setIsPaymentOpen(false)
                     setShowSuccess(true)
+                    checkPaymentStatus(data.transaction_id)
                 },
                 onPending: function (result: any) {
                     console.log('pending', result)
-                    alert("Pembayaran tertunda. Silakan selesaikan pembayaran Anda.")
                 },
                 onError: function (result: any) {
                     console.log('error', result)
                     alert("Pembayaran gagal!")
+                    setIsPaymentOpen(false)
                 },
                 onClose: function () {
                     console.log('closed')
+                    checkPaymentStatus(data.transaction_id)
                 }
             })
 
         } catch (err: any) {
             alert(err.message)
-        } finally {
             setProcessing(false)
         }
     }
@@ -152,13 +218,67 @@ export default function ProductSalesPage() {
                                 Terima kasih telah membeli <strong>{product.title}</strong>.
                                 Link download telah dikirim ke email <strong>{formData.email}</strong>.
                             </p>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-lg transition"
-                            >
-                                Tutup
-                            </button>
+                            <div className="flex flex-col gap-3 w-full">
+                                <a
+                                    href={product.file_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg transition font-medium"
+                                >
+                                    Download Sekarang
+                                </a>
+                            </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Payment Waiting Notice - Desktop Right Side */}
+            <AnimatePresence>
+                {isPaymentOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50 }}
+                        className="fixed z-[60] top-1/2 right-8 -translate-y-1/2 hidden md:flex items-center gap-4"
+                    >
+                        {/* Arrow pointing left */}
+                        <div className="text-blue-500 animate-pulse">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7" />
+                            </svg>
+                        </div>
+
+                        <div className="bg-slate-800 border border-blue-500/50 p-6 rounded-2xl shadow-2xl max-w-xs w-full backdrop-blur-md">
+                            <h3 className="font-bold text-white mb-2 text-lg">Menunggu Pembayaran</h3>
+                            <div className="flex justify-center my-4">
+                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                            </div>
+                            <p className="text-slate-300 text-sm mb-2 text-center">
+                                Silahkan selesaikan pembayaran di popup yang muncul.
+                            </p>
+                            <p className="text-xs text-slate-500 text-center">
+                                Status akan terupdate otomatis setelah Anda membayar. Atau tekan tombol "Check Status" untuk memeriksa status pembayaran.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Mobile Version of Payment Notice - Bottom (Optional fallback) */}
+            <AnimatePresence>
+                {isPaymentOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className="fixed z-[60] bottom-4 left-4 right-4 md:hidden bg-slate-800 border border-blue-500/50 p-4 rounded-xl shadow-2xl"
+                    >
+                        <h3 className="font-bold text-white text-center mb-2">Menunggu Pembayaran...</h3>
+                        <div className="flex items-center justify-center gap-2 text-sm text-slate-300">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                            <span>Silahkan selesaikan pembayaran</span>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -240,10 +360,15 @@ export default function ProductSalesPage() {
                                 <div className="pt-4">
                                     <button
                                         type="submit"
-                                        disabled={processing}
+                                        disabled={processing || isPaymentOpen}
                                         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        {processing ? <Loader2 className="animate-spin" /> : 'Beli Sekarang'}
+                                        {processing ? (
+                                            <>
+                                                <Loader2 className="animate-spin" />
+                                                Mohon Tunggu Link Pembayaran Sedang Dibuat
+                                            </>
+                                        ) : 'Beli Sekarang'}
                                     </button>
                                     <p className="text-center text-xs text-slate-500 mt-4 px-4">
                                         Pastikan email dan nomor telepon yang Anda masukkan sudah benar. Karena produk akan dikirimkan ke Email / Nomor HP anda

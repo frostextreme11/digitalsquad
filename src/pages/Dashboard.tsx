@@ -11,14 +11,12 @@ import UserManagement from '../components/dashboard/UserManagement'
 import ProductManagement from '../components/dashboard/ProductManagement'
 import Wallet from '../components/dashboard/Wallet'
 import AdminWithdrawals from '../components/dashboard/AdminWithdrawals'
-
 import AdminAcademy from '../components/dashboard/AdminAcademy'
 import AcademyList from '../components/dashboard/AcademyList'
 import AdminTestimonials from '../components/dashboard/AdminTestimonials'
 import AgentTestimonials from '../components/dashboard/AgentTestimonials'
 import FreeZone from '../components/dashboard/FreeZone'
-
-
+import SalesPage from '../components/dashboard/SalesPage'
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -55,8 +53,6 @@ export default function Dashboard() {
         .single()
 
       if (error || !data) {
-        // Handle case where profile doesn't exist yet (e.g. created via Auth but trigger failed)
-        // Or just show loading
         console.error(error)
       }
 
@@ -73,6 +69,7 @@ export default function Dashboard() {
     <DashboardLayout role={profile.role}>
       <Routes>
         <Route path="/" element={profile.role === 'admin' ? <AdminOverview /> : <AgentOverview profile={profile} />} />
+        <Route path="/sales" element={<SalesPage role={profile.role} />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/leads" element={profile.role === 'admin' ? <AdminLeadsList /> : <LeadsList />} />
         <Route path="/products" element={profile.role === 'admin' ? <ProductManagement /> : <ProductList />} />

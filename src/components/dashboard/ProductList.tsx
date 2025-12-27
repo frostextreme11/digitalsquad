@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Download, Search } from 'lucide-react'
+import { Download, Search, RefreshCw, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export default function ProductList() {
   const [products, setProducts] = useState<any[]>([])
@@ -12,6 +13,10 @@ export default function ProductList() {
   const [purchasedProductIds, setPurchasedProductIds] = useState<Set<string>>(new Set())
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
+
+  // Payment UI State
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [currentTxId, setCurrentTxId] = useState<string | null>(null)
 
   // Load Snap Script
   useEffect(() => {
@@ -40,16 +45,14 @@ export default function ProductList() {
         }
 
         // Get Purchases
-        // Fetch purchases linked to user_id OR email (for legacy or external purchases that match)
-        // Optimization: Just check user_id for now as we just added it. 
         // Or check checking email if easy.
-        const { data: purchases } = await supabase
+        const { data: purchases } = await (supabase as any)
           .from('product_purchases')
           .select('product_id')
           .or(`user_id.eq.${user.id},customer_email.eq.${user.email}`)
 
         if (purchases) {
-          setPurchasedProductIds(new Set(purchases.map(p => p.product_id)))
+          setPurchasedProductIds(new Set(purchases.map((p: any) => p.product_id)))
         }
       }
 
@@ -103,6 +106,43 @@ export default function ProductList() {
     alert("Link afiliasi berhasil disalin!")
   }
 
+  const checkPaymentStatus = async () => {
+    if (!currentTxId) return
+
+    try {
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-payment-status`
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ transaction_id: currentTxId })
+      })
+
+      const result = await response.json()
+
+      if (result.status === 'success' || (result.data && result.data.status === 'success')) {
+        setIsPaymentOpen(false)
+        alert("Pembayaran Berhasil! Halaman akan dimuat ulang.")
+        window.location.reload()
+      } else {
+        alert("Pembayaran belum terkonfirmasi/masih pending. Silakan tunggu beberapa saat atau refresh.")
+      }
+    } catch (err) {
+      console.error(err)
+      // Fallback
+      const { data: tx } = await supabase.from('transactions').select('status').eq('id', currentTxId).single()
+      if (tx?.status === 'success') {
+        setIsPaymentOpen(false)
+        alert("Pembayaran Berhasil! Halaman akan dimuat ulang.")
+        window.location.reload()
+      } else {
+        alert("Gagal memeriksa status pembayaran.")
+      }
+    }
+  }
+
   const handleBuy = async (product: any) => {
     if (!userProfile) return
     setProcessingId(product.id)
@@ -118,7 +158,7 @@ export default function ProductList() {
         },
         body: JSON.stringify({
           productId: product.id,
-          agentCode: affiliateCode, // Self-referral? Or null? Maybe allow self-commission or just track it.
+          agentCode: null, // No commission for self-purchase
           userId: userProfile.id, // Pass user ID to link purchase
           customerDetails: {
             first_name: userProfile.full_name || 'Agent',
@@ -134,6 +174,14 @@ export default function ProductList() {
       }
 
       const data = await response.json()
+      setCurrentTxId(data.transaction_id)
+
+      setProcessingId(null) // Reset processing ID so the spinner stops on button? 
+      // Actually user requested "Mohon Tunggu Link Pembayaran Sedang Dibuat" BEFORE payment exits.
+      // So while fetching, we show that.
+      // After fetching, we show popup.
+
+      setIsPaymentOpen(true)
 
       // @ts-ignore
       window.snap.pay(data.token, {
@@ -149,14 +197,16 @@ export default function ProductList() {
         onError: function (result: any) {
           console.log('error', result)
           alert("Pembayaran gagal!")
+          setIsPaymentOpen(false)
         },
         onClose: function () {
           console.log('closed')
+          // Auto-check on close
+          checkPaymentStatus()
         }
       })
     } catch (err: any) {
       alert(err.message)
-    } finally {
       setProcessingId(null)
     }
   }
@@ -199,6 +249,40 @@ export default function ProductList() {
           </select>
         </div>
       </div>
+
+      {/* Make Payment Check Popup */}
+      <AnimatePresence>
+        {isPaymentOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className="fixed z-50 bottom-4 left-4 right-4 md:left-auto md:right-8 md:bottom-8 md:top-auto bg-slate-800 border border-blue-500/50 p-6 rounded-2xl shadow-2xl max-w-sm w-full"
+          >
+            <h3 className="font-bold text-white mb-2 text-lg">Menunggu Pembayaran</h3>
+            <p className="text-slate-300 text-sm mb-4">
+              Silahkan selesaikan pembayaran di jendela yang muncul. Tekan tombol <strong>Check Status</strong> di bawah jika sudah selesai.
+            </p>
+            {/* Arrow */}
+            <div className="flex justify-center mb-4 text-blue-400 animate-bounce">
+              ⬇️
+            </div>
+            <button
+              onClick={checkPaymentStatus}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition"
+            >
+              <RefreshCw size={18} /> Check Status
+            </button>
+            <button
+              onClick={() => setIsPaymentOpen(false)}
+              className="w-full text-slate-400 text-sm mt-3 hover:text-white transition"
+            >
+              Tutup
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map(product => {
           const isPurchased = purchasedProductIds.has(product.id)
@@ -208,7 +292,7 @@ export default function ProductList() {
                 {product.thumbnail_url ? (
                   <img src={product.thumbnail_url} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-600">No Image</div>
+                  <div className="w-full h-64 flex items-center justify-center text-slate-600">No Image</div>
                 )}
               </div>
               <div className="p-6">
@@ -238,10 +322,15 @@ export default function ProductList() {
                     ) : (
                       <button
                         onClick={() => handleBuy(product)}
-                        disabled={processingId === product.id}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition disabled:opacity-50"
+                        disabled={processingId === product.id || isPaymentOpen}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition disabled:opacity-50 min-w-[100px] justify-center"
                       >
-                        {processingId === product.id ? 'Loading...' : 'Beli'}
+                        {processingId === product.id ? (
+                          <span className="flex items-center gap-1 scale-90">
+                            <Loader2 size={12} className="animate-spin" />
+                            Loading...
+                          </span>
+                        ) : 'Beli'}
                       </button>
                     )}
                   </div>

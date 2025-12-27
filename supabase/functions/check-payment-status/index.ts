@@ -12,123 +12,191 @@ serve(async (req) => {
   }
 
   try {
-    // This function allows manual trigger to force check Midtrans status 
-    // OR manual override if we trust the user context (secure this!)
-    // For now, let's just use it to "re-sync" status by order_id
-    
-    const { order_id } = await req.json()
-    
-    if (!order_id) throw new Error("Missing order_id")
+    const { transaction_id, order_id } = await req.json()
+    const targetId = transaction_id || order_id // flexible
+
+    if (!targetId) throw new Error("Missing transaction_id")
 
     // Initialize Supabase Admin Client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Check Midtrans API directly to see true status
+    // 1. Check Product Purchase Record
+    const { data: purchase, error: purchaseError } = await supabase
+      .from('product_purchases')
+      .select(`
+            status, 
+            product_id,
+            products (
+                title,
+                file_url
+            )
+        `)
+      .eq('transaction_id', targetId)
+      .maybeSingle()
+
+    // If purchase found and success, return immediately
+    if (purchase && purchase.status === 'success') {
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          data: {
+            status: 'success',
+            product_title: purchase.products?.title,
+            file_url: purchase.products?.file_url
+          }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    // 2. If not success (or not found yet?), check Midtrans Status
+    // This handles "Pending" -> "Success" transition if webhook hasn't fired yet
     const serverKey = Deno.env.get('MIDTRANS_SERVER_KEY')
     if (!serverKey) throw new Error('Server Key not found')
     const auth = btoa(serverKey + ':')
 
-    // Use sandbox/production URL based on env
-    // Default to sandbox for now as per previous context
-    const midtransUrl = `https://api.sandbox.midtrans.com/v2/${order_id}/status`
-    
+    // Midtrans API
+    const midtransUrl = `https://api.sandbox.midtrans.com/v2/${targetId}/status`
+    // Note: targetId is the UUID we sent as order_id to Midtrans
+
     const mtResponse = await fetch(midtransUrl, {
-        headers: {
-            'Authorization': `Basic ${auth}`,
-            'Accept': 'application/json'
-        }
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Accept': 'application/json'
+      }
     })
-    
+
     const mtData = await mtResponse.json()
-    console.log("Midtrans Status Data:", mtData)
-    
-    if (mtData.status_code === '404') {
-        return new Response(JSON.stringify({ error: "Order not found in Midtrans" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } })
-    }
+    console.log("Midtrans Status Check:", mtData.transaction_status)
 
     let status = 'pending'
-    const transaction_status = mtData.transaction_status
-    const fraud_status = mtData.fraud_status
-
-    if (transaction_status == 'capture') {
-      if (fraud_status == 'challenge') {
-        status = 'pending'
-      } else if (fraud_status == 'accept') {
-        status = 'success'
-      }
-    } else if (transaction_status == 'settlement') {
+    if (mtData.transaction_status == 'capture' && mtData.fraud_status == 'accept') {
       status = 'success'
-    } else if (transaction_status == 'cancel' || transaction_status == 'deny' || transaction_status == 'expire') {
+    } else if (mtData.transaction_status == 'settlement') {
+      status = 'success'
+    } else if (['cancel', 'deny', 'expire', 'failure'].includes(mtData.transaction_status)) {
       status = 'failed'
-    } else if (transaction_status == 'pending') {
-      status = 'pending'
     }
 
-    // Force update DB
-    const { data: transaction, error: txError } = await supabase
-      .from('transactions')
-      .update({ status: status, midtrans_id: order_id })
-      .eq('id', order_id)
-      .select()
-      .single()
+    if (status === 'success') {
+      // Update Transaction
+      const { data: transaction, error: txError } = await supabase
+        .from('transactions')
+        .update({ status: 'success', midtrans_id: targetId })
+        .eq('id', targetId)
+        .select()
+        .single()
 
-    if (txError) throw new Error(txError.message)
+      if (txError) console.error("Update Tx Error", txError)
 
-    // Run same commission logic if success
-     if (status === 'success' && transaction.type === 'registration') {
-        // ... (Copy logic from webhook or extract to shared function)
-        // For simplicity, let's just duplicate minimal logic or assume webhook might eventually hit.
-        // But to fix "stuck", we must apply effects.
-        
+      await supabase.from('product_purchases').update({ status: 'success' }).eq('transaction_id', targetId)
+
+      // --- Commission Logic (Failsafe) ---
+      if (transaction && transaction.type === 'product_purchase') {
+        // 1. Identify Agent (Referrer)
         let referrerId = null
+        let customerName = "Customer"
+
+        // Try to find purchaser details to get name for email
+        const { data: purchase } = await supabase.from('product_purchases').select('*').eq('transaction_id', targetId).single()
+        if (purchase) customerName = purchase.customer_name
+
+        // Determine Referrer
         if (transaction.user_id) {
-             const { data: profile } = await supabase.from('profiles').select('referred_by').eq('id', transaction.user_id).single()
-             if (profile?.referred_by) referrerId = profile.referred_by
-        }
-        
-        if (!referrerId && transaction.lead_id) {
-            const { data: lead } = await supabase.from('leads').select('referred_by_code').eq('id', transaction.lead_id).single()
-            if (lead?.referred_by_code) {
-                 const { data: referrer } = await supabase.from('profiles').select('id').eq('affiliate_code', lead.referred_by_code).single()
-                 if (referrer) referrerId = referrer.id
-            }
+          const { data: profile } = await supabase.from('profiles').select('referred_by').eq('id', transaction.user_id).single()
+          if (profile?.referred_by) referrerId = profile.referred_by
         }
 
+        // If not found via user_id (guest checkout), check lead_id
+        if (!referrerId && transaction.lead_id) {
+          const { data: lead } = await supabase.from('leads').select('referred_by_code').eq('id', transaction.lead_id).single()
+          if (lead?.referred_by_code) {
+            const { data: referrer } = await supabase.from('profiles').select('id').eq('affiliate_code', lead.referred_by_code).single()
+            if (referrer) referrerId = referrer.id
+          }
+          // Double check specific agent_code on purchase
+          if (purchase?.agent_code && !referrerId) {
+            const { data: referrer } = await supabase.from('profiles').select('id').eq('affiliate_code', purchase.agent_code).single()
+            if (referrer) referrerId = referrer.id
+          }
+        }
+
+        // 2. Apply Commission
         if (referrerId) {
-            const { data: existing } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
-            if (!existing) {
-                const commissionAmount = transaction.amount * 0.5 
-                const { error: commError } = await supabase.from('commissions').insert({
-                    agent_id: referrerId,
-                    source_transaction_id: transaction.id,
-                    amount: commissionAmount
-                })
-                if (!commError) {
-                    await supabase.rpc('increment_balance', { user_id: referrerId, amount: commissionAmount })
+          const { data: existing } = await supabase.from('commissions').select('id').eq('source_transaction_id', targetId).single()
+          if (!existing) {
+            // Get Product Price/Commission Rate (Assuming 50% for now or fetch product)
+            const { data: product } = await supabase.from('products').select('commission_rate').eq('id', purchase.product_id).single()
+            const rate = product?.commission_rate || 0.5
+            const commissionAmount = transaction.amount * rate
+
+            const { error: commError } = await supabase.from('commissions').insert({
+              agent_id: referrerId,
+              source_transaction_id: transaction.id,
+              amount: commissionAmount
+            })
+
+            if (!commError) {
+              await supabase.rpc('increment_balance', { user_id: referrerId, amount: commissionAmount })
+              console.log("Commission applied:", commissionAmount)
+            } else {
+              console.error("Commission Error", commError)
+            }
+          }
+        }
+
+        // 3. Trigger Email (via send-email function)
+        if (purchase) {
+          const { data: product } = await supabase.from('products').select('*').eq('id', purchase.product_id).single()
+          if (product) {
+            await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+              },
+              body: JSON.stringify({
+                to: [purchase.customer_email],
+                subject: `Akses Produk: ${product.title}`,
+                type: 'product_delivery',
+                data: {
+                  customerName: purchase.customer_name,
+                  productTitle: product.title,
+                  fileUrl: product.file_url // Direct link
                 }
-            }
+              })
+            })
+          }
         }
-        
-        // Generate affiliate code
-         if (transaction.user_id) {
-            const { data: profile } = await supabase.from('profiles').select('email, affiliate_code').eq('id', transaction.user_id).single()
-            if (profile && !profile.affiliate_code) {
-                 let code = profile.email.split('@')[0].toUpperCase()
-                 const { data: existing } = await supabase.from('profiles').select('id').eq('affiliate_code', code).single()
-                 if (existing) {
-                     code = code + Math.floor(Math.random() * 1000)
-                 }
-                 await supabase.from('profiles').update({ affiliate_code: code }).eq('id', transaction.user_id)
-            }
-        }
+      }
+
+      // Fetch product details again to get URL
+      const { data: updatedPurchase } = await supabase
+        .from('product_purchases')
+        .select(`status, products(title, file_url)`)
+        .eq('transaction_id', targetId)
+        .single()
+
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          data: {
+            status: 'success',
+            product_title: updatedPurchase?.products?.title,
+            file_url: updatedPurchase?.products?.file_url
+          }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
     }
 
     return new Response(
-      JSON.stringify({ status: 'ok', new_status: status, midtrans_data: mtData }),
+      JSON.stringify({ status: 'pending', midtrans_status: mtData.transaction_status }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
+
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
