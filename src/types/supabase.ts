@@ -124,6 +124,8 @@ export type Database = {
           phone: string | null
           referred_by: string | null
           role: Database["public"]["Enums"]["user_role"] | null
+          tier_id: string | null
+          total_sales: number | null
         }
         Insert: {
           affiliate_code?: string | null
@@ -135,6 +137,8 @@ export type Database = {
           phone?: string | null
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          tier_id?: string | null
+          total_sales?: number | null
         }
         Update: {
           affiliate_code?: string | null
@@ -146,6 +150,8 @@ export type Database = {
           phone?: string | null
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          tier_id?: string | null
+          total_sales?: number | null
         }
         Relationships: [
           {
@@ -369,17 +375,83 @@ export type Database = {
         }
         Relationships: []
       }
+      tiers: {
+        Row: {
+          id: string
+          tier_key: Database["public"]["Enums"]["tier_type"]
+          name: string
+          description: string | null
+          commission_rate: number
+          min_withdraw: number
+          upgrade_price: number
+          registration_price: number
+          upgrade_sales_threshold: number | null
+          override_commission_rate: number | null
+          priority_withdrawal: boolean
+          is_purchasable: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tier_key: Database["public"]["Enums"]["tier_type"]
+          name: string
+          description?: string | null
+          commission_rate: number
+          min_withdraw: number
+          upgrade_price?: number
+          registration_price?: number
+          upgrade_sales_threshold?: number | null
+          override_commission_rate?: number | null
+          priority_withdrawal?: boolean
+          is_purchasable?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tier_key?: Database["public"]["Enums"]["tier_type"]
+          name?: string
+          description?: string | null
+          commission_rate?: number
+          min_withdraw?: number
+          upgrade_price?: number
+          registration_price?: number
+          upgrade_sales_threshold?: number | null
+          override_commission_rate?: number | null
+          priority_withdrawal?: boolean
+          is_purchasable?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      set_registration_tier: {
+        Args: {
+          tier_id: string
+        }
+        Returns: void
+      }
+      increment_sales: {
+        Args: {
+          user_id: string
+        }
+        Returns: void
+      }
+      check_auto_upgrade: {
+        Args: {
+          check_user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       status_type: "pending" | "success" | "failed" | "cancelled"
-      transaction_type: "registration" | "product_purchase"
+      transaction_type: "registration" | "product_purchase" | "tier_upgrade"
       user_role: "agent" | "admin"
+      tier_type: "basic" | "pro" | "vip"
     }
     CompositeTypes: {
       [_ in never]: never

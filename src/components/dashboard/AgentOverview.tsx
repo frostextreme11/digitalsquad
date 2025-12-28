@@ -1,133 +1,204 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap } from 'lucide-react'
+import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap, Crown, Star, Shield, ArrowUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import StatsChart from './StatsChart'
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
 
+interface TierInfo {
+   id: string
+   tier_key: 'basic' | 'pro' | 'vip'
+   name: string
+   commission_rate: number
+   min_withdraw: number
+   upgrade_sales_threshold: number | null
+   priority_withdrawal: boolean
+}
+
 export default function AgentOverview({ profile }: { profile: any }) {
    const [stats, setStats] = useState({ visits: 0, leads: 0, sales: 0, commission: 0, academy: { total: 0, completed: 0, percentage: 0, currentBadge: 'Novice' } })
    const [chartData, setChartData] = useState<any[]>([])
    const [copied, setCopied] = useState(false)
+   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null)
+   const [nextTier, setNextTier] = useState<TierInfo | null>(null)
+   const [totalSales, setTotalSales] = useState(0)
+   const [loadingTier, setLoadingTier] = useState(true)
+
+   const DEFAULT_TIER: TierInfo = {
+      id: 'default',
+      tier_key: 'basic',
+      name: 'Basic Agent',
+      commission_rate: 0.30,
+      min_withdraw: 50000,
+      upgrade_sales_threshold: 5,
+      priority_withdrawal: false
+   }
 
    const affiliateLink = `${window.location.origin}/?ref=${profile.affiliate_code || 'generating...'}`
 
    useEffect(() => {
-      // Fetch stats
+      let isMounted = true
+
+      const fetchTierInfo = async () => {
+         try {
+            // Reset states before fetching
+            setNextTier(null)
+
+            // Get user's current tier and sales from DB to ensure fresh data
+            const { data: profileData } = await supabase
+               .from('profiles')
+               .select('tier_id, total_sales')
+               .eq('id', profile.id)
+               .maybeSingle()
+
+            if (!isMounted) return
+            setTotalSales(profileData?.total_sales || 0)
+
+            let currentTier: TierInfo | null = null
+
+            // 1. Try to fetch assigned tier if it exists
+            if (profileData?.tier_id) {
+               const { data: tier } = await supabase
+                  .from('tiers')
+                  .select('*')
+                  .eq('id', profileData.tier_id)
+                  .single()
+
+               if (tier) {
+                  currentTier = tier as TierInfo
+               }
+            }
+
+            // 2. Fallback: query 'basic' tier if no tier assigned or fetch failed
+            if (!currentTier) {
+               const { data: basicTier } = await supabase
+                  .from('tiers')
+                  .select('*')
+                  .eq('tier_key', 'basic')
+                  .single()
+
+               currentTier = basicTier ? (basicTier as TierInfo) : DEFAULT_TIER
+            }
+
+            // 3. Set tier info and calculate next tier
+            if (isMounted && currentTier) {
+               setTierInfo(currentTier)
+
+               // Get next tier for upgrade progress
+               const tierOrder: string[] = ['basic', 'pro', 'vip']
+               const currentKey = (currentTier.tier_key || 'basic') as string
+               const currentIndex = tierOrder.indexOf(currentKey)
+
+               if (currentIndex !== -1 && currentIndex < tierOrder.length - 1) {
+                  const { data: next } = await supabase
+                     .from('tiers')
+                     .select('*')
+                     .eq('tier_key', tierOrder[currentIndex + 1] as 'basic' | 'pro' | 'vip')
+                     .single()
+                  if (next && isMounted) setNextTier(next as TierInfo)
+               }
+            }
+         } catch (error) {
+            console.error("Error fetching tier info:", error)
+            if (isMounted) setTierInfo(DEFAULT_TIER)
+         } finally {
+            if (isMounted) setLoadingTier(false)
+         }
+      }
+
+      if (profile?.id) {
+         setLoadingTier(true)
+         fetchTierInfo()
+      } else {
+         setLoadingTier(false)
+      }
+
+      return () => { isMounted = false }
+   }, [profile?.id])
+
+   useEffect(() => {
       const fetchStats = async () => {
          if (!profile.affiliate_code) return
 
-         // Visits
-         const { count: visits } = await supabase.from('visits').select('*', { count: 'exact', head: true }).eq('affiliate_code', profile.affiliate_code)
+         const endDate = new Date()
+         const startDate = subMonths(endDate, 5)
 
-         // Leads (People referred by me who haven't paid or are just starting)
-         // Note: We count profiles referred by me.
-         const { count: leads } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true })
-            .eq('referred_by', profile.id)
+         try {
+            const [
+               { count: visits },
+               { count: pendingLeads },
+               { count: sales },
+               { data: allModules },
+               { data: userProgress },
+               { data: visitsData },
+               { data: leadsData },
+               { data: salesData }
+            ] = await Promise.all([
+               supabase.from('visits').select('*', { count: 'exact', head: true }).eq('affiliate_code', profile.affiliate_code),
+               supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('referred_by', profile.id).or('total_sales.eq.0,total_sales.is.null'),
+               supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id),
+               supabase.from('academy_posts').select('id, level_badge').eq('is_active', true).order('order_index', { ascending: true }),
+               supabase.from('academy_progress').select('post_id').eq('user_id', profile.id),
+               supabase.from('visits').select('created_at').eq('affiliate_code', profile.affiliate_code).gte('created_at', startDate.toISOString()),
+               supabase.from('profiles').select('created_at').eq('referred_by', profile.id).gte('created_at', startDate.toISOString()),
+               supabase.from('commissions').select('created_at').eq('agent_id', profile.id).gte('created_at', startDate.toISOString())
+            ])
 
-         // Sales (Commissions count)
-         const { count: sales } = await supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id)
+            // Academy Logic
+            const totalModules = allModules?.length || 0
+            const completedModules = userProgress?.length || 0
+            let currentBadge = 'Novice'
 
-         // Academy Stats
-         // Fetch all active posts to determine levels
-         const { data: allModules } = await supabase
-            .from('academy_posts')
-            .select('id, level_badge, order_index')
-            .eq('is_active', true)
-            .order('order_index', { ascending: true })
-
-         const { data: userProgress } = await supabase
-            .from('academy_progress')
-            .select('post_id')
-            .eq('user_id', profile.id)
-
-         const totalModules = allModules?.length || 0
-         const completedModules = userProgress?.length || 0
-
-         // Determine current badge
-         // Logic: Find the highest order_index module that is completed and has a badge
-         let currentBadge = 'Novice' // Default Starting Badge
-
-         if (allModules && userProgress) {
-            const completedPostIds = new Set(userProgress.map(p => p.post_id))
-
-            // Iterate through modules in order. 
-            // If a module is completed and has a badge, update currentBadge.
-            // This assumes modules are linear.
-            for (const module of allModules) {
-               if (completedPostIds.has(module.id)) {
-                  if (module.level_badge) {
+            if (allModules && userProgress) {
+               const completedPostIds = new Set(userProgress.map(p => p.post_id))
+               for (const module of allModules) {
+                  if (completedPostIds.has(module.id) && module.level_badge) {
                      currentBadge = module.level_badge
                   }
                }
             }
+
+            setStats(prev => ({
+               ...prev,
+               visits: visits || 0,
+               leads: pendingLeads || 0,
+               sales: sales || 0,
+               academy: {
+                  total: totalModules,
+                  completed: completedModules,
+                  percentage: totalModules ? Math.round((completedModules / totalModules) * 100) : 0,
+                  currentBadge
+               }
+            }))
+
+            // Chart Data Logic
+            const months = eachMonthOfInterval({ start: startDate, end: endDate })
+            const aggregatedData = months.map(month => {
+               const monthStart = startOfMonth(month)
+               const monthEnd = endOfMonth(month)
+               const filterByMonth = (items: any[]) => items?.filter(item => {
+                  const d = new Date(item.created_at)
+                  return d >= monthStart && d <= monthEnd
+               }).length || 0
+
+               return {
+                  name: format(month, 'MMM'),
+                  clicks: filterByMonth(visitsData || []),
+                  leads: filterByMonth(leadsData || []),
+                  sales: filterByMonth(salesData || [])
+               }
+            })
+
+            setChartData(aggregatedData)
+
+         } catch (error) {
+            console.error("Error fetching stats:", error)
          }
-
-         setStats(prev => ({
-            ...prev,
-            visits: visits || 0,
-            leads: (leads || 0) - (sales || 0), // Pending leads = Total referred - Sales
-            sales: sales || 0,
-            academy: {
-               total: totalModules || 0,
-               completed: completedModules || 0,
-               percentage: totalModules ? Math.round(((completedModules || 0) / totalModules) * 100) : 0,
-               currentBadge: currentBadge
-            }
-         }))
-
-         // Fetch Chart Data (Last 6 Months)
-         const endDate = new Date()
-         const startDate = subMonths(endDate, 5) // 6 months total including current
-
-         // 1. Visits by date
-         const { data: visitsData } = await supabase
-            .from('visits')
-            .select('created_at')
-            .eq('affiliate_code', profile.affiliate_code)
-            .gte('created_at', startDate.toISOString())
-
-         // 2. Leads (Registered) by date
-         const { data: leadsData } = await supabase
-            .from('profiles')
-            .select('created_at')
-            .eq('referred_by', profile.id)
-            .gte('created_at', startDate.toISOString())
-
-         // 3. Sales (Commissions) by date
-         const { data: salesData } = await supabase
-            .from('commissions')
-            .select('created_at')
-            .eq('agent_id', profile.id)
-            .gte('created_at', startDate.toISOString())
-
-         // Aggregate by month
-         const months = eachMonthOfInterval({ start: startDate, end: endDate })
-
-         const aggregatedData = months.map(month => {
-            const monthStart = startOfMonth(month)
-            const monthEnd = endOfMonth(month)
-
-            const filterByMonth = (items: any[]) => items?.filter(item => {
-               const d = new Date(item.created_at)
-               return d >= monthStart && d <= monthEnd
-            }).length || 0
-
-            return {
-               name: format(month, 'MMM'),
-               clicks: filterByMonth(visitsData || []),
-               leads: filterByMonth(leadsData || []), // This is "Total Signups" for chart
-               sales: filterByMonth(salesData || [])
-            }
-         })
-
-         setChartData(aggregatedData)
       }
+
       if (profile.id) fetchStats()
-   }, [profile])
+   }, [profile.id, profile.affiliate_code])
 
    const copyLink = () => {
       navigator.clipboard.writeText(affiliateLink)
@@ -135,14 +206,27 @@ export default function AgentOverview({ profile }: { profile: any }) {
       setTimeout(() => setCopied(false), 2000)
    }
 
+   const getTierIcon = (tierKey: string) => {
+      switch (tierKey) {
+         case 'basic': return <Star size={24} />
+         case 'pro': return <Crown size={24} />
+         case 'vip': return <Shield size={24} />
+         default: return <Star size={24} />
+      }
+   }
+
+   const getTierGradient = (tierKey: string) => {
+      switch (tierKey) {
+         case 'basic': return 'from-slate-700 to-slate-800 border-slate-600'
+         case 'pro': return 'from-blue-600 to-indigo-700 border-blue-500'
+         case 'vip': return 'from-yellow-500 to-amber-600 border-yellow-400'
+         default: return 'from-slate-700 to-slate-800 border-slate-600'
+      }
+   }
+
    const container = {
       hidden: { opacity: 0 },
-      show: {
-         opacity: 1,
-         transition: {
-            staggerChildren: 0.1
-         }
-      }
+      show: { opacity: 1, transition: { staggerChildren: 0.1 } }
    }
 
    const item = {
@@ -150,96 +234,214 @@ export default function AgentOverview({ profile }: { profile: any }) {
       show: { opacity: 1, y: 0 }
    }
 
+   // Use a derived state for rendering to guarantee we always show something
+   const activeTier = tierInfo || DEFAULT_TIER
+
+   const upgradeProgress = nextTier?.upgrade_sales_threshold
+      ? Math.min(100, (totalSales / nextTier.upgrade_sales_threshold) * 100)
+      : 0
+
    return (
-      <motion.div
-         variants={container}
-         initial="hidden"
-         animate="show"
-         className="space-y-8"
-      >
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <motion.div variants={item} className="bg-gradient-to-br from-blue-600 to-purple-700 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+
+         {/* Top Row: Balance & Affiliate */}
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <motion.div variants={item} className="bg-gradient-to-br from-blue-600 to-indigo-800 p-6 md:p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden flex flex-col justify-between h-full min-h-[200px]">
                <div className="relative z-10">
-                  <h2 className="text-xl font-medium mb-2 opacity-90">Saldo Dompet</h2>
-                  <div className="text-5xl font-bold tracking-tight">Rp {profile.balance?.toLocaleString()}</div>
-                  <div className="flex items-center justify-between mt-4">
-                     <p className="text-sm opacity-75">Siap ditarik kapan saja.</p>
-                     <Link to="/dashboard/wallet" className="bg-white text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-lg">
-                        Withdraw
+                  <h2 className="text-blue-100 font-medium mb-1 text-sm uppercase tracking-wider">Saldo Dompet</h2>
+                  <div className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Rp {profile.balance?.toLocaleString()}</div>
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                     <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs md:text-sm text-blue-50">
+                        Min. WD: <span className="font-semibold text-white">Rp {activeTier.min_withdraw?.toLocaleString() || '50.000'}</span>
+                     </div>
+                     <Link to="/dashboard/wallet" className="bg-white text-blue-700 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-lg flex items-center gap-2">
+                        Withdraw <ArrowUp size={16} />
                      </Link>
                   </div>
                </div>
-               <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-10 translate-y-10 pointer-events-none"></div>
+               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </motion.div>
 
-            <motion.div variants={item} className="bg-slate-900 p-8 rounded-3xl border border-slate-800 flex flex-col justify-center">
-               <label className="block text-slate-400 mb-3 text-sm font-medium uppercase tracking-wide">Link Affiliate Anda</label>
-               <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 font-mono text-sm truncate flex items-center">
-                     {affiliateLink}
+            <motion.div variants={item} className="bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 flex flex-col justify-center h-full min-h-[200px] relative overflow-hidden">
+               <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                     <div className="p-2 bg-slate-800 rounded-lg text-slate-400">
+                        <Copy size={18} />
+                     </div>
+                     <label className="text-slate-400 text-sm font-medium uppercase tracking-wide">Link Affiliate</label>
                   </div>
-                  <button onClick={copyLink} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 border border-slate-700 shrink-0">
-                     {copied ? <CheckCircle size={20} className="text-green-400" /> : <Copy size={20} />}
-                  </button>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                     <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 font-mono text-xs md:text-sm truncate select-all">
+                        {affiliateLink}
+                     </div>
+                     <button onClick={copyLink} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg font-medium shrink-0">
+                        {copied ? <CheckCircle size={20} /> : <span className="flex items-center gap-2">Salin</span>}
+                     </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+                     Bagikan link ini ke media sosial atau teman untuk mendapatkan komisi
+                     <span className="text-slate-300 font-medium"> {(activeTier.commission_rate || 0.3) * 100}%</span> dari setiap penjualan.
+                  </p>
                </div>
-               <p className="text-xs text-slate-500 mt-3">Bagikan link ini untuk mendapatkan komisi.</p>
+               <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl translate-y-10 translate-x-10 pointer-events-none"></div>
             </motion.div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Link to="/dashboard/academy" className="block">
-               <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition cursor-pointer h-full relative overflow-hidden">
-                  <div className="flex items-center gap-4 mb-2 relative z-10">
-                     <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><GraduationCap size={24} /></div>
-                     <div className="flex flex-col">
-                        <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider">Rank</h3>
-                        <span className="text-white font-bold text-lg leading-tight">{stats.academy.currentBadge}</span>
+         {/* Tier Card */}
+         {loadingTier ? (
+            <div className="bg-slate-900/50 rounded-3xl p-8 h-48 animate-pulse border border-slate-800"></div>
+         ) : (
+            <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.4 }}
+               className={`bg-gradient-to-br ${getTierGradient(activeTier.tier_key)} border p-1 rounded-3xl shadow-xl relative overflow-hidden`}>
+               <div className="bg-slate-950/20 backdrop-blur-sm rounded-[22px] p-6 h-full relative z-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                     {/* Tier Identity */}
+                     <div className="flex items-center gap-5">
+                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-inner ${activeTier.tier_key === 'vip' ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' : activeTier.tier_key === 'pro' ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                           {getTierIcon(activeTier.tier_key)}
+                        </div>
+                        <div>
+                           <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Current Membership</p>
+                           <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{activeTier.name}</h3>
+                           {activeTier.tier_key === 'vip' && <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded text-[10px] text-yellow-300 font-bold uppercase">Sultan Access</span>}
+                        </div>
+                     </div>
+
+                     {/* Benefits Grid */}
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                           <p className="text-white/50 text-[10px] uppercase">Komisi Penjualan</p>
+                           <p className="text-white font-bold text-xl">{(activeTier.commission_rate * 100).toFixed(0)}%</p>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                           <p className="text-white/50 text-[10px] uppercase">Auto Upgrade</p>
+                           <p className="text-white font-bold text-xl">{totalSales} Sales</p>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-3 col-span-2 flex items-center justify-between">
+                           <div>
+                              <p className="text-white/50 text-[10px] uppercase">Minimum Withdrawal</p>
+                              <p className="text-white font-bold">Rp {activeTier.min_withdraw.toLocaleString()}</p>
+                           </div>
+                           {activeTier.priority_withdrawal && <div className="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded">Priority</div>}
+                        </div>
+                     </div>
+
+                     {/* Next Tier Progress */}
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        {nextTier && nextTier.upgrade_sales_threshold ? (
+                           <div className="space-y-3">
+                              <div className="flex justify-between items-end">
+                                 <div>
+                                    <p className="text-white/60 text-xs mb-1">Next Tier: <span className="text-white font-semibold">{nextTier.name}</span></p>
+                                    <p className="text-xs text-white/40">Need {nextTier.upgrade_sales_threshold - totalSales} more sales</p>
+                                 </div>
+                                 <div className="text-right">
+                                    <p className="text-white font-bold">{Math.round(upgradeProgress)}%</p>
+                                 </div>
+                              </div>
+                              <div className="w-full bg-slate-900/50 h-2 rounded-full overflow-hidden">
+                                 <div className="bg-white h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${upgradeProgress}%` }}></div>
+                              </div>
+                           </div>
+                        ) : (
+                           <div className="flex items-center justify-center h-full text-center">
+                              <div>
+                                 <Crown className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                                 <p className="text-white font-bold">Max Tier Reached!</p>
+                                 <p className="text-white/50 text-xs">You are at the top of the food chain.</p>
+                              </div>
+                           </div>
+                        )}
                      </div>
                   </div>
+               </div>
+            </motion.div>
+         )}
+
+         {/* Stats Grid */}
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/dashboard/academy" className="block group">
+               <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition relative overflow-hidden h-full flex flex-col justify-between">
                   <div className="relative z-10">
-                     <p className="text-3xl font-bold text-white pl-1">{stats.academy.percentage}%</p>
-                     <div className="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
-                        <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${stats.academy.percentage}%` }}></div>
+                     <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400 group-hover:scale-110 transition-transform"><GraduationCap size={22} /></div>
+                        <div className="text-right">
+                           <p className="text-slate-500 text-xs uppercase font-bold">Academy Rank</p>
+                           <p className="text-white font-bold">{stats.academy.currentBadge}</p>
+                        </div>
+                     </div>
+                     <div className="mt-2">
+                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                           <span>Progress</span>
+                           <span>{stats.academy.percentage}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                           <div className="bg-blue-500 h-full rounded-full" style={{ width: `${stats.academy.percentage}%` }}></div>
+                        </div>
                      </div>
                   </div>
-                  {/* Background Decoration */}
-                  <div className="absolute -right-4 -bottom-4 text-slate-800/20 rotate-[-15deg]">
-                     <GraduationCap size={100} />
-                  </div>
                </motion.div>
             </Link>
-            <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-blue-500/30 transition">
-               <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400"><MousePointer size={24} /></div>
-                  <h3 className="text-slate-400 font-medium">Total Clicks</h3>
+
+            <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 relative overflow-hidden h-full flex flex-col justify-between">
+               <div className="flex justify-between items-start mb-2">
+                  <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><MousePointer size={22} /></div>
+                  <div className="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400">Total Visits</div>
                </div>
-               <p className="text-3xl font-bold text-white pl-1">{stats.visits}</p>
+               <div>
+                  <p className="text-3xl font-bold text-white">{stats.visits}</p>
+                  <p className="text-slate-500 text-xs mt-1">Unique link clicks</p>
+               </div>
             </motion.div>
 
-            <Link to="/dashboard/leads" className="block">
-               <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-purple-500/30 transition cursor-pointer h-full">
-                  <div className="flex items-center gap-4 mb-2">
-                     <div className="p-3 bg-purple-500/10 rounded-lg text-purple-400"><Users size={24} /></div>
-                     <h3 className="text-slate-400 font-medium">Total Leads</h3>
+            <Link to="/dashboard/leads" className="block group">
+               <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-purple-500/50 transition relative overflow-hidden h-full flex flex-col justify-between">
+                  <div className="flex justify-between items-start mb-2">
+                     <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 group-hover:scale-110 transition-transform"><Users size={22} /></div>
+                     <div className="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400">Pending Leads</div>
                   </div>
-                  <p className="text-3xl font-bold text-white pl-1">{stats.leads}</p>
-                  <p className="text-xs text-purple-400 mt-2">Klik untuk lihat detail</p>
+                  <div>
+                     <p className="text-3xl font-bold text-white">{stats.leads}</p>
+                     <p className="text-slate-500 text-xs mt-1">Potential customers</p>
+                  </div>
                </motion.div>
             </Link>
 
-            <motion.div variants={item} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/50 hover:border-green-500/30 transition">
-               <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 bg-green-500/10 rounded-lg text-green-400"><TrendingUp size={24} /></div>
-                  <h3 className="text-slate-400 font-medium">Total Sales</h3>
+            <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 relative overflow-hidden h-full flex flex-col justify-between">
+               <div className="flex justify-between items-start mb-2">
+                  <div className="p-3 bg-green-500/10 rounded-xl text-green-400"><TrendingUp size={22} /></div>
+                  <div className="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400">Total Sales</div>
                </div>
-               <p className="text-3xl font-bold text-white pl-1">{stats.sales}</p>
+               <div>
+                  <p className="text-3xl font-bold text-white">{stats.sales}</p>
+                  <p className="text-slate-500 text-xs mt-1">Successful products sold</p>
+               </div>
+               <div className="absolute right-0 bottom-0 opacity-10 transform translate-y-4 translate-x-4">
+                  <TrendingUp size={80} />
+               </div>
             </motion.div>
          </div>
 
-         <motion.div variants={item}>
-            <StatsChart data={chartData} />
+         {/* Chart Section */}
+         <motion.div variants={item} className="bg-slate-900 rounded-3xl border border-slate-800 p-6 md:p-8">
+            <div className="flex items-center justify-between mb-6">
+               <div>
+                  <h3 className="text-lg font-bold text-white">Performance Overview</h3>
+                  <p className="text-slate-400 text-sm">Traffic, Leads, and Sales last 6 months</p>
+               </div>
+               <div className="hidden md:flex gap-4">
+                  <div className="flex items-center gap-2 text-xs text-slate-400"><div className="w-3 h-3 bg-blue-500 rounded-full"></div> Leads</div>
+                  <div className="flex items-center gap-2 text-xs text-slate-400"><div className="w-3 h-3 bg-green-500 rounded-full"></div> Sales</div>
+               </div>
+            </div>
+            <div className="h-[300px] w-full">
+               <StatsChart data={chartData} mode="agent" />
+            </div>
          </motion.div>
       </motion.div>
    )
 }
-

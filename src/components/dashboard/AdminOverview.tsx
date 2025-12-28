@@ -204,7 +204,7 @@ export default function AdminOverview() {
             </div>
 
             <motion.div variants={item}>
-                <StatsChart data={chartData} currency={true} />
+                <StatsChart data={chartData} currency={true} mode="admin" />
             </motion.div>
         </motion.div>
     )

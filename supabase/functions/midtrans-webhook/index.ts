@@ -135,7 +135,38 @@ async function handleRegistrationSuccess(supabase: any, transaction: any) {
     const { data: existing } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
 
     if (!existing) {
-      const commissionAmount = transaction.amount * 0.5 // 50%
+      // Get referrer's tier for commission rate
+      let commissionRate = 0.30 // Default basic tier rate
+      let overrideRate = null
+      let uplineId = null
+
+      const { data: referrerProfile } = await supabase
+        .from('profiles')
+        .select('tier_id, referred_by')
+        .eq('id', referrerId)
+        .single()
+
+      if (referrerProfile?.tier_id) {
+        const { data: tier } = await supabase
+          .from('tiers')
+          .select('commission_rate, override_commission_rate')
+          .eq('id', referrerProfile.tier_id)
+          .single()
+
+        if (tier) {
+          commissionRate = tier.commission_rate
+          overrideRate = tier.override_commission_rate
+        }
+      }
+
+      // Get upline for VIP override commission (1 level only)
+      if (referrerProfile?.referred_by) {
+        uplineId = referrerProfile.referred_by
+      }
+
+      const commissionAmount = transaction.amount * commissionRate
+      console.log(`Creating commission: ${transaction.amount} * ${commissionRate} = ${commissionAmount}`)
+
       const { error: commError } = await supabase.from('commissions').insert({
         agent_id: referrerId,
         source_transaction_id: transaction.id,
@@ -145,8 +176,66 @@ async function handleRegistrationSuccess(supabase: any, transaction: any) {
       if (!commError) {
         console.log(`Commission created for agent ${referrerId}. Updating balance...`)
         await supabase.rpc('increment_balance', { user_id: referrerId, amount: commissionAmount })
+
+        // Increment sales count for referrer
+        await supabase.rpc('increment_sales', { user_id: referrerId })
+
+        // Check for auto-upgrade
+        await supabase.rpc('check_auto_upgrade', { check_user_id: referrerId })
       } else {
         console.error("Error creating commission:", commError)
+      }
+
+      // VIP Override Commission: Give 5% to upline if upline is VIP
+      if (uplineId) {
+        const { data: uplineProfile } = await supabase
+          .from('profiles')
+          .select('tier_id')
+          .eq('id', uplineId)
+          .single()
+
+        if (uplineProfile?.tier_id) {
+          const { data: uplineTier } = await supabase
+            .from('tiers')
+            .select('override_commission_rate, tier_key')
+            .eq('id', uplineProfile.tier_id)
+            .single()
+
+          if (uplineTier?.override_commission_rate && uplineTier.tier_key === 'vip') {
+            const overrideAmount = transaction.amount * uplineTier.override_commission_rate
+            console.log(`VIP Override: Giving ${overrideAmount} to upline ${uplineId}`)
+
+            await supabase.from('commissions').insert({
+              agent_id: uplineId,
+              source_transaction_id: transaction.id,
+              amount: overrideAmount
+            })
+
+            await supabase.rpc('increment_balance', { user_id: uplineId, amount: overrideAmount })
+          }
+        }
+      }
+    }
+  }
+
+  // Assign default tier to new user if not set
+  if (transaction.user_id) {
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('tier_id')
+      .eq('id', transaction.user_id)
+      .single()
+
+    if (!userProfile?.tier_id) {
+      const { data: basicTier } = await supabase
+        .from('tiers')
+        .select('id')
+        .eq('tier_key', 'basic')
+        .single()
+
+      if (basicTier) {
+        await supabase.from('profiles').update({ tier_id: basicTier.id }).eq('id', transaction.user_id)
+        console.log(`Assigned basic tier to user ${transaction.user_id}`)
       }
     }
   }
@@ -187,17 +276,33 @@ async function handleProductPurchaseSuccess(supabase: any, transaction: any, sup
 
   // 2. Commission Logic
   if (purchase.agent_code) {
-    const { data: agent } = await supabase.from('profiles').select('id, email').eq('affiliate_code', purchase.agent_code).single()
+    const { data: agent } = await supabase.from('profiles').select('id, email, tier_id, referred_by').eq('affiliate_code', purchase.agent_code).single()
 
     if (agent) {
       const { data: existingComm } = await supabase.from('commissions').select('id').eq('source_transaction_id', transaction.id).single()
 
       if (!existingComm) {
-        const { data: product } = await supabase.from('products').select('commission_rate').eq('id', purchase.product_id).single()
-        const rate = product?.commission_rate || 0.5
-        const commissionAmount = transaction.amount * rate
+        // Get agent's tier for commission rate
+        let commissionRate = 0.30 // Default basic
 
-        console.log(`Creating Commission: ${transaction.amount} * ${rate} = ${commissionAmount} for agent ${agent.email}`)
+        if (agent.tier_id) {
+          const { data: tier } = await supabase
+            .from('tiers')
+            .select('commission_rate')
+            .eq('id', agent.tier_id)
+            .single()
+
+          if (tier) commissionRate = tier.commission_rate
+        }
+
+        // Use tier rate OR product-specific rate if higher
+        const { data: product } = await supabase.from('products').select('commission_rate').eq('id', purchase.product_id).single()
+        const productRate = product?.commission_rate
+        const finalRate = productRate ? Math.max(commissionRate, productRate) : commissionRate
+
+        const commissionAmount = transaction.amount * finalRate
+
+        console.log(`Creating Commission: ${transaction.amount} * ${finalRate} = ${commissionAmount} for agent ${agent.email}`)
 
         const { error: commError } = await supabase.from('commissions').insert({
           agent_id: agent.id,
@@ -209,6 +314,42 @@ async function handleProductPurchaseSuccess(supabase: any, transaction: any, sup
           const { error: rpcError } = await supabase.rpc('increment_balance', { user_id: agent.id, amount: commissionAmount })
           if (rpcError) console.error("RPC Error:", rpcError)
           else console.log("Agent Balance Updated")
+
+          // Increment sales count
+          await supabase.rpc('increment_sales', { user_id: agent.id })
+
+          // Check for auto-upgrade
+          await supabase.rpc('check_auto_upgrade', { check_user_id: agent.id })
+
+          // VIP Override: Give 5% to upline if upline is VIP
+          if (agent.referred_by) {
+            const { data: uplineProfile } = await supabase
+              .from('profiles')
+              .select('tier_id')
+              .eq('id', agent.referred_by)
+              .single()
+
+            if (uplineProfile?.tier_id) {
+              const { data: uplineTier } = await supabase
+                .from('tiers')
+                .select('override_commission_rate, tier_key')
+                .eq('id', uplineProfile.tier_id)
+                .single()
+
+              if (uplineTier?.override_commission_rate && uplineTier.tier_key === 'vip') {
+                const overrideAmount = transaction.amount * uplineTier.override_commission_rate
+                console.log(`VIP Override: Giving ${overrideAmount} to upline ${agent.referred_by}`)
+
+                await supabase.from('commissions').insert({
+                  agent_id: agent.referred_by,
+                  source_transaction_id: transaction.id,
+                  amount: overrideAmount
+                })
+
+                await supabase.rpc('increment_balance', { user_id: agent.referred_by, amount: overrideAmount })
+              }
+            }
+          }
         } else {
           console.error("Commission Insert Error:", commError)
         }

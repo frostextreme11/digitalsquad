@@ -2,6 +2,7 @@ import Hero3D from '../components/landing/Hero3D'
 import Testimonials from '../components/landing/Testimonials'
 import HowItWorks from '../components/landing/HowItWorks'
 import ProductShowcase from '../components/landing/ProductShowcase'
+import TierPricing from '../components/landing/TierPricing'
 import IncomeCalculator from '../components/landing/IncomeCalculator'
 import Benefits from '../components/landing/Benefits'
 import FAQSection from '../components/landing/FAQSection'
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <Testimonials />
       <HowItWorks />
       <ProductShowcase />
+      <TierPricing />
       <IncomeCalculator />
       <Benefits />
       <FAQSection />

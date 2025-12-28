@@ -10,6 +10,7 @@ export default function Wallet() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [limit, setLimit] = useState(10)
+    const [tierInfo, setTierInfo] = useState<{ name: string, min_withdraw: number } | null>(null)
     const [formData, setFormData] = useState({
         amount: '',
         bank_name: '',
@@ -18,15 +19,36 @@ export default function Wallet() {
     })
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-    // Update fetchWalletData to also fetch saved accounts
+    // Fetch wallet data and tier info
     const fetchWalletData = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            // Get profile for balance
-            const { data: profile } = await supabase.from('profiles').select('balance').eq('id', user.id).single()
-            if (profile) setBalance(profile.balance || 0)
+            // Get profile for balance and tier
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('balance, tier_id')
+                .eq('id', user.id)
+                .single()
+
+            if (profile) {
+                setBalance(profile.balance || 0)
+
+                // Get tier info for min_withdraw
+                if (profile.tier_id) {
+                    const { data: tier } = await supabase
+                        .from('tiers')
+                        .select('name, min_withdraw')
+                        .eq('id', profile.tier_id)
+                        .single()
+
+                    if (tier) setTierInfo(tier)
+                } else {
+                    // Default to basic tier values
+                    setTierInfo({ name: 'SQUAD MEMBER', min_withdraw: 50000 })
+                }
+            }
 
             // Get withdrawal history
             const { data: withdrawalData } = await supabase
@@ -95,8 +117,10 @@ export default function Wallet() {
             return
         }
 
-        if (amount < 10000) {
-            setMessage({ type: 'error', text: 'Minimal penarikan adalah Rp 10.000.' })
+        // Use tier-based minimum withdrawal
+        const minWithdraw = tierInfo?.min_withdraw || 50000
+        if (amount < minWithdraw) {
+            setMessage({ type: 'error', text: `Minimal penarikan untuk tier ${tierInfo?.name || 'Anda'} adalah Rp ${minWithdraw.toLocaleString()}.` })
             setSubmitting(false)
             return
         }
@@ -270,7 +294,7 @@ export default function Wallet() {
                                 />
                                 <div className="flex flex-col gap-1 mt-2 text-xs text-slate-500">
                                     <div className="flex justify-between">
-                                        <span>Min: Rp 10.000</span>
+                                        <span>Min ({tierInfo?.name || 'Basic'}): Rp {(tierInfo?.min_withdraw || 50000).toLocaleString()}</span>
                                         <span className="cursor-pointer hover:text-blue-400" onClick={() => setFormData({ ...formData, amount: balance.toString() })}>Max: Rp {balance.toLocaleString()}</span>
                                     </div>
                                     {formData.amount && !isNaN(parseFloat(formData.amount)) && (

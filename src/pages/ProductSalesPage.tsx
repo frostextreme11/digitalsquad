@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 
 export default function ProductSalesPage() {
     const { productId } = useParams()

@@ -9,7 +9,7 @@ const faqs = [
     },
     {
         question: "Kapan saya bisa tarik tunai?",
-        answer: "Anda bisa melakukan penarikan (withdraw) kapan saja setelah saldo komisi mencapai batas minimum Rp 100.000. Proses pencairan dana biasanya memakan waktu 1x24 jam kerja ke rekening bank atau e-wallet Anda."
+        answer: "Anda bisa melakukan penarikan (withdraw) kapan saja setelah saldo komisi mencapai batas minimum. Proses pencairan dana biasanya memakan waktu 1x24 jam kerja ke rekening bank atau e-wallet Anda."
     },
     {
         question: "Apakah saya diajari cara jualannya?",
@@ -26,44 +26,44 @@ const faqs = [
 ]
 
 export default function FAQSection() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
-  return (
-    <section className="py-20 bg-slate-950">
-        <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-bold text-center text-white mb-12">Sering Ditanyakan</h2>
-            
-            <div className="space-y-4">
-                {faqs.map((faq, index) => (
-                    <div key={index} className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-                        <button 
-                            onClick={() => setActiveIndex(activeIndex === index ? null : index)}
-                            className="w-full flex justify-between items-center p-6 text-left focus:outline-none hover:bg-slate-800/50 transition"
-                        >
-                            <span className="text-white font-medium text-lg">{faq.question}</span>
-                            <span className="text-slate-400">
-                                {activeIndex === index ? <Minus size={20} /> : <Plus size={20} />}
-                            </span>
-                        </button>
-                        
-                        <AnimatePresence>
-                            {activeIndex === index && (
-                                <motion.div 
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <div className="p-6 pt-0 text-slate-400 leading-relaxed border-t border-slate-800/50">
-                                        {faq.answer}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                ))}
+    return (
+        <section className="py-20 bg-slate-950">
+            <div className="container mx-auto px-4 max-w-3xl">
+                <h2 className="text-3xl font-bold text-center text-white mb-12">Sering Ditanyakan</h2>
+
+                <div className="space-y-4">
+                    {faqs.map((faq, index) => (
+                        <div key={index} className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                            <button
+                                onClick={() => setActiveIndex(activeIndex === index ? null : index)}
+                                className="w-full flex justify-between items-center p-6 text-left focus:outline-none hover:bg-slate-800/50 transition"
+                            >
+                                <span className="text-white font-medium text-lg">{faq.question}</span>
+                                <span className="text-slate-400">
+                                    {activeIndex === index ? <Minus size={20} /> : <Plus size={20} />}
+                                </span>
+                            </button>
+
+                            <AnimatePresence>
+                                {activeIndex === index && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    >
+                                        <div className="p-6 pt-0 text-slate-400 leading-relaxed border-t border-slate-800/50">
+                                            {faq.answer}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-    </section>
-  )
+        </section>
+    )
 }

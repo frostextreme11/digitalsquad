@@ -1,31 +1,26 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { motion } from "framer-motion"
 
-export default function StatsChart({ data, currency = false }: { data: any[], currency?: boolean }) {
+
+interface StatsChartProps {
+  data: any[]
+  currency?: boolean
+  mode?: 'agent' | 'admin'
+}
+
+export default function StatsChart({ data, currency = false, mode = 'agent' }: StatsChartProps) {
   // Fallback if no data
   if (!data || data.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="h-[400px] w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center justify-center text-slate-500"
-      >
+      <div className="h-full w-full flex items-center justify-center text-slate-500 text-sm">
         Belum ada data statistik.
-      </motion.div>
+      </div>
     )
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="h-[400px] w-full bg-slate-900 border border-slate-800 rounded-3xl p-6"
-    >
-      <h3 className="text-xl font-bold text-white mb-6">Performance Overview</h3>
+    <div className="w-full h-full min-h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             {/* Agent Colors */}
             <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
@@ -62,6 +57,7 @@ export default function StatsChart({ data, currency = false }: { data: any[], cu
             fontSize={12}
             tickLine={false}
             axisLine={false}
+            dy={10}
           />
           <YAxis
             stroke="#64748b"
@@ -69,7 +65,7 @@ export default function StatsChart({ data, currency = false }: { data: any[], cu
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => currency ? `Rp ${value.toLocaleString()}` : `${value}`}
-            width={currency ? 80 : 40}
+            width={currency ? 80 : 30}
           />
           <Tooltip
             contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }}
@@ -77,18 +73,25 @@ export default function StatsChart({ data, currency = false }: { data: any[], cu
             formatter={(value: any) => currency ? `Rp ${Number(value).toLocaleString()}` : `${value}`}
           />
 
-          {/* Agent Areas */}
-          <Area type="monotone" dataKey="clicks" name="Clicks" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorClicks)" />
-          <Area type="monotone" dataKey="leads" name="Leads" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#colorLeads)" />
-          <Area type="monotone" dataKey="sales" name="Sales" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+          {/* Conditional Rendering based on Mode */}
+          {mode === 'agent' && (
+            <>
+              <Area type="monotone" dataKey="clicks" name="Clicks" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorClicks)" />
+              <Area type="monotone" dataKey="leads" name="Leads" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#colorLeads)" />
+              <Area type="monotone" dataKey="sales" name="Sales" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+            </>
+          )}
 
-          {/* Admin Areas */}
-          <Area type="monotone" dataKey="income" name="Income" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
-          <Area type="monotone" dataKey="withdrawal" name="Withdrawal" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorWithdrawal)" />
-          <Area type="monotone" dataKey="net" name="Net Profit" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorNet)" />
+          {mode === 'admin' && (
+            <>
+              <Area type="monotone" dataKey="income" name="Income" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
+              <Area type="monotone" dataKey="withdrawal" name="Withdrawal" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorWithdrawal)" />
+              <Area type="monotone" dataKey="net" name="Net Profit" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorNet)" />
+            </>
+          )}
 
         </AreaChart>
       </ResponsiveContainer>
-    </motion.div>
+    </div>
   )
 }
