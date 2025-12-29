@@ -31,13 +31,28 @@ export default function PaymentPage() {
   // Check Auth and Payment Status
   useEffect(() => {
     const init = async () => {
+
       // First check user validation
       await checkUser()
       // Then immediately check payment status if we found a pending one
       // We use a small timeout to let state settle, but effectively immediate
       setTimeout(() => {
-        handleCheckStatus(true)
+        // User requested to "disable buttons" aka show checking state during this auto-check
+        // So we set checkingPayment to true, and call handleCheckStatus(true) (silent alert, but UI is busy)
+        setCheckingPayment(true)
+        handleCheckStatus(true).finally(() => {
+          setCheckingPayment(false)
+        })
       }, 500)
+
+      //Extra check for payment status
+      setTimeout(async () => {
+        if (await handleCheckStatus(false)) {
+          if (window.location.pathname !== '/dashboard') {
+            navigate('/dashboard')
+          }
+        }
+      }, 4000)
     }
     init()
   }, [])

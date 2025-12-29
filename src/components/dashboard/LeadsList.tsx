@@ -18,25 +18,30 @@ export default function LeadsList() {
         if (!user) return
 
         try {
-            // Fetch filtered leads
-            // We want leads who haven't paid (total_sales is null or 0)
-            let query = supabase
-                .from('profiles')
-                .select('*', { count: 'exact' })
-                .eq('referred_by', user.id)
-                .or('total_sales.eq.0,total_sales.is.null')
-
-            if (search) {
-                query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)
-            }
-
-            const { data: leadsData, error, count } = await query
-                .range(page * limit, (page + 1) * limit - 1)
-                .order('created_at', { ascending: false })
+            // Use RPC to fetch leads (profiles who referred by me AND have NOT paid)
+            // @ts-ignore
+            const { data: leadsData, error } = await supabase
+                .rpc('get_agent_leads_paginated', {
+                    p_agent_id: user.id,
+                    search_query: search,
+                    page_limit: limit,
+                    page_offset: page * limit
+                })
 
             if (error) throw error
+
+            // Get total count
+            // @ts-ignore
+            const { data: countData, error: countError } = await supabase
+                .rpc('get_agent_leads_count', {
+                    p_agent_id: user.id,
+                    search_query: search
+                })
+
+            if (countError) throw countError
+
             setLeads(leadsData || [])
-            setTotalCount(count || 0)
+            setTotalCount(countData || 0)
 
         } catch (error) {
             console.error("Error fetching leads:", error)

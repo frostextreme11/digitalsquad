@@ -2,7 +2,7 @@ create or replace function increment_balance(user_id uuid, amount decimal)
 returns void as $$
 begin
   update public.profiles
-  set balance = balance + amount
+  set balance = coalesce(balance, 0) + amount
   where id = user_id;
 end;
 $$ language plpgsql security definer;

@@ -35,7 +35,27 @@ export default function AgentOverview({ profile }: { profile: any }) {
       priority_withdrawal: false
    }
 
-   const affiliateLink = `${window.location.origin}/?ref=${profile.affiliate_code || 'generating...'}`
+   const [localAffiliateCode, setLocalAffiliateCode] = useState(profile.affiliate_code)
+
+   useEffect(() => {
+      // If code is missing from prop, try to fetch it (self-healing for backfilled/newly generated codes)
+      if (!localAffiliateCode && profile.id) {
+         const fetchCode = async () => {
+            const { data } = await supabase
+               .from('profiles')
+               .select('affiliate_code')
+               .eq('id', profile.id)
+               .single()
+
+            if (data?.affiliate_code) {
+               setLocalAffiliateCode(data.affiliate_code)
+            }
+         }
+         fetchCode()
+      }
+   }, [profile.id, localAffiliateCode])
+
+   const affiliateLink = `${window.location.origin}/?ref=${localAffiliateCode || 'generating...'}`
 
    useEffect(() => {
       let isMounted = true
@@ -119,7 +139,8 @@ export default function AgentOverview({ profile }: { profile: any }) {
 
    useEffect(() => {
       const fetchStats = async () => {
-         if (!profile.affiliate_code) return
+         const codeToUse = localAffiliateCode || profile.affiliate_code
+         if (!codeToUse) return
 
          const endDate = new Date()
          const startDate = subMonths(endDate, 5)
@@ -127,7 +148,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
          try {
             const [
                { count: visits },
-               { count: pendingLeads },
+               { data: pendingLeads },
                { count: sales },
                { data: allModules },
                { data: userProgress },
@@ -135,12 +156,13 @@ export default function AgentOverview({ profile }: { profile: any }) {
                { data: leadsData },
                { data: salesData }
             ] = await Promise.all([
-               supabase.from('visits').select('*', { count: 'exact', head: true }).eq('affiliate_code', profile.affiliate_code),
-               supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('referred_by', profile.id).or('total_sales.eq.0,total_sales.is.null'),
+               supabase.from('visits').select('*', { count: 'exact', head: true }).eq('affiliate_code', codeToUse),
+               // @ts-ignore
+               supabase.rpc('get_agent_leads_count', { p_agent_id: profile.id, search_query: '' }),
                supabase.from('commissions').select('*', { count: 'exact', head: true }).eq('agent_id', profile.id),
                supabase.from('academy_posts').select('id, level_badge').eq('is_active', true).order('order_index', { ascending: true }),
                supabase.from('academy_progress').select('post_id').eq('user_id', profile.id),
-               supabase.from('visits').select('created_at').eq('affiliate_code', profile.affiliate_code).gte('created_at', startDate.toISOString()),
+               supabase.from('visits').select('created_at').eq('affiliate_code', codeToUse).gte('created_at', startDate.toISOString()),
                supabase.from('profiles').select('created_at').eq('referred_by', profile.id).gte('created_at', startDate.toISOString()),
                supabase.from('commissions').select('created_at').eq('agent_id', profile.id).gte('created_at', startDate.toISOString())
             ])
@@ -162,7 +184,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
             setStats(prev => ({
                ...prev,
                visits: visits || 0,
-               leads: pendingLeads || 0,
+               leads: Number(pendingLeads || 0),
                sales: sales || 0,
                academy: {
                   total: totalModules,
@@ -198,7 +220,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
       }
 
       if (profile.id) fetchStats()
-   }, [profile.id, profile.affiliate_code])
+   }, [profile.id, localAffiliateCode])
 
    const copyLink = () => {
       navigator.clipboard.writeText(affiliateLink)

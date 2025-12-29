@@ -390,7 +390,7 @@ export default function RegistrationForm() {
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Mohon tunggu sebentar, link pembelian sedang di buat :)</span>
+                  <span>Mohon tunggu sebentar, link pembayaran sedang di buat :)</span>
                 </div>
               ) : `Daftar ${currentTier.name} - Rp ${currentTier.price.toLocaleString('id-ID')}`}
             </button>
