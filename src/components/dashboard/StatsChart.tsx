@@ -85,7 +85,7 @@ export default function StatsChart({ data, currency = false, mode = 'agent' }: S
           {mode === 'admin' && (
             <>
               <Area type="monotone" dataKey="income" name="Income" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
-              <Area type="monotone" dataKey="withdrawal" name="Withdrawal" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorWithdrawal)" />
+              <Area type="monotone" dataKey="commission" name="Commission" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorWithdrawal)" />
               <Area type="monotone" dataKey="net" name="Net Profit" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorNet)" />
             </>
           )}

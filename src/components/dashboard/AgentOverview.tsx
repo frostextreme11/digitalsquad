@@ -433,19 +433,21 @@ export default function AgentOverview({ profile }: { profile: any }) {
                </motion.div>
             </Link>
 
-            <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 relative overflow-hidden h-full flex flex-col justify-between">
-               <div className="flex justify-between items-start mb-2">
-                  <div className="p-3 bg-green-500/10 rounded-xl text-green-400"><TrendingUp size={22} /></div>
-                  <div className="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400">Total Sales</div>
-               </div>
-               <div>
-                  <p className="text-3xl font-bold text-white">{stats.sales}</p>
-                  <p className="text-slate-500 text-xs mt-1">Successful products sold</p>
-               </div>
-               <div className="absolute right-0 bottom-0 opacity-10 transform translate-y-4 translate-x-4">
-                  <TrendingUp size={80} />
-               </div>
-            </motion.div>
+            <Link to="/dashboard/sales" className="block group">
+               <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-green-500/50 transition relative overflow-hidden h-full flex flex-col justify-between">
+                  <div className="flex justify-between items-start mb-2">
+                     <div className="p-3 bg-green-500/10 rounded-xl text-green-400 group-hover:scale-110 transition-transform"><TrendingUp size={22} /></div>
+                     <div className="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400">Total Sales</div>
+                  </div>
+                  <div>
+                     <p className="text-3xl font-bold text-white">{stats.sales}</p>
+                     <p className="text-slate-500 text-xs mt-1">Successful products sold</p>
+                  </div>
+                  <div className="absolute right-0 bottom-0 opacity-10 transform translate-y-4 translate-x-4">
+                     <TrendingUp size={80} />
+                  </div>
+               </motion.div>
+            </Link>
          </div>
 
          {/* Chart Section */}

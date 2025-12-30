@@ -38,6 +38,7 @@ export default function AdminOverview() {
             }
 
             // 3. Income Split (Affiliate vs Organic)
+            // Removed .eq('type', 'registration') to include all revenue (Omset)
             const { data: transactions } = await supabase
                 .from('transactions')
                 .select(`
@@ -46,7 +47,17 @@ export default function AdminOverview() {
                 profiles!transactions_user_id_fkey (referred_by)
             `)
                 .eq('status', 'success')
-                .eq('type', 'registration')
+
+            // 4. Commissions (For Net Profit Calculation)
+            const { data: commissions } = await supabase
+                .from('commissions')
+                .select('amount, created_at')
+
+            // 5. Withdrawals (Keep for display, but not for Net Profit)
+            const { data: withdrawals } = await supabase
+                .from('withdrawals')
+                .select('amount, created_at')
+                .eq('status', 'success')
 
             let incomeAffiliate = 0
             let incomeOrganic = 0
@@ -61,20 +72,21 @@ export default function AdminOverview() {
                 })
             }
 
+            // Console log for debugging
+            console.log('AdminOverview Fetch:', {
+                users,
+                organicLeadsCount,
+                transactionsCount: transactions?.length,
+                commissionsCount: commissions?.length,
+                withdrawalsCount: withdrawals?.length
+            })
+
             const incomeTotal = incomeAffiliate + incomeOrganic
-
-            // 4. Total Withdrawal
-            const { data: withdrawals } = await supabase
-                .from('withdrawals')
-                .select('amount, created_at')
-                .eq('status', 'success')
-
+            const totalCommission = commissions?.reduce((sum, c) => sum + c.amount, 0) || 0
             const totalWithdrawal = withdrawals?.reduce((sum, w) => sum + (w.amount + 2500), 0) || 0
 
-            // 5. Net Profit (Omset - Withdrawal)
-            // Note: Withdrawals here are Net Payouts. Ideally we might want to subtract (Withdrawal + Fee).
-            // But prompt asks strictly "omset - withdrawal".
-            const netProfit = incomeTotal - totalWithdrawal
+            // Net Profit = Total Income - Total Commissions
+            const netProfit = incomeTotal - totalCommission
 
             setStats({
                 users: users || 0,
@@ -88,7 +100,7 @@ export default function AdminOverview() {
 
             // 6. Chart Data
             const endDate = new Date()
-            const startDate = subMonths(endDate, 5)
+            const startDate = subMonths(endDate, 5) // Last 6 months
             const months = eachMonthOfInterval({ start: startDate, end: endDate })
 
             const aggregatedData = months.map(month => {
@@ -101,16 +113,21 @@ export default function AdminOverview() {
                 })
 
                 const monthTransactions = filterByMonth(transactions || [])
+                const monthCommissions = filterByMonth(commissions || [])
                 const monthWithdrawals = filterByMonth(withdrawals || [])
 
                 const monthIncome = monthTransactions.reduce((sum, t) => sum + t.amount, 0)
-                const monthWithdrawalTotal = monthWithdrawals.reduce((sum, w) => sum + (w.amount + 2500), 0)
+                const monthCommissionTotal = monthCommissions.reduce((sum, c) => sum + c.amount, 0)
+                // We'll still pass withdrawal for the chart if we want, or we can repurpose it.
+                // Let's pass 'commission' as a new field and 'withdrawal' as well.
+                // But for the 'Net' line in chart, we use Income - Commission.
 
                 return {
                     name: format(month, 'MMM'),
                     income: monthIncome,
-                    withdrawal: monthWithdrawalTotal,
-                    net: monthIncome - monthWithdrawalTotal
+                    commission: monthCommissionTotal,
+                    withdrawal: monthWithdrawals.reduce((sum, w) => sum + (w.amount + 2500), 0),
+                    net: monthIncome - monthCommissionTotal
                 }
             })
 
@@ -194,16 +211,16 @@ export default function AdminOverview() {
                 <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 lg:col-span-2">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><TrendingUp size={20} /></div>
-                        <h3 className="text-slate-400 text-sm font-medium">Net Profit (Omset - Withdrawal)</h3>
+                        <h3 className="text-slate-400 text-sm font-medium">Net Profit</h3>
                     </div>
                     <p className="text-3xl font-bold text-emerald-400">Rp {stats.netProfit.toLocaleString()}</p>
                     <p className="text-slate-500 text-xs mt-2">
-                        Profit bersih dari selisih total pemasukan dan total penarikan affiliate.
+                        Profit bersih dari selisih total pemasukan dan total komisi affiliate.
                     </p>
                 </motion.div>
             </div>
 
-            <motion.div variants={item}>
+            <motion.div variants={item} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 h-[400px]">
                 <StatsChart data={chartData} currency={true} mode="admin" />
             </motion.div>
         </motion.div>
