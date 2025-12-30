@@ -52,7 +52,7 @@ export default function PaymentPage() {
             navigate('/dashboard')
           }
         }
-      }, 4000)
+      }, 3000)
     }
     init()
   }, [])
