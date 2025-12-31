@@ -18,8 +18,7 @@ returns table (
 ) as $$
 begin
   return query
-  with combined_leads as (
-    -- 1. From Profiles (Registered Users)
+  with organic_profiles as (
     select 
       p.id,
       p.email,
@@ -33,26 +32,27 @@ begin
       where t.user_id = p.id 
       and t.status = 'success'
     )
-    union all
-    -- 2. From Leads Table (Pre-registration)
-    select 
+    and (search_query = '' or p.email ilike '%' || search_query || '%' or p.full_name ilike '%' || search_query || '%')
+  ),
+  organic_leads as (
+    select distinct on (l.email)
       l.id,
       l.email,
       l.full_name,
       l.phone,
       l.created_at
     from leads l
-    where l.referred_by_code is null 
-       or l.referred_by_code = ''
+    where (l.referred_by_code is null or l.referred_by_code = '')
+    and not exists (
+      select 1 from profiles p where p.email = l.email
+    )
+    and (search_query = '' or l.email ilike '%' || search_query || '%' or l.full_name ilike '%' || search_query || '%')
+    order by l.email, l.created_at desc
   )
-  select *
-  from combined_leads cl
-  where (
-    search_query = '' 
-    or cl.email ilike '%' || search_query || '%' 
-    or cl.full_name ilike '%' || search_query || '%'
-  )
-  order by cl.created_at desc
+  select * from organic_profiles
+  union all
+  select * from organic_leads
+  order by created_at desc
   limit page_limit
   offset page_offset;
 end;
@@ -65,10 +65,9 @@ returns integer as $$
 declare
   total int;
 begin
-  with combined_leads as (
+  with organic_profiles as (
     select 
-      p.email,
-      p.full_name
+      p.email
     from profiles p
     where p.referred_by is null
     and not exists (
@@ -76,22 +75,25 @@ begin
       where t.user_id = p.id 
       and t.status = 'success'
     )
-    union all
+    and (search_query = '' or p.email ilike '%' || search_query || '%' or p.full_name ilike '%' || search_query || '%')
+  ),
+  organic_leads as (
     select 
-      l.email,
-      l.full_name
+      l.email
     from leads l
-    where l.referred_by_code is null 
-       or l.referred_by_code = ''
+    where (l.referred_by_code is null or l.referred_by_code = '')
+    and not exists (
+      select 1 from profiles p where p.email = l.email
+    )
+    and (search_query = '' or l.email ilike '%' || search_query || '%' or l.full_name ilike '%' || search_query || '%')
   )
-  select count(*)
+  select count(distinct email)
   into total
-  from combined_leads cl
-  where (
-    search_query = '' 
-    or cl.email ilike '%' || search_query || '%' 
-    or cl.full_name ilike '%' || search_query || '%'
-  );
+  from (
+    select email from organic_profiles
+    union all
+    select email from organic_leads
+  ) combined;
   
   return total;
 end;
