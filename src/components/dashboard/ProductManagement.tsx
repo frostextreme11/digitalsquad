@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Search, ChevronLeft, ChevronRight, Filter, Plus, Edit, Trash, Image as ImageIcon, X, Check, Loader2 } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Filter, Plus, Edit, Trash, Image as ImageIcon, X, Check, Loader2, Share2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function ProductManagement() {
@@ -23,6 +23,7 @@ export default function ProductManagement() {
     is_active: true
   })
   const [saving, setSaving] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -59,6 +60,13 @@ export default function ProductManagement() {
     }, 500)
     return () => clearTimeout(timer)
   }, [search])
+
+  const handleCopyLink = (id: string) => {
+    const link = `${window.location.origin}/buy/${id}`
+    navigator.clipboard.writeText(link)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   const totalPages = Math.ceil(totalCount / limit)
 
@@ -223,6 +231,13 @@ export default function ProductManagement() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleCopyLink(product.id)}
+                          className="p-2 hover:bg-purple-500/10 text-slate-400 hover:text-purple-400 rounded-lg transition"
+                          title="Copy Share Link"
+                        >
+                          {copiedId === product.id ? <Check size={18} /> : <Share2 size={18} />}
+                        </button>
                         <button onClick={() => handleOpenModal(product)} className="p-2 hover:bg-blue-500/10 text-slate-400 hover:text-blue-400 rounded-lg transition">
                           <Edit size={18} />
                         </button>
