@@ -19,8 +19,7 @@ export default function LeadsList() {
 
         try {
             // Use RPC to fetch leads (profiles who referred by me AND have NOT paid)
-            // @ts-ignore
-            const { data: leadsData, error } = await supabase
+            const { data: leadsData, error } = await (supabase as any)
                 .rpc('get_agent_leads_paginated', {
                     p_agent_id: user.id,
                     search_query: search,
@@ -31,8 +30,7 @@ export default function LeadsList() {
             if (error) throw error
 
             // Get total count
-            // @ts-ignore
-            const { data: countData, error: countError } = await supabase
+            const { data: countData, error: countError } = await (supabase as any)
                 .rpc('get_agent_leads_count', {
                     p_agent_id: user.id,
                     search_query: search
@@ -40,8 +38,8 @@ export default function LeadsList() {
 
             if (countError) throw countError
 
-            setLeads(leadsData || [])
-            setTotalCount(countData || 0)
+            setLeads((leadsData as any[]) || [])
+            setTotalCount((countData as number) || 0)
 
         } catch (error) {
             console.error("Error fetching leads:", error)
@@ -175,4 +173,3 @@ export default function LeadsList() {
         </div>
     )
 }
-

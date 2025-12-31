@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
-import { TrendingUp, UserPlus, ShoppingBag, Filter, Calendar, Search, ChevronDown, DollarSign } from 'lucide-react'
+import { TrendingUp, UserPlus, ShoppingBag, Filter, Calendar, Search, ChevronDown } from 'lucide-react'
 
 interface SalesPageProps {
     role?: string

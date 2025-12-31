@@ -16,13 +16,15 @@ export default function RegistrationForm() {
     password: ''
   })
 
+  // Dynamic Tier Pricing State
+  // Initialize with null/loading or safe fallback to prevent crashes, but rely on effect
+  const [tierPricing, setTierPricing] = useState<Record<string, any>>({
+    basic: { name: 'SQUAD MEMBER', price: 50000, commission: '...' },
+    pro: { name: 'SQUAD ELITE', price: 150000, commission: '...' }
+  })
+
   // Countdown Timer State
   const [timeLeft, setTimeLeft] = useState({ h: 2, m: 59, s: 59 })
-
-  const tierPricing = {
-    basic: { name: 'SQUAD MEMBER', price: 50000, commission: '30%' },
-    pro: { name: 'SQUAD ELITE', price: 150000, commission: '50%' }
-  }
 
   // Load Snap Script & Tiers & Timer
   useEffect(() => {
@@ -42,15 +44,41 @@ export default function RegistrationForm() {
       sessionStorage.removeItem('selectedTier')
     }
 
-    // Fetch Tier IDs
+    // Fetch Tier IDs and Pricing
     const fetchTiers = async () => {
-      const { data } = await supabase.from('tiers').select('id, tier_key')
-      if (data) {
-        const mapping: Record<string, string> = {}
+      const { data } = await supabase.from('tiers').select('id, tier_key, registration_price, name, commission_rate, description')
+      if (data && data.length > 0) {
+        setTierIds(prev => {
+          const mapping: Record<string, string> = { ...prev };
+          data.forEach((tier: any) => {
+            if (tier.tier_key) mapping[tier.tier_key] = tier.id;
+          });
+          return mapping;
+        });
+
+        // Initialize empty pricing to ensure we overwrite completely
+        const newPricing: Record<string, any> = {};
+
         data.forEach((tier: any) => {
-          mapping[tier.tier_key] = tier.id
+          if (tier.tier_key === 'basic' || tier.tier_key === 'pro') {
+            const commRate = Number(tier.commission_rate || (tier.tier_key === 'basic' ? 0.5 : 0.7));
+            newPricing[tier.tier_key] = {
+              name: tier.name,
+              price: tier.registration_price,
+              commission: `${Math.round(commRate * 100)}%`
+            }
+          }
         })
-        setTierIds(mapping)
+
+        // If data was fetched but keys missing for some reason
+        if (!newPricing.basic) {
+          newPricing.basic = { name: 'SQUAD MEMBER', price: 50000, commission: '50%' }
+        }
+        if (!newPricing.pro) {
+          newPricing.pro = { name: 'SQUAD ELITE', price: 150000, commission: '70%' }
+        }
+
+        setTierPricing(newPricing);
       }
     }
     fetchTiers()
@@ -161,7 +189,8 @@ export default function RegistrationForm() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Calculate amount based on selected tier
-      const paymentAmount = tierPricing[selectedTier].price
+      // Safety: use fallback or optional chaining
+      const price = tierPricing[selectedTier]?.price || 50000
 
       // Call Edge Function
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`;
@@ -173,7 +202,7 @@ export default function RegistrationForm() {
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({
-          amount: paymentAmount,
+          amount: price,
           userId: authData.user.id,
           type: 'registration',
           referralCode: referredByCode,
@@ -229,7 +258,8 @@ export default function RegistrationForm() {
     }
   }
 
-  const currentTier = tierPricing[selectedTier]
+  // Safe fallback
+  const currentTier = tierPricing[selectedTier] || tierPricing.basic;
 
   return (
     <section id="register" className="py-20 bg-slate-950 relative">
@@ -299,8 +329,8 @@ export default function RegistrationForm() {
                 <span className="font-bold text-white text-sm">Basic</span>
                 {selectedTier === 'basic' && <Check size={16} className="text-green-400 ml-auto" />}
               </div>
-              <p className="text-lg font-bold text-white">Rp 50.000</p>
-              <p className="text-xs text-slate-400">Komisi 30%</p>
+              <p className="text-lg font-bold text-white">Rp {(tierPricing.basic?.price || 0).toLocaleString('id-ID')}</p>
+              <p className="text-xs text-slate-400">Komisi {tierPricing.basic?.commission || '...'}</p>
             </button>
 
             <button
@@ -319,8 +349,8 @@ export default function RegistrationForm() {
                 <span className="font-bold text-white text-sm">Pro</span>
                 {selectedTier === 'pro' && <Check size={16} className="text-green-400 ml-auto" />}
               </div>
-              <p className="text-lg font-bold text-white">Rp 150.000</p>
-              <p className="text-xs text-blue-400">Komisi 50%</p>
+              <p className="text-lg font-bold text-white">Rp {(tierPricing.pro?.price || 0).toLocaleString('id-ID')}</p>
+              <p className="text-xs text-blue-400">Komisi {tierPricing.pro?.commission || '...'}</p>
             </button>
           </div>
 
@@ -328,7 +358,7 @@ export default function RegistrationForm() {
           <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-4 mb-6 text-center">
             <p className="text-slate-400 text-sm mb-1">Total yang harus dibayar:</p>
             <p className="text-3xl font-black text-white">
-              Rp {currentTier.price.toLocaleString('id-ID')}
+              Rp {(currentTier.price || 0).toLocaleString('id-ID')}
             </p>
             <p className="text-xs text-slate-400 mt-1">
               {currentTier.name} • Komisi {currentTier.commission} per penjualan
@@ -392,7 +422,7 @@ export default function RegistrationForm() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Mohon tunggu sebentar, link pembayaran sedang di buat :)</span>
                 </div>
-              ) : `Daftar ${currentTier.name} - Rp ${currentTier.price.toLocaleString('id-ID')}`}
+              ) : `Daftar ${currentTier.name} - Rp ${(currentTier.price || 0).toLocaleString('id-ID')}`}
             </button>
             <p className="text-xs text-slate-500 text-center mt-4">
               Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, animate } from 'framer-motion'
+import { supabase } from '../../lib/supabase'
 
 const Counter = ({ from, to }: { from: number, to: number }) => {
   const nodeRef = useRef<HTMLSpanElement>(null);
@@ -8,10 +9,13 @@ const Counter = ({ from, to }: { from: number, to: number }) => {
     const node = nodeRef.current;
     if (!node) return;
 
-    const controls = animate(from, to, {
+    const safeTo = isNaN(to) ? 0 : to;
+    const safeFrom = isNaN(from) ? 0 : from;
+
+    const controls = animate(safeFrom, safeTo, {
       duration: 1.5,
       onUpdate(value) {
-        node.textContent = Math.floor(value).toLocaleString('id-ID');
+        if (node) node.textContent = Math.floor(value).toLocaleString('id-ID');
       }
     });
 
@@ -24,33 +28,76 @@ const Counter = ({ from, to }: { from: number, to: number }) => {
 export default function IncomeCalculator() {
   const [invites, setInvites] = useState(10)
   const [sales, setSales] = useState(5)
+  // Ensure we default to 'basic' if 'pro' is risky, 
+  // but we initialize 'pro' because we provide default config.
   const [selectedTier, setSelectedTier] = useState<'basic' | 'pro'>('pro')
 
-  // Tier-based commission rates
-  const tierConfig = {
+  const [tierConfig, setTierConfig] = useState<Record<string, any>>({
     basic: {
       name: 'Basic',
-      inviteCommission: 15000, // 30% of 50000
-      productCommission: 25000, // 30% (approx)
+      inviteCommission: 25000,
+      productCommission: 41666,
       registrationCost: 50000,
-      color: 'slate'
+      color: 'slate',
+      commissionRate: 0.5
     },
     pro: {
       name: 'Pro',
-      inviteCommission: 25000, // 50% of 50000
-      productCommission: 41667, // 50% (approx)
+      inviteCommission: 35000,
+      productCommission: 58333,
       registrationCost: 150000,
-      color: 'blue'
+      color: 'blue',
+      commissionRate: 0.7
     }
-  }
+  })
 
-  const config = tierConfig[selectedTier]
-  const totalIncome = (invites * config.inviteCommission) + (sales * config.productCommission)
-  const netProfit = totalIncome - config.registrationCost
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const { data, error } = await supabase
+        .from('tiers')
+        .select('*')
+        .in('tier_key', ['basic', 'pro'])
+
+      if (data && !error && data.length > 0) {
+        setTierConfig(prevConfig => {
+          const newConfig: Record<string, any> = { ...prevConfig }
+          const avgProductPrice = 83333; // Derived from original logic
+
+          data.forEach(t => {
+            if (t.tier_key) {
+              // Use hard fallback if DB returns 0 or null for registration_price
+              const regCost = Number(t.registration_price) || 50000;
+              const commissionRate = Number(t.commission_rate) || (t.tier_key === 'basic' ? 0.5 : 0.7);
+
+              newConfig[t.tier_key] = {
+                name: t.tier_key === 'basic' ? 'Basic' : 'Pro',
+                inviteCommission: commissionRate * 50000,
+                productCommission: commissionRate * avgProductPrice,
+                registrationCost: regCost,
+                color: t.tier_key === 'pro' ? 'blue' : 'slate',
+                commissionRate: commissionRate
+              }
+            }
+          })
+          return newConfig
+        })
+      }
+    }
+    fetchTiers()
+  }, [])
+
+  // Safe fallback
+  const config = tierConfig[selectedTier] || tierConfig.basic;
+
+  const totalIncome = ((invites || 0) * (config.inviteCommission || 0)) + ((sales || 0) * (config.productCommission || 0))
+  const netProfit = totalIncome - (config.registrationCost || 0)
 
   // Calculate comparison
-  const basicIncome = (invites * tierConfig.basic.inviteCommission) + (sales * tierConfig.basic.productCommission)
-  const proIncome = (invites * tierConfig.pro.inviteCommission) + (sales * tierConfig.pro.productCommission)
+  const basicConfig = tierConfig.basic || config; // fallback to current if basic missing (unlikely)
+  const proConfig = tierConfig.pro || config; // fallback
+
+  const basicIncome = ((invites || 0) * (basicConfig.inviteCommission || 0)) + ((sales || 0) * (basicConfig.productCommission || 0))
+  const proIncome = ((invites || 0) * (proConfig.inviteCommission || 0)) + ((sales || 0) * (proConfig.productCommission || 0))
   const proDifference = proIncome - basicIncome
 
   return (
@@ -80,20 +127,20 @@ export default function IncomeCalculator() {
               <button
                 onClick={() => setSelectedTier('basic')}
                 className={`px-6 py-2 rounded-lg font-medium transition ${selectedTier === 'basic'
-                    ? 'bg-slate-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                  ? 'bg-slate-600 text-white'
+                  : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Basic (30%)
+                Basic ({Math.round((tierConfig.basic?.commissionRate || 0.5) * 100)}%)
               </button>
               <button
                 onClick={() => setSelectedTier('pro')}
                 className={`px-6 py-2 rounded-lg font-medium transition ${selectedTier === 'pro'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Pro (50%)
+                Pro ({Math.round((tierConfig.pro?.commissionRate || 0.7) * 100)}%)
               </button>
             </div>
           </div>
@@ -108,13 +155,13 @@ export default function IncomeCalculator() {
                 </label>
                 <input
                   type="range"
-                  min="0" max="100"
+                  min="0" max="1000"
                   value={invites}
-                  onChange={(e) => setInvites(parseInt(e.target.value))}
+                  onChange={(e) => setInvites(parseInt(e.target.value) || 0)}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  Komisi: Rp {config.inviteCommission.toLocaleString('id-ID')} / invite ({selectedTier === 'pro' ? '50%' : '30%'})
+                  Komisi: Rp {(config.inviteCommission || 0).toLocaleString('id-ID')} / invite ({Math.round((config.commissionRate || 0) * 100)}%)
                 </p>
               </div>
 
@@ -125,13 +172,13 @@ export default function IncomeCalculator() {
                 </label>
                 <input
                   type="range"
-                  min="0" max="100"
+                  min="0" max="1000"
                   value={sales}
-                  onChange={(e) => setSales(parseInt(e.target.value))}
+                  onChange={(e) => setSales(parseInt(e.target.value) || 0)}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  Komisi: Rp {config.productCommission.toLocaleString('id-ID')} / produk
+                  Komisi: Rp {(config.productCommission || 0).toLocaleString('id-ID')} / produk
                 </p>
               </div>
 
@@ -140,11 +187,11 @@ export default function IncomeCalculator() {
                 <h4 className="text-white font-medium mb-3 text-sm uppercase tracking-wide">Perbandingan Tier</h4>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className={`p-3 rounded-lg ${selectedTier === 'basic' ? 'bg-slate-700 ring-2 ring-slate-500' : 'bg-slate-800'}`}>
-                    <p className="text-slate-400 text-xs mb-1">Basic (30%)</p>
+                    <p className="text-slate-400 text-xs mb-1">Basic ({Math.round((basicConfig.commissionRate || 0) * 100)}%)</p>
                     <p className="text-white font-bold">Rp {basicIncome.toLocaleString('id-ID')}</p>
                   </div>
                   <div className={`p-3 rounded-lg ${selectedTier === 'pro' ? 'bg-blue-900/50 ring-2 ring-blue-500' : 'bg-slate-800'}`}>
-                    <p className="text-blue-400 text-xs mb-1">Pro (50%)</p>
+                    <p className="text-blue-400 text-xs mb-1">Pro ({Math.round((proConfig.commissionRate || 0) * 100)}%)</p>
                     <p className="text-white font-bold">Rp {proIncome.toLocaleString('id-ID')}</p>
                   </div>
                 </div>
@@ -164,8 +211,8 @@ export default function IncomeCalculator() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-slate-800">
-                <p className="text-slate-400 text-sm mb-1">Modal Awal ({selectedTier === 'pro' ? 'Pro' : 'Basic'})</p>
-                <p className="text-white font-bold">- Rp {config.registrationCost.toLocaleString('id-ID')}</p>
+                <p className="text-slate-400 text-sm mb-1">Modal Awal ({config.name})</p>
+                <p className="text-white font-bold">- Rp {(config.registrationCost || 0).toLocaleString('id-ID')}</p>
               </div>
 
               <div className="mt-4 pt-4 border-t border-slate-800">
@@ -177,8 +224,8 @@ export default function IncomeCalculator() {
 
               <p className="text-xs text-slate-500 mt-4">
                 {netProfit >= 0
-                  ? `✅ Balik modal setelah ${Math.ceil(config.registrationCost / config.inviteCommission)} invite!`
-                  : `Butuh ${Math.ceil((config.registrationCost - totalIncome) / config.inviteCommission)} invite lagi untuk BEP`
+                  ? `✅ Balik modal setelah ${Math.ceil((config.registrationCost || 1) / (config.inviteCommission || 1))} invite!`
+                  : `Butuh ${Math.ceil(((config.registrationCost || 0) - totalIncome) / (config.inviteCommission || 1))} invite lagi untuk BEP`
                 }
               </p>
             </div>
