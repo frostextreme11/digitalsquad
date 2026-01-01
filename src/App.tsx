@@ -8,6 +8,8 @@ import ProductSalesPage from './pages/ProductSalesPage';
 import NotFound from './pages/NotFound';
 import Maintenance from './pages/Maintenance';
 import AccessDenied from './pages/AccessDenied';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import { useAffiliateTracker } from './hooks/useAffiliateTracker';
 
 function AppContent() {
@@ -17,6 +19,8 @@ function AppContent() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/update-password" element={<UpdatePasswordPage />} />
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/dashboard/*" element={<Dashboard />} />
       <Route path="/buy/:productId" element={<ProductSalesPage />} />

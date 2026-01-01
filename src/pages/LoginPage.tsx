@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,7 +11,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
+
     try {
       const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
@@ -26,7 +26,7 @@ export default function LoginPage() {
           .eq('status', 'success') // Only check success for now, as settlement is not in enum
           .limit(1)
           .maybeSingle()
-        
+
         if (transaction) {
           navigate('/dashboard')
         } else {
@@ -47,8 +47,8 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-slate-400 mb-2">Email</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -57,16 +57,23 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="block text-slate-400 mb-2">Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
-          <button 
-            type="submit" 
+
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300 transition">
+              Lupa Password?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-lg hover:opacity-90 transition"
           >
