@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { supabase } from '../lib/supabase'
 import { useNavigate, Link } from 'react-router-dom'
 
@@ -42,6 +43,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+      <Helmet>
+        <title>Login Member Area - Digital Squad</title>
+        <meta name="description" content="Masuk ke member area Digital Squad untuk mengakses materi pembelajaran, tools bisnis online, dan dashboard affiliate." />
+      </Helmet>
       <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-white text-center mb-8">Login Digital Squad</h1>
         <form onSubmit={handleLogin} className="space-y-6">
