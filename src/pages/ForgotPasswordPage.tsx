@@ -14,8 +14,16 @@ export default function ForgotPasswordPage() {
 
         try {
             // Allow user to reset password. 
-            // Redirect to the update-password page after clicking the link in email
-            const redirectTo = `${window.location.origin}/update-password`
+            // Determine the correct redirect URL
+            // Supabase config whitelist only has 'https://digitalsquad.id/update-password'
+            // If the user visits via 'www.digitalsquad.id', window.location.origin would mismatch.
+            // We force the non-www version for production to match the whitelist.
+            let redirectBase = window.location.origin
+            if (window.location.hostname.includes('digitalsquad.id')) {
+                redirectBase = 'https://digitalsquad.id'
+            }
+
+            const redirectTo = `${redirectBase}/update-password`
             console.log('Reset Password Redirect To:', redirectTo)
 
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
