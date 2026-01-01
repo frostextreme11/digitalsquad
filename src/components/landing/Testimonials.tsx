@@ -8,7 +8,6 @@ const testimonials = [
   { id: 3, name: "Nabilah", earning: "Anak SMA", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416389/nabilah_16_tahun_um8cim.mp4" },
   { id: 4, name: "Faris", earning: "Mahasiswa", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416397/Mahasiswa_kuliah_bn0oql.mp4" },
   { id: 5, name: "Budi Santoso", earning: "Ojek Online", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416373/budi_santoso_umur_35_dzra2t.mp4" },
-  { id: 6, name: "Farah", earning: "Anak SMP", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416795/Digen_video_1764413365349_wluu8e.mp4" },
 ]
 
 const CARD_WIDTH_DESKTOP = 320
