@@ -4,6 +4,9 @@ import LoginPage from './pages/LoginPage';
 import PaymentPage from './pages/PaymentPage';
 import Dashboard from './pages/Dashboard';
 import ProductSalesPage from './pages/ProductSalesPage';
+import NotFound from './pages/NotFound';
+import Maintenance from './pages/Maintenance';
+import AccessDenied from './pages/AccessDenied';
 import { useAffiliateTracker } from './hooks/useAffiliateTracker';
 
 function AppContent() {
@@ -16,6 +19,9 @@ function AppContent() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/dashboard/*" element={<Dashboard />} />
       <Route path="/buy/:productId" element={<ProductSalesPage />} />
+      <Route path="/maintenance" element={<Maintenance />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
