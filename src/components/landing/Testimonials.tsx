@@ -52,7 +52,7 @@ export default function Testimonials() {
           videoRefs.current.forEach(v => v?.pause())
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.2 } // Lower threshold for better mobile detection
     )
     if (sectionRef.current) observer.observe(sectionRef.current)
     return () => observer.disconnect()
@@ -64,16 +64,19 @@ export default function Testimonials() {
 
       if (index === activeIndex && isInView) {
         // Enforce muted state from component state
-        // If isMuted is false (default), this sets muted=false
         video.muted = isMuted;
 
-        const playPromise = video.play()
-        if (playPromise !== undefined) {
-          playPromise.catch((e) => {
-            // If autoplay fails (e.g. browser policy), we capture it but DO NOT FALLBACK TO MUTED
-            // This ensures if it plays, it plays with sound.
-            // It will remain paused until user interaction.
-            console.log("Autoplay with sound blocked. Waiting for interaction.", e);
+        const p = video.play()
+        if (p !== undefined) {
+          p.catch((e) => {
+            console.log("Autoplay blocked/failed", e);
+            // If failed (likely due to sound), and we thought we weren't muted (or even if we were),
+            // ensure we try to play muted as fallback if not already.
+            if (!video.muted) {
+              video.muted = true;
+              setIsMuted(true); // Sync state
+              video.play().catch(err => console.error("Even muted autoplay failed", err));
+            }
           })
         }
       } else {
@@ -124,7 +127,7 @@ export default function Testimonials() {
           Tapi Kata Mereka yang Udah Cuan!
         </h2>
         <p className="text-center text-slate-400 text-lg max-w-2xl mx-auto">
-          Ribuan member telah membuktikan keberhasilan metode kami. Tonton testimoni asli tanpa rekayasa.
+          Ribuan member telah membuktikan keberhasilan metode kami. Tonton testimoni mereka.
         </p>
       </div>
 
