@@ -129,6 +129,17 @@ serve(async (req) => {
 
         const midtransUrl = config?.value || 'https://app.sandbox.midtrans.com/snap/v1/transactions'
 
+        // DEBUG: Check for Environment Mismatch
+        const isProductionUrl = !midtransUrl.includes('sandbox')
+        const isSandboxKey = serverKey.startsWith('SB-')
+
+        console.log(`[Product Payment] URL: ${midtransUrl}`)
+        console.log(`[Product Payment] Key Prefix: ${serverKey.substring(0, 5)}...`)
+
+        if (isProductionUrl && isSandboxKey) {
+            console.error("CRITICAL CONFIG ERROR: Using Sandbox Key with Production URL! Update MIDTRANS_SERVER_KEY.")
+        }
+
         const response = await fetch(midtransUrl, {
             method: 'POST',
             headers: {

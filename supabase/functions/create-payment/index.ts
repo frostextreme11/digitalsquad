@@ -193,6 +193,19 @@ serve(async (req) => {
     // Use sandbox by default, change to production URL for live
     const url = config?.value || 'https://app.sandbox.midtrans.com/snap/v1/transactions'
 
+    // DEBUG: Check for Environment Mismatch
+    const isProductionUrl = !url.includes('sandbox')
+    const isSandboxKey = serverKey.startsWith('SB-')
+
+    console.log(`[Payment Debug] URL: ${url}`)
+    console.log(`[Payment Debug] Key Prefix: ${serverKey.substring(0, 5)}...`)
+
+    if (isProductionUrl && isSandboxKey) {
+      console.error("CRITICAL CONFIG ERROR: Using Sandbox Key with Production URL! Update MIDTRANS_SERVER_KEY in Supabase Secrets.")
+    } else if (!isProductionUrl && !isSandboxKey) {
+      console.warn("WARNING: Using likely Production Key with Sandbox URL.")
+    }
+
     // Construct Webhook URL explicitly to ensure Midtrans hits us
     const webhookUrl = `${supabaseUrl}/functions/v1/midtrans-webhook`
 
