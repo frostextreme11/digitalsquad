@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Sphere, MeshDistortMaterial } from '@react-three/drei'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import { LogIn } from 'lucide-react'
 
 const AuroraBackground = () => {
   return (
@@ -63,6 +65,22 @@ export default function Hero3D() {
     <div className="h-[90vh] w-full relative bg-slate-950 overflow-hidden flex items-center justify-center">
       <AuroraBackground />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay z-0"></div>
+
+      {/* Login Button - Absolute Top Right */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        className="absolute top-6 right-6 z-50"
+      >
+        <Link
+          to="/login"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 text-white/90 hover:text-white font-medium transition-all duration-300 shadow-lg hover:shadow-indigo-500/20 group"
+        >
+          <span className="text-sm">Login</span>
+          <LogIn className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+        </Link>
+      </motion.div>
 
       {/* 3D Background Layer - Desktop Only */}
       {!isMobile && (
