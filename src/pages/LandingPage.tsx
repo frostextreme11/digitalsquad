@@ -34,7 +34,7 @@ export default function LandingPage() {
       <RegistrationForm />
       <FloatingToast />
       <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">
-        <p>&copy; 2025 Digital Squad. All rights reserved.</p>
+        <p>&copy; 2026 Digital Squad. All rights reserved.</p>
       </footer>
     </div>
   )
