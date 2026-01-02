@@ -20,16 +20,28 @@ export default function ProductList() {
 
   // Load Snap Script
   useEffect(() => {
-    const snapUrl = 'https://app.sandbox.midtrans.com/snap/snap.js'
-    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-placeholder'
+    const loadSnap = async () => {
+      const { data: configs } = await supabase
+        .from('app_config')
+        .select('key, value')
+        .in('key', ['midtrans_snap_url', 'midtrans_client_key'])
 
-    if (!document.querySelector(`script[src="${snapUrl}"]`)) {
-      const script = document.createElement('script')
-      script.src = snapUrl
-      script.setAttribute('data-client-key', clientKey)
-      script.async = true
-      document.body.appendChild(script)
+      const configMap = configs?.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {}) || {}
+
+      const snapUrl = configMap['midtrans_snap_url'] || 'https://app.sandbox.midtrans.com/snap/snap.js'
+      const clientKey = configMap['midtrans_client_key'] !== 'SB-Mid-client-placeholder'
+        ? configMap['midtrans_client_key']
+        : (import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-placeholder')
+
+      if (!document.querySelector(`script[src="${snapUrl}"]`)) {
+        const script = document.createElement('script')
+        script.src = snapUrl
+        script.setAttribute('data-client-key', clientKey)
+        script.async = true
+        document.body.appendChild(script)
+      }
     }
+    loadSnap()
   }, [])
 
   useEffect(() => {
