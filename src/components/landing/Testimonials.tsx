@@ -69,13 +69,9 @@ export default function Testimonials() {
         if (p !== undefined) {
           p.catch((e) => {
             console.log("Autoplay blocked/failed", e);
-            // If failed (likely due to sound), and we thought we weren't muted (or even if we were),
-            // ensure we try to play muted as fallback if not already.
-            if (!video.muted) {
-              video.muted = true;
-              setIsMuted(true); // Sync state
-              video.play().catch(err => console.error("Even muted autoplay failed", err));
-            }
+            // We do not fallback to muted anymore. 
+            // The user wants sound when it starts. 
+            // If it cannot play with sound (no interaction), it will remain paused.
           })
         }
       } else {
@@ -92,7 +88,18 @@ export default function Testimonials() {
   }
 
   const handleCardClick = (index: number) => {
-    setActiveIndex(index)
+    if (index === activeIndex) {
+      const video = videoRefs.current[index]
+      if (video) {
+        if (video.paused) {
+          video.play().catch(e => console.log("Play failed on click", e))
+        } else {
+          video.pause()
+        }
+      }
+    } else {
+      setActiveIndex(index)
+    }
   }
 
   const handleNext = () => {
@@ -205,8 +212,13 @@ export default function Testimonials() {
           </motion.div>
         </div>
 
+        {/* Helper Text */}
+        <p className="text-slate-400 text-sm mt-16 mb-4 animate-pulse font-medium">
+          Click Video Untuk Memutar Testimoni
+        </p>
+
         {/* Navigation Buttons */}
-        <div className="flex gap-4 mt-8 z-20">
+        <div className="flex gap-4 z-20">
           <button
             onClick={handlePrev}
             className="p-4 rounded-full bg-slate-800/50 hover:bg-green-500 hover:text-white text-slate-300 border border-slate-700 hover:border-green-500 transition-all duration-300 backdrop-blur-sm group"
