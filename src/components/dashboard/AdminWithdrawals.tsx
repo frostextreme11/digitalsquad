@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Clock, Check, X, Copy, Search, ChevronDown, RefreshCcw, Filter } from 'lucide-react'
 import { format } from 'date-fns'
+import toast from 'react-hot-toast'
+import ConfirmationModal from '../ConfirmationModal'
 
 interface WithdrawalRequest {
     id: string
@@ -50,6 +52,25 @@ export default function AdminWithdrawals() {
     const [statusFilter, setStatusFilter] = useState('all')
     const [search, setSearch] = useState('')
 
+    // Modal State
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean
+        id: string | null
+        currentStatus: string
+        newStatus: 'pending' | 'success' | 'failed'
+        agentId: string
+        amount: number
+        agentName: string
+    }>({
+        isOpen: false,
+        id: null,
+        currentStatus: '',
+        newStatus: 'pending',
+        agentId: '',
+        amount: 0,
+        agentName: ''
+    })
+
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchWithdrawals()
@@ -70,15 +91,27 @@ export default function AdminWithdrawals() {
             setWithdrawals((data as any) || [])
         } catch (error) {
             console.error('Error fetching withdrawals:', error)
+            toast.error('Failed to fetch withdrawal list')
         } finally {
             setLoading(false)
         }
     }
 
-    // ... existing handleStatusChange and getStatusBadge ...
+    const openConfirmModal = (id: string, currentStatus: string, newStatus: 'pending' | 'success' | 'failed', agentId: string, amount: number, agentName: string) => {
+        setModalConfig({
+            isOpen: true,
+            id,
+            currentStatus,
+            newStatus,
+            agentId,
+            amount,
+            agentName
+        })
+    }
 
-    const handleStatusChange = async (id: string, currentStatus: string, newStatus: 'pending' | 'success' | 'failed', agentId: string, amount: number) => {
-        if (!confirm(`Are you sure you want to change status from ${currentStatus.toUpperCase()} to ${newStatus.toUpperCase()}?`)) return
+    const handleConfirmStatusChange = async () => {
+        const { id, currentStatus, newStatus, agentId, amount } = modalConfig
+        if (!id) return
 
         setProcessing(id)
         try {
@@ -102,6 +135,8 @@ export default function AdminWithdrawals() {
                 balanceChange = (amount + 2500)
             }
 
+            // NOTE: The backend balance update via RPC (increment_balance) is critical.
+            // If the balance change is 0, we simply skip it.
             if (balanceChange !== 0) {
                 const { error: rpcError } = await (supabase as any).rpc('increment_balance', {
                     user_id: agentId,
@@ -110,15 +145,17 @@ export default function AdminWithdrawals() {
 
                 if (rpcError) {
                     console.error('Error updating balance:', rpcError)
-                    alert(`Status updated via RPC, but balance adjustment (${balanceChange}) failed. Please check manually.`)
+                    toast.error(`Status updated, but balance adjustment failed. Check manually.`)
                 }
             }
 
+            toast.success(`Status updated to ${newStatus}`)
+            setModalConfig(prev => ({ ...prev, isOpen: false }))
             await fetchWithdrawals()
 
         } catch (error: any) {
             console.error('Error updating status:', error)
-            alert('Failed to update status: ' + error.message)
+            toast.error('Failed to update status: ' + error.message)
         } finally {
             setProcessing(null)
         }
@@ -137,6 +174,16 @@ export default function AdminWithdrawals() {
     const container = {
         hidden: { opacity: 0 },
         show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    }
+
+    // Helper to determine modal type
+    const getModalType = () => {
+        switch (modalConfig.newStatus) {
+            case 'success': return 'success'
+            case 'failed': return 'danger'
+            case 'pending': return 'warning'
+            default: return 'info'
+        }
     }
 
     return (
@@ -267,7 +314,7 @@ export default function AdminWithdrawals() {
                                             <div className="flex items-center justify-end gap-2">
                                                 {item.status !== 'success' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(item.id, item.status, 'success', item.agent_id, item.amount)}
+                                                        onClick={() => openConfirmModal(item.id, item.status, 'success', item.agent_id, item.amount, item.profiles?.full_name)}
                                                         disabled={processing === item.id}
                                                         className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition disabled:opacity-50"
                                                         title="Approve & Mark Paid"
@@ -278,7 +325,7 @@ export default function AdminWithdrawals() {
 
                                                 {item.status !== 'pending' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(item.id, item.status, 'pending', item.agent_id, item.amount)}
+                                                        onClick={() => openConfirmModal(item.id, item.status, 'pending', item.agent_id, item.amount, item.profiles?.full_name)}
                                                         disabled={processing === item.id}
                                                         className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition disabled:opacity-50"
                                                         title="Mark Pending"
@@ -289,7 +336,7 @@ export default function AdminWithdrawals() {
 
                                                 {item.status !== 'failed' && item.status !== 'cancelled' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(item.id, item.status, 'failed', item.agent_id, item.amount)}
+                                                        onClick={() => openConfirmModal(item.id, item.status, 'failed', item.agent_id, item.amount, item.profiles?.full_name)}
                                                         disabled={processing === item.id}
                                                         className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition disabled:opacity-50"
                                                         title="Reject"
@@ -373,7 +420,7 @@ export default function AdminWithdrawals() {
                             <div className="mt-5 pt-4 border-t border-slate-800 flex justify-end gap-2">
                                 {item.status !== 'success' && (
                                     <button
-                                        onClick={() => handleStatusChange(item.id, item.status, 'success', item.agent_id, item.amount)}
+                                        onClick={() => openConfirmModal(item.id, item.status, 'success', item.agent_id, item.amount, item.profiles?.full_name)}
                                         disabled={processing === item.id}
                                         className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 py-2 rounded-xl border border-emerald-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
                                     >
@@ -383,7 +430,7 @@ export default function AdminWithdrawals() {
 
                                 {item.status !== 'pending' && (
                                     <button
-                                        onClick={() => handleStatusChange(item.id, item.status, 'pending', item.agent_id, item.amount)}
+                                        onClick={() => openConfirmModal(item.id, item.status, 'pending', item.agent_id, item.amount, item.profiles?.full_name)}
                                         disabled={processing === item.id}
                                         className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 py-2 rounded-xl border border-amber-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
                                     >
@@ -393,7 +440,7 @@ export default function AdminWithdrawals() {
 
                                 {item.status !== 'failed' && item.status !== 'cancelled' && (
                                     <button
-                                        onClick={() => handleStatusChange(item.id, item.status, 'failed', item.agent_id, item.amount)}
+                                        onClick={() => openConfirmModal(item.id, item.status, 'failed', item.agent_id, item.amount, item.profiles?.full_name)}
                                         disabled={processing === item.id}
                                         className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2 rounded-xl border border-red-500/20 transition disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
                                     >
@@ -406,6 +453,18 @@ export default function AdminWithdrawals() {
                     ))
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={modalConfig.isOpen}
+                title="Update Withdrawal Status"
+                message={`Are you sure you want to change status from ${modalConfig.currentStatus?.toUpperCase()} to ${modalConfig.newStatus?.toUpperCase()} for ${modalConfig.agentName}?`}
+                confirmText={modalConfig.newStatus === 'success' ? 'Yes, Approve & Pay' : modalConfig.newStatus === 'failed' ? 'Yes, Reject' : 'Yes, Update'}
+                cancelText="Cancel"
+                type={getModalType()}
+                isProcessing={processing === modalConfig.id}
+                onConfirm={handleConfirmStatusChange}
+                onCancel={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+            />
         </motion.div>
     )
 }

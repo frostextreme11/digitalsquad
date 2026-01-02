@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Search, Play, Download, X, Loader2 } from 'lucide-react'
+import { Search, Play, Download, X, Loader2, Copy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
 
 interface Testimonial {
     id: string
@@ -37,6 +38,7 @@ export default function AgentTestimonials() {
 
         if (error) {
             console.error('Error fetching testimonials:', error)
+            toast.error('Failed to load testimonials')
         } else {
             setTestimonials(data || [])
         }
@@ -63,14 +65,19 @@ export default function AgentTestimonials() {
             a.click()
             window.URL.revokeObjectURL(url)
             document.body.removeChild(a)
+            toast.success('Download started')
         } catch (err) {
             console.error('Download failed', err)
-            // Fallback to direct link
             window.open(video.video_url, '_blank')
         }
     }
 
-
+    const handleCopyDescription = (e: React.MouseEvent, description: string | null) => {
+        e.stopPropagation()
+        if (!description) return
+        navigator.clipboard.writeText(description)
+        toast.success('Description copied to clipboard')
+    }
 
     return (
         <div className="space-y-6">
@@ -120,9 +127,13 @@ export default function AgentTestimonials() {
                                     {item.thumbnail_url ? (
                                         <img src={item.thumbnail_url} alt={item.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500 group-hover:scale-105" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-slate-950">
-                                            <Play size={40} className="text-white/20 group-hover:text-blue-500 transition duration-300" />
-                                        </div>
+                                        <video
+                                            src={item.video_url + '#t=0.001'}
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500 group-hover:scale-105"
+                                            muted
+                                            preload="metadata"
+                                            playsInline
+                                        />
                                     )}
 
                                     {/* Play Button Overlay */}
@@ -137,13 +148,22 @@ export default function AgentTestimonials() {
                                     <h3 className="font-bold text-lg text-slate-100 line-clamp-2 mb-2 group-hover:text-blue-400 transition">{item.title}</h3>
                                     <p className="text-slate-400 text-sm line-clamp-3 mb-4 flex-1">{item.description}</p>
 
-                                    <div className="flex items-center gap-3 mt-auto pt-4 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-2 mt-auto pt-4 border-t border-slate-800/50">
                                         <button
                                             onClick={() => setSelectedVideo(item)}
                                             className="flex-1 py-2 bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-300 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
                                         >
                                             <Play size={16} /> Watch
                                         </button>
+
+                                        <button
+                                            onClick={(e) => handleCopyDescription(e, item.description)}
+                                            className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                                            title="Copy Description"
+                                        >
+                                            <Copy size={16} />
+                                        </button>
+
                                         <button
                                             onClick={(e) => handleDownload(e, item)}
                                             className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
@@ -198,8 +218,20 @@ export default function AgentTestimonials() {
                                 </video>
                             </div>
 
-                            <div className="p-4 bg-slate-900 border-t border-slate-800">
-                                <p className="text-slate-300 text-sm">{selectedVideo.description}</p>
+                            <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-between items-start gap-4">
+                                <p className="text-slate-300 text-sm flex-1">{selectedVideo.description}</p>
+                                <button
+                                    onClick={() => {
+                                        if (selectedVideo.description) {
+                                            navigator.clipboard.writeText(selectedVideo.description)
+                                            toast.success('Copied to clipboard')
+                                        }
+                                    }}
+                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
+                                    title="Copy Description"
+                                >
+                                    <Copy size={16} />
+                                </button>
                             </div>
                         </motion.div>
                     </div>

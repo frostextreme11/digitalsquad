@@ -11,6 +11,7 @@ import AccessDenied from './pages/AccessDenied';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import { useAffiliateTracker } from './hooks/useAffiliateTracker';
+import { Toaster } from 'react-hot-toast';
 
 function AppContent() {
   useAffiliateTracker(); // Use hook inside Router context or just generally
@@ -31,12 +32,12 @@ function AppContent() {
   );
 }
 
-
 function App() {
   return (
     <ErrorBoundary>
       <Router>
         <AppContent />
+        <Toaster position="top-right" />
       </Router>
     </ErrorBoundary>
   );
