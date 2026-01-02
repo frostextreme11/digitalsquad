@@ -1,9 +1,8 @@
-import { Trash2, TrendingUp, CheckCircle, Smartphone, Coffee, AlertTriangle, ShieldCheck, BookOpen, GraduationCap, Briefcase } from 'lucide-react'
+import { Trash2, TrendingUp, Coffee, AlertTriangle, ShieldCheck, BookOpen, GraduationCap, Briefcase } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
 
 export default function ValueComparison() {
-    const navigate = useNavigate()
+
 
     return (
         <section className="py-24 relative bg-slate-950 overflow-hidden">
