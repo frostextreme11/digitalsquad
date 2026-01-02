@@ -183,8 +183,15 @@ serve(async (req) => {
 
     const auth = btoa(serverKey + ':')
 
+    // Fetch API URL from Config
+    const { data: config } = await supabaseAdmin
+      .from('app_config')
+      .select('value')
+      .eq('key', 'midtrans_api_url')
+      .single()
+
     // Use sandbox by default, change to production URL for live
-    const url = 'https://app.sandbox.midtrans.com/snap/v1/transactions'
+    const url = config?.value || 'https://app.sandbox.midtrans.com/snap/v1/transactions'
 
     // Construct Webhook URL explicitly to ensure Midtrans hits us
     const webhookUrl = `${supabaseUrl}/functions/v1/midtrans-webhook`

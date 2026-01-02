@@ -119,7 +119,15 @@ serve(async (req) => {
         if (!serverKey) throw new Error('Server Key not found')
 
         const auth = btoa(serverKey + ':')
-        const midtransUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions' // TODO: Switch to production based on env?
+
+        // Fetch API URL from Config
+        const { data: config } = await supabaseAdmin
+            .from('app_config')
+            .select('value')
+            .eq('key', 'midtrans_api_url')
+            .single()
+
+        const midtransUrl = config?.value || 'https://app.sandbox.midtrans.com/snap/v1/transactions'
 
         const response = await fetch(midtransUrl, {
             method: 'POST',
