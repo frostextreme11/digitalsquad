@@ -9,8 +9,8 @@ const benefits = [
   },
   {
     icon: Users,
-    title: "Komunitas Solid",
-    description: "Belajar bareng member lain. Support system yang gokil abis."
+    title: "Belajar Dengan Mudah",
+    description: "Belajar dengan cepat dan mudah di Digital Squad Academy"
   },
   {
     icon: Wallet,

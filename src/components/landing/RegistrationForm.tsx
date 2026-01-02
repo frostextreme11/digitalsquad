@@ -44,6 +44,15 @@ export default function RegistrationForm() {
       sessionStorage.removeItem('selectedTier')
     }
 
+    // Listen for custom tier selection event (for when component is already mounted)
+    const handleTierSelection = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail === 'basic' || customEvent.detail === 'pro') {
+        setSelectedTier(customEvent.detail)
+      }
+    }
+    window.addEventListener('tierSelected', handleTierSelection)
+
     // Fetch Tier IDs and Pricing
     const fetchTiers = async () => {
       const { data } = await supabase.from('tiers').select('id, tier_key, registration_price, name, commission_rate, description')
@@ -95,6 +104,7 @@ export default function RegistrationForm() {
 
     return () => {
       clearInterval(timer)
+      window.removeEventListener('tierSelected', handleTierSelection)
       // if (document.body.contains(script)) {
       //   document.body.removeChild(script)
       // }
@@ -285,12 +295,12 @@ export default function RegistrationForm() {
             </div>
 
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/20">
-                  <Timer className="w-4 h-4 animate-pulse" />
-                  <span className="font-bold text-xs tracking-widest uppercase">Berakhir Dalam</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2 text-yellow-400 bg-yellow-400/10 px-3 py-1.5 rounded-full border border-yellow-400/20 w-fit">
+                  <Timer className="w-4 h-4 animate-pulse shrink-0" />
+                  <span className="font-bold text-xs tracking-widest uppercase whitespace-nowrap">Berakhir Dalam</span>
                 </div>
-                <div className="font-mono text-xl font-bold text-white tracking-widest tabular-nums bg-slate-950 px-3 py-1 rounded-md border border-slate-700">
+                <div className="font-mono text-2xl sm:text-xl font-bold text-white tracking-widest tabular-nums bg-slate-950 px-4 py-2 sm:py-1 rounded-md border border-slate-700 w-full sm:w-auto text-center shadow-inner">
                   {String(timeLeft.h).padStart(2, '0')} : {String(timeLeft.m).padStart(2, '0')} : {String(timeLeft.s).padStart(2, '0')}
                 </div>
               </div>
@@ -310,130 +320,170 @@ export default function RegistrationForm() {
           </div>
         </motion.div>
 
-        <div className="bg-slate-900/80 backdrop-blur-lg p-8 rounded-2xl border border-slate-700/50 shadow-2xl ring-1 ring-white/10">
-          <h2 className="text-3xl font-bold text-white text-center mb-2">Join Digital Squad</h2>
-          <p className="text-center text-slate-400 mb-6">Pilih tier dan mulai perjalanan cuan-mu!</p>
+        <motion.div
+          animate={{
+            boxShadow: selectedTier === 'pro'
+              ? '0 0 40px rgba(59, 130, 246, 0.3)'
+              : '0 0 0px rgba(0, 0, 0, 0)',
+            borderColor: selectedTier === 'pro'
+              ? 'rgba(59, 130, 246, 0.5)'
+              : 'rgba(51, 65, 85, 0.5)'
+          }}
+          transition={{ duration: 0.5 }}
+          className={`bg-slate-900/80 backdrop-blur-lg p-8 rounded-2xl border shadow-2xl ring-1 ring-white/10 transition-colors duration-500 relative overflow-hidden`}
+        >
+          {/* Background Ambient Glow for Pro */}
+          {selectedTier === 'pro' && (
+            <div className="absolute inset-0 bg-blue-500/5 z-0 pointer-events-none animate-pulse" />
+          )}
 
-          {/* Tier Selection */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => setSelectedTier('basic')}
-              className={`p-4 rounded-xl border-2 transition duration-200 text-left ${selectedTier === 'basic'
-                ? 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
-                : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
-                }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Star size={18} className="text-slate-400" />
-                <span className="font-bold text-white text-sm">Basic</span>
-                {selectedTier === 'basic' && <Check size={16} className="text-green-400 ml-auto" />}
-              </div>
-              <p className="text-lg font-bold text-white">Rp {(tierPricing.basic?.price || 0).toLocaleString('id-ID')}</p>
-              <p className="text-xs text-slate-400">Komisi {tierPricing.basic?.commission || '...'}</p>
-            </button>
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-white text-center mb-2">Join Digital Squad</h2>
+            <p className="text-center text-slate-400 mb-6">Pilih tier dan mulai perjalanan cuan-mu!</p>
 
-            <button
-              type="button"
-              onClick={() => setSelectedTier('pro')}
-              className={`p-4 rounded-xl border-2 transition duration-200 text-left relative ${selectedTier === 'pro'
-                ? 'border-blue-500 bg-blue-900/30 ring-2 ring-blue-500/50'
-                : 'border-slate-700 bg-slate-800/30 hover:border-blue-600'
-                }`}
-            >
-              <div className="absolute -top-2 -right-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">
-                BEST
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <Crown size={18} className="text-blue-400" />
-                <span className="font-bold text-white text-sm">Pro</span>
-                {selectedTier === 'pro' && <Check size={16} className="text-green-400 ml-auto" />}
-              </div>
-              <p className="text-lg font-bold text-white">Rp {(tierPricing.pro?.price || 0).toLocaleString('id-ID')}</p>
-              <p className="text-xs text-blue-400">Komisi {tierPricing.pro?.commission || '...'}</p>
-            </button>
-          </div>
-
-          {/* Total Display */}
-          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-4 mb-6 text-center">
-            <p className="text-slate-400 text-sm mb-1">Total yang harus dibayar:</p>
-            <p className="text-3xl font-black text-white">
-              Rp {(currentTier.price || 0).toLocaleString('id-ID')}
-            </p>
-            <p className="text-xs text-slate-400 mt-1">
-              {currentTier.name} • Komisi {currentTier.commission} per penjualan
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-slate-300 mb-1 text-sm font-medium">Nama Lengkap</label>
-              <input
-                type="text"
-                name="fullName"
-                required
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                placeholder="Contoh: Agus Setiawan"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-1 text-sm font-medium">Email</label>
-              <input
-                type="email"
-                name="email"
-                required
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                placeholder="nama@email.com"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-1 text-sm font-medium">No. WhatsApp</label>
-              <input
-                type="tel"
-                name="phone"
-                required
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                placeholder="081234567890"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-1 text-sm font-medium">Password</label>
-              <input
-                type="password"
-                name="password"
-                required
-                minLength={6}
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                placeholder="******"
-                onChange={handleChange}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3.5 rounded-lg hover:opacity-90 transition disabled:opacity-50 mt-6 shadow-lg shadow-blue-600/20"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Mohon tunggu sebentar, link pembayaran sedang di buat :)</span>
+            {/* Tier Selection */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button
+                type="button"
+                onClick={() => setSelectedTier('basic')}
+                className={`p-4 rounded-xl border-2 transition duration-200 text-left ${selectedTier === 'basic'
+                  ? 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
+                  : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
+                  }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Star size={18} className="text-slate-400" />
+                  <span className="font-bold text-white text-sm">Basic</span>
+                  {selectedTier === 'basic' && <Check size={16} className="text-green-400 ml-auto" />}
                 </div>
-              ) : `Daftar ${currentTier.name} - Rp ${(currentTier.price || 0).toLocaleString('id-ID')}`}
-            </button>
-            <p className="text-xs text-slate-500 text-center mt-4">
-              Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.
-            </p>
-            <div className="mt-6 pt-6 border-t border-slate-800 text-center">
-              <p className="text-slate-400">
-                Sudah join? akses ke sini: <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline">Login</Link>
+                <p className="text-lg font-bold text-white">Rp {(tierPricing.basic?.price || 0).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-slate-400">Komisi {tierPricing.basic?.commission || '...'}</p>
+              </button>
+
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(59, 130, 246, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedTier('pro')}
+                className={`p-4 rounded-xl border-2 transition-all duration-300 text-left relative overflow-visible ${selectedTier === 'pro'
+                  ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                  : 'border-slate-700 bg-slate-800/30 hover:border-blue-500 hover:bg-slate-800/50 shadow-[0_0_15px_rgba(59,130,246,0.15)] animate-pulse-slow' /* Added shadow and slow pulse to unselected state */
+                  }`}
+              >
+                {/* Glowing Pulse Effect for Pro */}
+                <div className="absolute inset-0 rounded-xl bg-blue-500/5 blur-xl animate-pulse" />
+
+                <div className="absolute -top-3 -right-2 transform rotate-2">
+                  <span className="relative flex h-6 w-auto">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span className="relative inline-flex items-center justify-center px-3 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-lg ring-1 ring-white/20">
+                      Most Popular
+                    </span>
+                  </span>
+                </div>
+
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`p-1.5 rounded-lg ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-400'}`}>
+                      <Crown size={18} className={selectedTier === 'pro' ? 'fill-blue-500/20' : ''} />
+                    </div>
+                    <span className={`font-bold text-sm ${selectedTier === 'pro' ? 'text-white' : 'text-slate-300'}`}>Squad Elite</span>
+                    {selectedTier === 'pro' && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check size={18} className="text-blue-400 ml-auto drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" /></motion.div>}
+                  </div>
+
+                  <div className="flex items-end gap-1 mb-1">
+                    <p className="text-2xl font-black text-white tracking-tight">Rp {(tierPricing.pro?.price || 0).toLocaleString('id-ID')}</p>
+                    {/* <p className="text-xs text-slate-500 line-through mb-1.5">Rp 300.000</p> */}
+                  </div>
+
+                  <div className={`text-xs px-2 py-1 rounded-md inline-block font-medium ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-200 border border-blue-500/30' : 'text-slate-500 bg-slate-800'}`}>
+                    🔥 Komisi {tierPricing.pro?.commission || '...'} / penjualan
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+
+            {/* Total Display */}
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-4 mb-6 text-center">
+              <p className="text-slate-400 text-sm mb-1">Total yang harus dibayar:</p>
+              <p className="text-3xl font-black text-white">
+                Rp {(currentTier.price || 0).toLocaleString('id-ID')}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {currentTier.name} • Komisi {currentTier.commission} per penjualan
               </p>
             </div>
-          </form>
-        </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-slate-300 mb-1 text-sm font-medium">Nama Lengkap</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  required
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  placeholder="Contoh: Agus Setiawan"
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 text-sm font-medium">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  placeholder="nama@email.com"
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 text-sm font-medium">No. WhatsApp</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  required
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  placeholder="081234567890"
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 text-sm font-medium">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  minLength={6}
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  placeholder="******"
+                  onChange={handleChange}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3.5 rounded-lg hover:opacity-90 transition disabled:opacity-50 mt-6 shadow-lg shadow-blue-600/20"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Mohon tunggu sebentar, link pembayaran sedang di buat :)</span>
+                  </div>
+                ) : `Daftar ${currentTier.name} - Rp ${(currentTier.price || 0).toLocaleString('id-ID')}`}
+              </button>
+              <p className="text-xs text-slate-500 text-center mt-4">
+                Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.
+              </p>
+              <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+                <p className="text-slate-400">
+                  Sudah join? akses ke sini: <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline">Login</Link>
+                </p>
+              </div>
+            </form>
+          </div>
+        </motion.div>
       </div>
     </section>
   )

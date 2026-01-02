@@ -9,6 +9,7 @@ import Benefits from '../components/landing/Benefits'
 import FAQSection from '../components/landing/FAQSection'
 import RegistrationForm from '../components/landing/RegistrationForm'
 import FloatingToast from '../components/landing/FloatingToast'
+import ValueComparison from '../components/landing/ValueComparison'
 
 export default function LandingPage() {
   return (
@@ -25,10 +26,11 @@ export default function LandingPage() {
       <Testimonials />
       <HowItWorks />
       <ProductShowcase />
-      <TierPricing />
       <IncomeCalculator />
+      <ValueComparison />
       <Benefits />
       <FAQSection />
+      <TierPricing />
       <RegistrationForm />
       <FloatingToast />
       <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">
