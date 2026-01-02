@@ -230,7 +230,7 @@ export default function TierPricing() {
                                                 Komisi {commissionPercent}% <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded text-white/90">INSTANT</span>
                                             </div>
                                             <div className="text-white/80 text-sm mt-0.5">
-                                                ~ Rp {estimatedCommission.toLocaleString('id-ID')} / penjualan
+                                                {/* ~ Rp {estimatedCommission.toLocaleString('id-ID')} / penjualan */}
                                             </div>
                                         </div>
                                     </div>
@@ -289,7 +289,7 @@ export default function TierPricing() {
                             <span className="font-bold">SQUAD COMMANDER (VIP)</span>
                         </div>
                         <p className="text-slate-400 text-sm mt-2">
-                            Tier eksklusif dengan komisi 60% + bonus 5% dari penjualan downline.
+                            Tier eksklusif dengan komisi 80% + bonus 5% dari penjualan downline.
                             <br />
                             <span className="text-yellow-500/80">Otomatis unlock setelah mencapai 100 penjualan!</span>
                         </p>
