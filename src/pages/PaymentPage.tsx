@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, Loader2 } from 'lucide-react'
+import { trackEvent } from '../lib/pixel'
 
 export default function PaymentPage() {
   const [loading, setLoading] = useState(false)
@@ -292,6 +293,10 @@ export default function PaymentPage() {
           window.snap.pay(data.token, {
             onSuccess: function (result: any) {
               console.log('success', result)
+              trackEvent('Purchase', {
+                value: payload.amount,
+                currency: 'IDR'
+              })
               setShowSuccess(true)
               setTimeout(() => window.location.reload(), 2000)
             },

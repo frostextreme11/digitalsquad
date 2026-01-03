@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { Link, useNavigate } from 'react-router-dom'
 import { Star, Crown, Check, Gift, Timer } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { trackEvent } from '../../lib/pixel'
 
 export default function RegistrationForm() {
   const [loading, setLoading] = useState(false)
@@ -220,6 +221,13 @@ export default function RegistrationForm() {
       // Safety: use fallback or optional chaining
       const price = tierPricing[selectedTier]?.price || 50000
 
+      // Track Registration Pixel
+      trackEvent('CompleteRegistration', {
+        content_name: selectedTier,
+        value: price,
+        currency: 'IDR'
+      })
+
       // Call Edge Function
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`;
 
@@ -260,6 +268,11 @@ export default function RegistrationForm() {
         window.snap.pay(data.token, {
           onSuccess: function (result: any) {
             console.log('success', result)
+            trackEvent('Purchase', {
+              value: price,
+              currency: 'IDR',
+              order_id: data.token // or result.order_id if available
+            })
             window.location.href = '/dashboard'
           },
           onPending: function (result: any) {
