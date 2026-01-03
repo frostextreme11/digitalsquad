@@ -95,6 +95,31 @@ export default function ProductManagement() {
     setIsModalOpen(true)
   }
 
+  const transformGoogleDriveUrl = (url: string) => {
+    if (!url || !url.includes('google.com')) return url
+
+    // Check if it's already in the correct format
+    if (url.includes('docs.google.com/uc?export=download&id=')) return url
+
+    let fileId = null
+
+    // Pattern 1: /file/d/ID
+    const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+    if (match1) fileId = match1[1]
+
+    // Pattern 2: id=ID
+    if (!fileId) {
+      const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/)
+      if (match2) fileId = match2[1]
+    }
+
+    if (fileId) {
+      return `https://docs.google.com/uc?export=download&id=${fileId}`
+    }
+
+    return url
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -308,7 +333,7 @@ export default function ProductManagement() {
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">File URL (Download Link)</label>
                   <input type="url" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                    value={formData.file_url} onChange={e => setFormData({ ...formData, file_url: e.target.value })} />
+                    value={formData.file_url} onChange={e => setFormData({ ...formData, file_url: transformGoogleDriveUrl(e.target.value) })} />
                 </div>
                 <div className="flex items-center gap-3 pt-2">
                   <input type="checkbox" id="is_active" className="w-5 h-5 rounded bg-slate-950 border-slate-800 text-blue-600 focus:ring-blue-500"
