@@ -148,8 +148,8 @@ export default function TierPricing() {
                         if (!style) return null;
 
                         const commissionPercent = tier.commission_rate ? Math.round(tier.commission_rate * 100) : 0;
-                        const exampleSalePrice = 50000;
-                        const estimatedCommission = tier.commission_rate ? exampleSalePrice * tier.commission_rate : 0;
+
+
 
                         return (
                             <motion.div

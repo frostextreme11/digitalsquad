@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, X, Check, Info } from 'lucide-react'
+import { AlertCircle, Check, Info } from 'lucide-react'
 
 interface ConfirmationModalProps {
     isOpen: boolean
