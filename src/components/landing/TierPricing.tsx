@@ -184,9 +184,9 @@ export default function TierPricing() {
                                 <div className="relative z-10">
                                     {/* Best Seller Badge with Animation */}
                                     {style.isBestSeller && (
-                                        <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 z-20">
+                                        <div className="absolute -top-13 left-1/2 transform -translate-x-1/2 z-20">
                                             <motion.div
-                                                animate={{ y: [0, -4, 0] }}
+                                                animate={{ y: [5, -5, 5] }}
                                                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                                                 className="relative"
                                             >

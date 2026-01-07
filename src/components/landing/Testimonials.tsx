@@ -3,11 +3,13 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react'
 
 const testimonials = [
-  { id: 1, name: "Rizky Pratama", earning: "Mahasiswa", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416382/rizky_pratama_baru_lulus_sma_uevvir.mp4" },
-  { id: 2, name: "Siti Aminah", earning: "Ibu Rumah Tangga", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416364/siti_aminah_anak_4_gqdibx.mp4" },
-  { id: 3, name: "Nabilah", earning: "Anak SMA", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416389/nabilah_16_tahun_um8cim.mp4" },
-  { id: 4, name: "Faris", earning: "Mahasiswa", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416397/Mahasiswa_kuliah_bn0oql.mp4" },
-  { id: 5, name: "Budi Santoso", earning: "Ojek Online", video: "https://res.cloudinary.com/dusyghcnl/video/upload/v1764416373/budi_santoso_umur_35_dzra2t.mp4" },
+  { id: 1, name: "Budi Santoso", earning: "Ojek Online", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Di_Ajak_Temen_Ojol.mp4" },
+  { id: 2, name: "Siti", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Di_Ajak_Temen_Sekelas.mp4" },
+  { id: 3, name: "Rofidah", earning: "Ibu Rumah Tangga", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Iseng_Liat_Status_WA_Temen_(2).mp4" },
+  { id: 4, name: "Faris", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Lagi_Gabut_Di_Kosan.mp4" },
+  { id: 5, name: "Hendri", earning: "Ojek Online", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Ojol_Liat_Iklan_Di_Facebook.mp4" },
+  { id: 6, name: "Meilani", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Penasaran_Tapi_Happy.mp4" },
+  { id: 7, name: "Cacha", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Story_Temen_Gk_Nyesel.mp4" },
 ]
 
 const CARD_WIDTH_DESKTOP = 320
