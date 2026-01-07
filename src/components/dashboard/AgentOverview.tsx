@@ -385,29 +385,99 @@ export default function AgentOverview({ profile }: { profile: any }) {
                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </motion.div>
 
-            <motion.div variants={item} className="bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 flex flex-col justify-center h-full min-h-[200px] relative overflow-hidden">
+            <motion.div
+               variants={item}
+               animate={copied ? {
+                  boxShadow: "0 0 30px rgba(59, 130, 246, 0.4)",
+                  borderColor: "rgba(59, 130, 246, 0.5)",
+                  scale: 1.02
+               } : {
+                  boxShadow: "0 0 0px rgba(59, 130, 246, 0)",
+                  borderColor: "rgba(30, 41, 59, 0.5)",
+                  scale: 1
+               }}
+               transition={{ duration: 0.3 }}
+               className="bg-slate-900/80 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 flex flex-col justify-center h-full min-h-[200px] relative overflow-hidden group"
+            >
+               {/* Border Beam Animation (Idle) */}
+               {!copied && (
+                  <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden z-0">
+                     <motion.div
+                        initial={{ x: '-100%', opacity: 0 }}
+                        animate={{ x: '200%', opacity: [0, 1, 1, 0] }}
+                        transition={{
+                           repeat: Infinity,
+                           duration: 3,
+                           ease: "linear",
+                           repeatDelay: 1
+                        }}
+                        className="absolute top-0 bottom-0 w-[40%] bg-gradient-to-r from-transparent via-blue-500/60 to-transparent skew-x-12 -ml-20"
+                        style={{ filter: 'blur(5px)' }}
+                     />
+                     {/* Masking the center to create outline effect */}
+                     <div className="absolute inset-[1px] bg-slate-900 rounded-[22px]" />
+                  </div>
+               )}
+
+               {/* Background Glow */}
+               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent opacity-50 group-hover:opacity-100 transition duration-500 z-0"></div>
+
+               <motion.div
+                  className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl opacity-0 blur-lg transition duration-500"
+                  animate={copied ? { opacity: 0.3 } : { opacity: 0 }}
+               ></motion.div>
+
                <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-4">
-                     <div className="p-2 bg-slate-800 rounded-lg text-slate-400">
+                     <div className={`p-2 rounded-lg transition-colors duration-300 ${copied ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
                         <Copy size={18} />
                      </div>
-                     <label className="text-slate-400 text-sm font-medium uppercase tracking-wide">Link Affiliate</label>
+                     <label className={`text-sm font-medium uppercase tracking-wide transition-colors duration-300 ${copied ? 'text-blue-400' : 'text-slate-400'}`}>Link Affiliate</label>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                     <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 font-mono text-xs md:text-sm truncate select-all">
+                     <div className={`flex-1 bg-slate-950 border rounded-xl px-4 py-3 text-slate-300 font-mono text-xs md:text-sm truncate select-all transition-colors duration-300 ${copied ? 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'border-slate-800'}`}>
                         {affiliateLink}
                      </div>
-                     <button onClick={copyLink} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg font-medium shrink-0">
-                        {copied ? <CheckCircle size={20} /> : <span className="flex items-center gap-2">Salin</span>}
-                     </button>
+                     <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={copyLink}
+                        className={`px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg font-bold shrink-0 relative overflow-hidden ${copied
+                           ? 'bg-green-500 text-white shadow-green-500/50'
+                           : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/30'
+                           }`}
+                     >
+                        {copied && (
+                           <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 20, opacity: 0 }}
+                              transition={{ duration: 0.5 }}
+                              className="absolute inset-0 bg-white rounded-full place-self-center pointer-events-none"
+                           />
+                        )}
+                        {copied ? (
+                           <motion.div
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="flex items-center gap-2"
+                           >
+                              <CheckCircle size={20} /> <span>Tersalin!</span>
+                           </motion.div>
+                        ) : (
+                           <span className="flex items-center gap-2">Salin Link</span>
+                        )}
+                     </motion.button>
                   </div>
-                  <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-4 leading-relaxed group-hover:text-slate-400 transition-colors">
                      Bagikan link ini ke media sosial atau teman untuk mendapatkan komisi
-                     <span className="text-slate-300 font-medium"> {(activeTier.commission_rate || 0.3) * 100}%</span> dari setiap penjualan.
+                     <span className="text-blue-400 font-bold glow-text"> {(activeTier.commission_rate || 0.3) * 100}%</span> dari setiap penjualan.
                   </p>
                </div>
-               <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl translate-y-10 translate-x-10 pointer-events-none"></div>
+
+               {/* Decorative floating elements */}
+               <div className="absolute bottom-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl translate-y-10 translate-x-10 pointer-events-none mix-blend-screen animate-pulse"></div>
+               <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl -translate-y-10 -translate-x-10 pointer-events-none mix-blend-screen"></div>
             </motion.div>
          </div>
 
