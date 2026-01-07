@@ -282,7 +282,14 @@ export default function AdminTestimonials() {
                                         type="url"
                                         required
                                         value={formData.video_url}
-                                        onChange={e => setFormData({ ...formData, video_url: e.target.value })}
+                                        onChange={e => {
+                                            let val = e.target.value
+                                            // Auto-convert GitHub to jsDelivr
+                                            if (val.includes('github.com') && val.includes('/blob/')) {
+                                                val = val.replace('github.com', 'cdn.jsdelivr.net/gh').replace('/blob/', '@')
+                                            }
+                                            setFormData({ ...formData, video_url: val })
+                                        }}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
                                         placeholder="https://..."
                                     />

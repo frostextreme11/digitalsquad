@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap, Crown, Star, Shield, ArrowUp } from 'lucide-react'
+import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap, Crown, Star, Shield, ArrowUp, RefreshCw, Download, Play, MessageCircle, Instagram, Twitter, Music2, Calendar, Clock, Video, Loader2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
 import StatsChart from './StatsChart'
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
 
@@ -24,6 +25,12 @@ export default function AgentOverview({ profile }: { profile: any }) {
    const [nextTier, setNextTier] = useState<TierInfo | null>(null)
    const [totalSales, setTotalSales] = useState(0)
    const [loadingTier, setLoadingTier] = useState(true)
+
+   // Mission State
+   const [missionVideo, setMissionVideo] = useState<any>(null)
+   const [missionLoading, setMissionLoading] = useState(true)
+   const [videoModalOpen, setVideoModalOpen] = useState(false)
+   const [currentTime, setCurrentTime] = useState(new Date())
 
    const DEFAULT_TIER: TierInfo = {
       id: 'default',
@@ -222,6 +229,100 @@ export default function AgentOverview({ profile }: { profile: any }) {
       if (profile.id) fetchStats()
    }, [profile.id, localAffiliateCode])
 
+   // Updates current time every minute for the schedule highlighter
+   useEffect(() => {
+      const timer = setInterval(() => setCurrentTime(new Date()), 60000)
+      return () => clearInterval(timer)
+   }, [])
+
+   // Mission Logic
+   useEffect(() => {
+      fetchRandomMission()
+   }, [])
+
+   const fetchRandomMission = async () => {
+      setMissionLoading(true)
+      try {
+         const { data } = await supabase.from('video_testimonials').select('*')
+         if (data && data.length > 0) {
+            // Pick random one
+            const random = data[Math.floor(Math.random() * data.length)]
+            setMissionVideo(random)
+         }
+      } catch (err) {
+         console.error("Error fetching mission", err)
+      } finally {
+         setMissionLoading(false)
+      }
+   }
+
+   const handleMissionCopy = () => {
+      if (!missionVideo) return
+      const text = `${missionVideo.description || ''}\n\nInfo lebih lanjut: ${affiliateLink}`
+      navigator.clipboard.writeText(text)
+      toast.success('Caption + Link berhasil disalin!')
+   }
+
+   const handleMissionDownload = async () => {
+      if (!missionVideo) return
+      toast.loading('Mulai download...', { duration: 2000 })
+      try {
+         const response = await fetch(missionVideo.video_url)
+         const blob = await response.blob()
+         const url = window.URL.createObjectURL(blob)
+         const a = document.createElement('a')
+         a.href = url
+         a.download = `${missionVideo.title.replace(/\s+/g, '_')}.mp4`
+         document.body.appendChild(a)
+         a.click()
+         window.URL.revokeObjectURL(url)
+         document.body.removeChild(a)
+         toast.success('Download berhasil!')
+      } catch (err) {
+         console.error('Download failed', err)
+         window.open(missionVideo.video_url, '_blank')
+      }
+   }
+
+   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
+   const todaySchedule = isWeekend ? [
+      { time: '07:00 - 08:00', tasks: [{ name: 'WA Status', icon: MessageCircle }, { name: 'IG Story', icon: Instagram }] },
+      { time: '12:00 - 13:00', tasks: [{ name: 'Tiktok', icon: Music2 }, { name: 'Twitter', icon: Twitter }, { name: 'IG Post', icon: Instagram }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }] },
+      { time: '13:00 - 15:00', tasks: [{ name: 'Tiktok', icon: Music2 }, { name: 'IG Post', icon: Instagram }, { name: 'Twitter', icon: Twitter }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }] },
+      { time: '19:00 - 22:00', tasks: [{ name: 'Tiktok', icon: Music2 }, { name: 'IG Post', icon: Instagram }, { name: 'Twitter', icon: Twitter }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }], label: 'Golden Hour' }
+   ] : [
+      { time: '07:00 - 08:00', tasks: [{ name: 'WA Status', icon: MessageCircle }, { name: 'IG Story', icon: Instagram }] },
+      { time: '12:00 - 13:00', tasks: [{ name: 'Tiktok', icon: Music2 }, { name: 'Twitter', icon: Twitter }, { name: 'IG Post', icon: Instagram }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }] },
+      { time: '15:30 - 17:00', tasks: [{ name: 'Twitter', icon: Twitter }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }] },
+      { time: '19:00 - 21:00', tasks: [{ name: 'Tiktok', icon: Music2 }, { name: 'IG Post', icon: Instagram }, { name: 'Twitter', icon: Twitter }, { name: 'IG Story', icon: Instagram }, { name: 'WA Status', icon: MessageCircle }], label: 'Golden Hour' }
+   ]
+
+   const getScheduleStatus = (timeRange: string) => {
+      // timeRange format "HH:mm - HH:mm"
+      const [startStr, endStr] = timeRange.split(' - ')
+      if (!startStr || !endStr) return 'normal'
+
+      const now = currentTime
+      const [startHour, startMinute] = startStr.split(':').map(Number)
+      const [endHour, endMinute] = endStr.split(':').map(Number)
+
+      const startTime = new Date(now)
+      startTime.setHours(startHour, startMinute, 0, 0)
+
+      const endTime = new Date(now)
+      endTime.setHours(endHour, endMinute, 0, 0)
+
+      // Handle crossing midnight if needed (though schedule seems fit in day)
+      // Assuming schedules are within same day for simplicity given requirements
+
+      const approachingTime = new Date(startTime)
+      approachingTime.setHours(startTime.getHours() - 2) // 2 hours before
+
+      if (now >= startTime && now <= endTime) return 'active'
+      if (now >= approachingTime && now < startTime) return 'approaching'
+      return 'normal'
+   }
+
    const copyLink = () => {
       navigator.clipboard.writeText(affiliateLink)
       setCopied(true)
@@ -309,6 +410,199 @@ export default function AgentOverview({ profile }: { profile: any }) {
                <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl translate-y-10 translate-x-10 pointer-events-none"></div>
             </motion.div>
          </div>
+
+         {/* Mission Card */}
+         <motion.div variants={item} className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 rounded-3xl border border-indigo-500/30 overflow-hidden shadow-2xl relative">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+            <div className="p-6 md:p-8 relative z-10">
+               <div className="flex flex-col md:flex-row gap-8 items-start">
+
+                  {/* Left: Schedule */}
+                  <div className="flex-1 w-full">
+                     <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-300">
+                           <Calendar size={24} />
+                        </div>
+                        <div>
+                           <h3 className="text-xl font-bold text-white">Misi Harian Agent</h3>
+                           <p className="text-indigo-200 text-sm">{isWeekend ? 'Jadwal Weekend (Sabtu - Minggu)' : 'Jadwal Weekday (Senin - Jumat)'}</p>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4">
+                        {todaySchedule.map((slot, idx) => {
+                           const status = getScheduleStatus(slot.time)
+
+                           return (
+                              <div
+                                 key={idx}
+                                 className={`p-4 rounded-xl border transition-all duration-500 relative overflow-hidden ${status === 'active'
+                                    ? 'bg-gradient-to-r from-green-900/40 to-emerald-900/40 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
+                                    : status === 'approaching'
+                                       ? 'bg-indigo-900/30 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                                       : slot.label ? 'bg-indigo-900/30 border-indigo-500/50' : 'bg-slate-800/40 border-slate-700/50'
+                                    }`}
+                              >
+                                 {status === 'active' && (
+                                    <div className="absolute inset-0 bg-green-500/10 animate-pulse pointer-events-none"></div>
+                                 )}
+                                 {status === 'approaching' && (
+                                    <div className="absolute inset-0 bg-yellow-500/5 animate-pulse pointer-events-none" style={{ animationDuration: '3s' }}></div>
+                                 )}
+
+                                 <div className="relative z-10">
+                                    <div className="flex justify-between items-center mb-3">
+                                       <div className={`flex items-center gap-2 font-mono font-semibold ${status === 'active' ? 'text-green-400' : status === 'approaching' ? 'text-yellow-400' : 'text-white'
+                                          }`}>
+                                          <Clock size={16} className={status === 'active' ? 'animate-bounce' : ''} />
+                                          {slot.time}
+                                          {status === 'active' && <span className="text-[10px] bg-green-500 text-black px-2 py-0.5 rounded font-bold animate-pulse">NOW</span>}
+                                          {status === 'approaching' && <span className="text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 px-2 py-0.5 rounded font-bold">SOON</span>}
+                                       </div>
+                                       {slot.label && (
+                                          <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 flex items-center gap-1">
+                                             <Star size={10} fill="currentColor" /> {slot.label}
+                                          </span>
+                                       )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                       {slot.tasks.map((task, tIdx) => (
+                                          <div key={tIdx} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs ${status === 'active'
+                                             ? 'bg-green-950/50 border-green-500/30 text-green-200'
+                                             : 'bg-slate-900/80 border-slate-700 text-slate-300'
+                                             }`}>
+                                             <task.icon size={12} className={task.name.includes('IG') ? 'text-pink-500' : task.name.includes('Twitter') ? 'text-sky-500' : task.name.includes('WA') ? 'text-green-500' : task.name.includes('Tiktok') ? 'text-white' : 'text-slate-400'} />
+                                             {task.name}
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              </div>
+                           )
+                        })}
+                     </div>
+                  </div>
+
+                  {/* Right: Content Generator */}
+                  <div className="w-full md:w-[400px] shrink-0">
+                     <div className="bg-slate-950/50 border border-indigo-500/20 rounded-2xl p-5 backdrop-blur-sm h-full flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                           <h4 className="text-white font-bold flex items-center gap-2">
+                              <Video size={18} className="text-pink-500" />
+                              Konten Siap Upload
+                           </h4>
+                           <button
+                              onClick={fetchRandomMission}
+                              disabled={missionLoading}
+                              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
+                              title="Refresh Konten Lain"
+                           >
+                              <RefreshCw size={16} className={missionLoading ? 'animate-spin' : ''} />
+                           </button>
+                        </div>
+
+                        {missionLoading ? (
+                           <div className="aspect-[9/16] bg-slate-900 rounded-xl animate-pulse flex items-center justify-center border border-slate-800">
+                              <Loader2 className="animate-spin text-slate-500" />
+                           </div>
+                        ) : missionVideo ? (
+                           <div className="flex flex-col gap-4 flex-1">
+                              {/* Video Preview */}
+                              <div
+                                 className="relative aspect-video rounded-xl overflow-hidden bg-black group border border-slate-800 shadow-lg cursor-pointer"
+                                 onClick={() => setVideoModalOpen(true)}
+                              >
+                                 {missionVideo.thumbnail_url ? (
+                                    <img src={missionVideo.thumbnail_url} alt="thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition duration-300" />
+                                 ) : (
+                                    <video src={missionVideo.video_url + '#t=0.001'} className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition duration-300" />
+                                 )}
+                                 <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 group-hover:scale-110 transition duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                                       <Play size={24} fill="currentColor" className="ml-1" />
+                                    </div>
+                                 </div>
+                                 <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                    Click to Preview
+                                 </div>
+                              </div>
+
+                              <div className="flex-1">
+                                 <h5 className="text-white font-medium text-sm line-clamp-1 mb-1">{missionVideo.title}</h5>
+                                 <p className="text-slate-400 text-xs line-clamp-2 mb-4">{missionVideo.description}</p>
+
+                                 <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                       onClick={handleMissionCopy}
+                                       className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-500/20"
+                                    >
+                                       <Copy size={14} /> Copy Caption
+                                    </button>
+                                    <button
+                                       onClick={handleMissionDownload}
+                                       className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-bold transition border border-slate-700"
+                                    >
+                                       <Download size={14} /> Download
+                                    </button>
+                                 </div>
+                              </div>
+                           </div>
+                        ) : (
+                           <div className="text-center py-10 text-slate-500 text-sm">
+                              Tidak ada konten tersedia.
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+               </div>
+            </div>
+         </motion.div>
+
+         {/* Video Modal */}
+         <AnimatePresence>
+            {videoModalOpen && missionVideo && (
+               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md px-4" onClick={() => setVideoModalOpen(false)}>
+                  <motion.div
+                     initial={{ opacity: 0, scale: 0.9 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.9 }}
+                     onClick={(e) => e.stopPropagation()}
+                     className="relative w-full max-w-sm md:max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col max-h-[90vh]"
+                  >
+                     <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800">
+                        <h3 className="text-white font-bold truncate pr-4">{missionVideo.title}</h3>
+                        <button onClick={() => setVideoModalOpen(false)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition">
+                           <X size={20} />
+                        </button>
+                     </div>
+                     <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+                        <video
+                           src={missionVideo.video_url}
+                           controls
+                           autoPlay
+                           className="w-full h-full object-contain max-h-[70vh]"
+                        />
+                     </div>
+                     <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+                        <button
+                           onClick={handleMissionCopy}
+                           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
+                        >
+                           <Copy size={16} /> Copy Caption
+                        </button>
+                        <button
+                           onClick={handleMissionDownload}
+                           className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-bold transition border border-slate-700"
+                        >
+                           <Download size={16} /> Download
+                        </button>
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
 
          {/* Tier Card */}
          {loadingTier ? (
