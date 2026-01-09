@@ -81,7 +81,7 @@ export default function ValueComparison() {
                         whileHover={{ scale: 1.05 }}
                         className="relative p-8 rounded-3xl border-2 border-emerald-500/50 bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950/20 shadow-lg shadow-emerald-500/10"
                     >
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-500 text-slate-950 text-sm font-bold rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-500 text-slate-950 text-xs font-bold rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)]">
                             RECOMMENDED CHOICE
                         </div>
 
