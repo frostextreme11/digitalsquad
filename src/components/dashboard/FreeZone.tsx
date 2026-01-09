@@ -28,6 +28,44 @@ export default function FreeZone() {
         return () => clearTimeout(timeoutId)
     }, [searchTerm, limit])
 
+    const handleDownload = async (e: React.MouseEvent, product: any) => {
+        const url = product.file_url
+        if (!url) return
+
+        // Check if it's a jsDelivr PDF link that needs forced download
+        const isJsDelivrPdf = url.includes('cdn.jsdelivr.net') && url.toLowerCase().endsWith('.pdf')
+
+        if (isJsDelivrPdf) {
+            e.preventDefault()
+            try {
+                const response = await fetch(url)
+                const blob = await response.blob()
+                const blobUrl = window.URL.createObjectURL(blob)
+
+                // Use product title as filename, ensuring .pdf extension
+                let filename = product.title || 'download'
+                // Remove special chars for filename safety
+                filename = filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+
+                if (!filename.endsWith('.pdf')) {
+                    filename += '.pdf'
+                }
+
+                const link = document.createElement('a')
+                link.href = blobUrl
+                link.download = filename
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(blobUrl)
+            } catch (error) {
+                console.error("Download failed, opening in new tab", error)
+                window.open(url, '_blank')
+            }
+        }
+        // Otherwise let the default behavior happen (or existing target="_blank")
+    }
+
     if (loading) return <div className="text-white">Loading free products...</div>
 
     return (
@@ -75,6 +113,7 @@ export default function FreeZone() {
                                 </span>
                                 <a
                                     href={product.file_url}
+                                    onClick={(e) => handleDownload(e, product)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition"
