@@ -242,6 +242,7 @@ export type Database = {
           id: string
           user_agent: string | null
           visitor_ip: string | null
+          location: string | null
         }
         Insert: {
           affiliate_code?: string | null
@@ -249,6 +250,7 @@ export type Database = {
           id?: string
           user_agent?: string | null
           visitor_ip?: string | null
+          location?: string | null
         }
         Update: {
           affiliate_code?: string | null
@@ -256,6 +258,7 @@ export type Database = {
           id?: string
           user_agent?: string | null
           visitor_ip?: string | null
+          location?: string | null
         }
         Relationships: []
       }

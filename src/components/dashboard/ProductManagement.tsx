@@ -340,7 +340,7 @@ export default function ProductManagement() {
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Thumbnail URL</label>
                   <input type="url" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                    value={formData.thumbnail_url} onChange={e => setFormData({ ...formData, thumbnail_url: e.target.value })} />
+                    value={formData.thumbnail_url} onChange={e => setFormData({ ...formData, thumbnail_url: transformFileUrl(e.target.value) })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">File URL (Download Link)</label>
