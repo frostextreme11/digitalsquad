@@ -17,7 +17,7 @@ const faqs = [
     },
     {
         question: "Apa saja produk yang bisa saya jual?",
-        answer: "Tersedia ribuan produk digital (PLR) seperti Ebook, Video Course, Template Desain, dan Software yang bisa Anda jual kembali dengan keuntungan 100% masuk ke kantong Anda sendiri."
+        answer: "Tersedia gudang produk digital (PLR) seperti Ebook yang bisa Anda jual kembali dengan keuntungan masuk ke kantong Anda sendiri."
     },
     {
         question: "Apakah ada jaminan uang kembali?",

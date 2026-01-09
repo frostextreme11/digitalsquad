@@ -108,11 +108,11 @@ export default function ValueComparison() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <div className="w-5 h-5 mt-1 flex items-center justify-center shrink-0">🚀</div>
-                                <span className="text-slate-200 font-semibold">ROI: Unlimited <span className="text-slate-400 font-normal">(Potensi income tak terbatas)</span></span>
+                                <span className="text-slate-200 font-semibold">ROI: Penghasilan Unlimited <span className="text-slate-400 font-normal">(Potensi income tak terbatas)</span></span>
                             </li>
                             <li className="flex items-start gap-3">
                                 <ShieldCheck className="w-5 h-5 mt-1 text-yellow-400 shrink-0" />
-                                <span className="bg-yellow-500/10 text-yellow-300 px-2 py-0.5 rounded -ml-2">Risiko: NOL (Gagal jualan pun tetap untung dapat ribuan ebook).</span>
+                                <span className="bg-yellow-500/10 text-yellow-300 px-2 py-0.5 rounded -ml-2">Risiko: NOL (Ikuti dan Praktekan Academy Digital Squad Maka Anda Akan Profit!).</span>
                             </li>
                         </ul>
                     </motion.div>
@@ -131,11 +131,11 @@ export default function ValueComparison() {
                     <div className="space-y-4 text-slate-300 text-lg leading-relaxed text-left">
                         <p>Banyak orang ragu mengeluarkan Rp 50.000 untuk bisnis. Padahal:</p>
                         <ol className="list-decimal list-outside pl-5 space-y-2">
-                            <li>Harga 1 Ebook Premium di pasaran rata-rata <strong className="text-white">Rp 50.000 - Rp 100.000</strong>. Itu hanya untuk satu judul.</li>
+                            <li>Harga 1 Ebook Premium di pasaran rata-rata <strong className="text-white">Rp 50.000 - Rp 100.000</strong>. Itu hanya untuk satu judul. Mirip harga 2 cup kopi kekinian.</li>
                             <li>Di Digital Squad, dengan Rp 50.000 Anda dapat <strong className="text-emerald-400">Akses Perpustakaan Ebook</strong> (Bukan cuma satu, tapi banyak!).</li>
                             <li>PLUS: Ebook ini bisa Anda <strong className="text-amber-400">jual lagi</strong>! Beli akses gudang seharga 1 buku, jual isinya berkali-kali.</li>
                             <li>Jual ke 2 orang = Balik Modal. Jual ke-3 = <strong className="text-emerald-400">Profit 100%</strong>.</li>
-                            <li>Fakta nya semua member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan 1 jam, sisa nya mereka mendapatkan profit berkali kali lipat dengan mudah!</strong></li>
+                            <li>Fakta nya semua member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
                         </ol>
                     </div>
                 </motion.div>
@@ -151,7 +151,7 @@ export default function ValueComparison() {
                         onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                         className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-slate-950 transition-all duration-200 bg-emerald-500 rounded-full hover:bg-emerald-400 hover:scale-105 hover:shadow-[0_0_40px_rgba(16,185,129,0.3)]"
                     >
-                        <span>Saya Mau Untung Hari Ini! (Amankan Slot)</span>
+                        <span>Saya Mau Untung Hari Ini!</span>
                         <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all" />
                     </button>
                 </motion.div>
