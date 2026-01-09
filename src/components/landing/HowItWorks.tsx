@@ -11,7 +11,7 @@ const steps = [
     {
         icon: CloudDownload,
         title: "Akses Produk",
-        desc: "Download ribuan aset digital premium gratis di member area.",
+        desc: "Download di gudang aset digital premium gratis di member area.",
         color: "from-purple-400 to-purple-600"
     },
     {
