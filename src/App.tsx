@@ -3,6 +3,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import PaymentPage from './pages/PaymentPage';
+import PaymentSuccess from './pages/PaymentSuccess';
 import Dashboard from './pages/Dashboard';
 import ProductSalesPage from './pages/ProductSalesPage';
 import NotFound from './pages/NotFound';
@@ -23,6 +24,7 @@ function AppContent() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />
       <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/dashboard/*" element={<Dashboard />} />
       <Route path="/buy/:productId" element={<ProductSalesPage />} />
       <Route path="/maintenance" element={<Maintenance />} />
