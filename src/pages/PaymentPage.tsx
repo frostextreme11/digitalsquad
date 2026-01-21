@@ -107,7 +107,7 @@ export default function PaymentPage() {
     // Check for pending transaction
     const { data: pending } = await supabase
       .from('transactions')
-      .select('id, midtrans_id, amount')
+      .select('id, midtrans_id, amount, payment_gateway, mayar_payment_url')
       .eq('user_id', user.id)
       .eq('type', 'registration')
       .eq('status', 'pending')
@@ -117,6 +117,13 @@ export default function PaymentPage() {
 
     if (pending) {
       setPendingTransaction(pending)
+
+      // Auto-redirect to Mayar payment URL if available
+      if (pending.payment_gateway === 'mayar' && pending.mayar_payment_url) {
+        console.log('Found pending Mayar payment, redirecting to:', pending.mayar_payment_url)
+        window.location.href = pending.mayar_payment_url
+        return
+      }
     }
 
     setCheckingStatus(false)
@@ -286,7 +293,18 @@ export default function PaymentPage() {
 
       const data = await response.json()
 
-      if (data.token) {
+      // Handle based on gateway response
+      if (data.gateway === 'mayar' && data.payment_url) {
+        // Mayar: Redirect to payment page
+        console.log('Redirecting to Mayar payment:', data.payment_url)
+        trackEvent('InitiateCheckout', {
+          value: payload.amount,
+          currency: 'IDR',
+          gateway: 'mayar'
+        })
+        window.location.href = data.payment_url
+      } else if (data.token) {
+        // Midtrans: Use Snap popup
         // @ts-ignore
         if (window.snap) {
           // @ts-ignore
@@ -317,7 +335,7 @@ export default function PaymentPage() {
           alert("Sistem pembayaran belum siap. Harap refresh halaman.")
         }
       } else {
-        alert('Gagal memuat token pembayaran.')
+        alert('Gagal memuat pembayaran.')
       }
 
     } catch (error: any) {

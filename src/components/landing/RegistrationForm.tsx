@@ -263,7 +263,18 @@ export default function RegistrationForm() {
         throw new Error(data.error)
       }
 
-      if (data.token) {
+      // Handle based on gateway response
+      if (data.gateway === 'mayar' && data.payment_url) {
+        // Mayar: Redirect to payment page
+        console.log('Redirecting to Mayar payment:', data.payment_url)
+        trackEvent('InitiateCheckout', {
+          value: price,
+          currency: 'IDR',
+          gateway: 'mayar'
+        })
+        window.location.href = data.payment_url
+      } else if (data.token) {
+        // Midtrans: Use Snap popup
         // @ts-ignore
         window.snap.pay(data.token, {
           onSuccess: function (result: any) {

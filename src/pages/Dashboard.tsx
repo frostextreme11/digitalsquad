@@ -18,6 +18,7 @@ import AgentTestimonials from '../components/dashboard/AgentTestimonials'
 import FreeZone from '../components/dashboard/FreeZone'
 import SalesPage from '../components/dashboard/SalesPage'
 import AdminTierSettings from '../components/dashboard/AdminTierSettings'
+import AdminPaymentSettings from '../components/dashboard/AdminPaymentSettings'
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -72,6 +73,7 @@ export default function Dashboard() {
         <Route path="/" element={profile.role === 'admin' ? <AdminOverview /> : <AgentOverview profile={profile} />} />
         <Route path="/sales" element={<SalesPage role={profile.role} />} />
         <Route path="/tiers" element={<AdminTierSettings />} />
+        <Route path="/payment-settings" element={<AdminPaymentSettings />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/leads" element={profile.role === 'admin' ? <AdminLeadsList /> : <LeadsList />} />
         <Route path="/products" element={profile.role === 'admin' ? <ProductManagement /> : <ProductList />} />

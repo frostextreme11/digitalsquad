@@ -161,29 +161,39 @@ export default function ProductSalesPage() {
             localStorage.setItem(`tx_${product.id}`, data.transaction_id)
 
             setProcessing(false)
-            setIsPaymentOpen(true)
 
-            // @ts-ignore
-            window.snap.pay(data.token, {
-                onSuccess: function (result: any) {
-                    console.log('success', result)
-                    setIsPaymentOpen(false)
-                    setShowSuccess(true)
-                    checkPaymentStatus(data.transaction_id)
-                },
-                onPending: function (result: any) {
-                    console.log('pending', result)
-                },
-                onError: function (result: any) {
-                    console.log('error', result)
-                    alert("Pembayaran gagal!")
-                    setIsPaymentOpen(false)
-                },
-                onClose: function () {
-                    console.log('closed')
-                    checkPaymentStatus(data.transaction_id)
-                }
-            })
+            // Handle based on gateway response
+            if (data.gateway === 'mayar' && data.payment_url) {
+                // Mayar: Redirect to payment page
+                console.log('Redirecting to Mayar payment:', data.payment_url)
+                window.location.href = data.payment_url
+            } else if (data.token) {
+                // Midtrans: Use Snap popup
+                setIsPaymentOpen(true)
+                // @ts-ignore
+                window.snap.pay(data.token, {
+                    onSuccess: function (result: any) {
+                        console.log('success', result)
+                        setIsPaymentOpen(false)
+                        setShowSuccess(true)
+                        checkPaymentStatus(data.transaction_id)
+                    },
+                    onPending: function (result: any) {
+                        console.log('pending', result)
+                    },
+                    onError: function (result: any) {
+                        console.log('error', result)
+                        alert("Pembayaran gagal!")
+                        setIsPaymentOpen(false)
+                    },
+                    onClose: function () {
+                        console.log('closed')
+                        checkPaymentStatus(data.transaction_id)
+                    }
+                })
+            } else {
+                alert('Gagal memuat pembayaran.')
+            }
 
         } catch (err: any) {
             alert(err.message)

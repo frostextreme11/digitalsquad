@@ -110,11 +110,106 @@ serve(async (req) => {
 
         if (purchaseError) throw new Error(`Failed to track purchase: ${purchaseError.message}`)
 
-        // 4. Update Transaction with Midtrans ID (We use txn.id as Order ID)
+        // 4. Update Transaction with order ID (We use txn.id as Order ID)
         const orderId = txn.id
-        await supabaseAdmin.from('transactions').update({ midtrans_id: orderId }).eq('id', txn.id)
 
-        // 5. Call Midtrans Snap API
+        // Fetch active payment gateway from config
+        const { data: gatewayConfig } = await supabaseAdmin
+            .from('app_config')
+            .select('value')
+            .eq('key', 'payment_gateway')
+            .single()
+
+        const activeGateway = gatewayConfig?.value || 'midtrans'
+        console.log(`[Product Payment] Active Gateway: ${activeGateway}`)
+
+        // Update transaction with payment_gateway info
+        await supabaseAdmin
+            .from('transactions')
+            .update({ midtrans_id: orderId, payment_gateway: activeGateway })
+            .eq('id', txn.id)
+
+        // ============ MAYAR GATEWAY ============
+        if (activeGateway === 'mayar') {
+            console.log("[Product Payment] Processing with Mayar...")
+
+            const mayarApiKey = Deno.env.get('MAYAR_API_KEY')
+            if (!mayarApiKey) throw new Error('Mayar API Key not found')
+
+            // Fetch Mayar config
+            const { data: mayarUrlConfig } = await supabaseAdmin
+                .from('app_config')
+                .select('value')
+                .eq('key', 'mayar_api_url')
+                .single()
+
+            const { data: mayarRedirectConfig } = await supabaseAdmin
+                .from('app_config')
+                .select('value')
+                .eq('key', 'mayar_redirect_url')
+                .single()
+
+            // For staging use api.mayar.club, for production use api.mayar.id
+            const mayarApiUrl = mayarUrlConfig?.value || 'https://api.mayar.club/hl/v1'
+            const redirectUrl = mayarRedirectConfig?.value || 'https://digitalsquad.id/payment-success'
+
+            console.log(`[Mayar] API URL: ${mayarApiUrl}`)
+
+            // Call Mayar API to create payment
+            const mayarResponse = await fetch(`${mayarApiUrl}/payment/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${mayarApiKey}`
+                },
+                body: JSON.stringify({
+                    name: customerDetails?.first_name || 'Customer',
+                    email: customerDetails?.email || '',
+                    amount: parseInt(String(amount)),
+                    mobile: customerDetails?.phone || '081234567890',
+                    redirectUrl: redirectUrl,
+                    description: `Pembayaran produk: ${product.title}`,
+                })
+            })
+
+            const mayarData = await mayarResponse.json()
+            console.log("[Mayar] Response:", JSON.stringify(mayarData))
+
+            if (!mayarResponse.ok || mayarData.statusCode >= 400) {
+                console.error("[Mayar] Error:", mayarData)
+                throw new Error(mayarData.message || mayarData.error || 'Mayar Error')
+            }
+
+            // Extract Mayar transaction ID and payment link
+            const mayarTxId = mayarData.data?.id
+            const paymentUrl = mayarData.data?.link
+
+            if (!paymentUrl) {
+                throw new Error('Mayar did not return a payment link')
+            }
+
+            // Update transaction with Mayar ID and payment URL
+            await supabaseAdmin
+                .from('transactions')
+                .update({ mayar_id: mayarTxId, mayar_payment_url: paymentUrl })
+                .eq('id', txn.id)
+
+            console.log(`[Mayar] Product Payment created. ID: ${mayarTxId}, Link: ${paymentUrl}`)
+
+            return new Response(
+                JSON.stringify({
+                    gateway: 'mayar',
+                    payment_url: paymentUrl,
+                    mayar_id: mayarTxId,
+                    transaction_id: txn.id
+                }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            )
+        }
+
+        // ============ MIDTRANS GATEWAY ============
+        console.log("[Product Payment] Processing with Midtrans...")
+
         const serverKey = Deno.env.get('MIDTRANS_SERVER_KEY')
         if (!serverKey) throw new Error('Server Key not found')
 
@@ -175,7 +270,7 @@ serve(async (req) => {
         }
 
         return new Response(
-            JSON.stringify({ token: midtransData.token, redirect_url: midtransData.redirect_url, transaction_id: txn.id }),
+            JSON.stringify({ token: midtransData.token, redirect_url: midtransData.redirect_url, transaction_id: txn.id, gateway: 'midtrans' }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         )
     } catch (error) {
