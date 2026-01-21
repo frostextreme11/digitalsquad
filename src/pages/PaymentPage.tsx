@@ -107,7 +107,7 @@ export default function PaymentPage() {
     // Check for pending transaction
     const { data: pending } = await supabase
       .from('transactions')
-      .select('id, midtrans_id, amount, payment_gateway, mayar_payment_url')
+      .select('*')
       .eq('user_id', user.id)
       .eq('type', 'registration')
       .eq('status', 'pending')
@@ -119,9 +119,10 @@ export default function PaymentPage() {
       setPendingTransaction(pending)
 
       // Auto-redirect to Mayar payment URL if available
-      if (pending.payment_gateway === 'mayar' && pending.mayar_payment_url) {
-        console.log('Found pending Mayar payment, redirecting to:', pending.mayar_payment_url)
-        window.location.href = pending.mayar_payment_url
+      const pendingTx = pending as any
+      if (pendingTx.payment_gateway === 'mayar' && pendingTx.mayar_payment_url) {
+        console.log('Found pending Mayar payment, redirecting to:', pendingTx.mayar_payment_url)
+        window.location.href = pendingTx.mayar_payment_url
         return
       }
     }

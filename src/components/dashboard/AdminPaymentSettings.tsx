@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
-import { CreditCard, Save, Check, AlertCircle, RefreshCw, Settings } from 'lucide-react'
+import { CreditCard, Check, AlertCircle, RefreshCw, Settings } from 'lucide-react'
 
 interface ConfigItem {
     key: string
@@ -136,8 +136,8 @@ export default function AdminPaymentSettings() {
                     onClick={() => handleGatewayChange('midtrans')}
                     disabled={saving}
                     className={`relative p-6 rounded-xl border-2 text-left transition-all ${activeGateway === 'midtrans'
-                            ? 'border-green-500 bg-green-500/10'
-                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                        ? 'border-green-500 bg-green-500/10'
+                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
                         }`}
                 >
                     {activeGateway === 'midtrans' && (
@@ -165,8 +165,8 @@ export default function AdminPaymentSettings() {
 
                     <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${isSandbox('midtrans')
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-green-500/20 text-green-400'
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-green-500/20 text-green-400'
                             }`}>
                             {isSandbox('midtrans') ? 'SANDBOX' : 'PRODUCTION'}
                         </span>
@@ -180,8 +180,8 @@ export default function AdminPaymentSettings() {
                     onClick={() => handleGatewayChange('mayar')}
                     disabled={saving}
                     className={`relative p-6 rounded-xl border-2 text-left transition-all ${activeGateway === 'mayar'
-                            ? 'border-green-500 bg-green-500/10'
-                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                        ? 'border-green-500 bg-green-500/10'
+                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
                         }`}
                 >
                     {activeGateway === 'mayar' && (
@@ -209,8 +209,8 @@ export default function AdminPaymentSettings() {
 
                     <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${isSandbox('mayar')
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-green-500/20 text-green-400'
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-green-500/20 text-green-400'
                             }`}>
                             {isSandbox('mayar') ? 'SANDBOX' : 'PRODUCTION'}
                         </span>
