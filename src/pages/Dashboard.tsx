@@ -19,6 +19,7 @@ import FreeZone from '../components/dashboard/FreeZone'
 import SalesPage from '../components/dashboard/SalesPage'
 import AdminTierSettings from '../components/dashboard/AdminTierSettings'
 import AdminPaymentSettings from '../components/dashboard/AdminPaymentSettings'
+import AdminBlogPosts from '../components/dashboard/AdminBlogPosts'
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -81,6 +82,7 @@ export default function Dashboard() {
         <Route path="/academy" element={profile.role === 'admin' ? <AdminAcademy /> : <AcademyList />} />
         <Route path="/testimonials" element={profile.role === 'admin' ? <AdminTestimonials /> : <AgentTestimonials />} />
         <Route path="/free-zone" element={<FreeZone />} />
+        <Route path="/blog" element={<AdminBlogPosts />} />
       </Routes>
     </DashboardLayout>
   )

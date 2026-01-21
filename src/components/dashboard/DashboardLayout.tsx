@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { LogOut, LayoutDashboard, Users, Wallet, ShoppingBag, Menu, X, GraduationCap, Video, Gift, DollarSign, Crown, CreditCard } from 'lucide-react'
+import { LogOut, LayoutDashboard, Users, Wallet, ShoppingBag, Menu, X, GraduationCap, Video, Gift, DollarSign, Crown, CreditCard, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function DashboardLayout({ children, role }: { children: React.ReactNode, role: 'agent' | 'admin' }) {
@@ -26,6 +26,7 @@ export default function DashboardLayout({ children, role }: { children: React.Re
     { path: '/dashboard/wallet', icon: Wallet, label: role === 'admin' ? 'Withdrawals' : 'My Wallet', roles: ['agent', 'admin'] },
     { path: '/dashboard/academy', icon: GraduationCap, label: 'Academy', roles: ['agent', 'admin'] },
     { path: '/dashboard/testimonials', icon: Video, label: 'Testimonials', roles: ['agent', 'admin'] },
+    { path: '/dashboard/blog', icon: FileText, label: 'Blog Posts', roles: ['admin'] },
   ]
 
   const NavLink = ({ item, onClick }: { item: any, onClick?: () => void }) => {
