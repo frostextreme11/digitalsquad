@@ -87,31 +87,122 @@ export default function BlogPostPage() {
 
         console.log('Original content (first 300 chars):', content.substring(0, 300))
 
-        // STEP 1: Check if content is wrapped in HTML tags (saved by Tiptap)
-        // If so, convert HTML back to plain text first
-        if (content.includes('<p>') || content.includes('<br>')) {
-            // Replace <br> with newlines
+        // STEP 1: Process HTML from Tiptap and convert to clean markdown
+        // Tiptap outputs HTML, so we need to convert relevant tags BACK to markdown
+
+        // First, decode any HTML entities
+        content = content
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&nbsp;/g, ' ')
+
+        // Check if content has HTML tags (from Tiptap)
+        if (content.includes('<')) {
+            console.log('Content has HTML tags, converting to markdown...')
+
+            // STEP 1a: Convert HTML formatting to markdown equivalents
+            // Convert <strong> to ** (markdown bold)
+            content = content.replace(/<strong>([^<]*)<\/strong>/gi, '**$1**')
+
+            // Convert <em> to * (markdown italic)
+            content = content.replace(/<em>([^<]*)<\/em>/gi, '*$1*')
+
+            // Convert <a> tags to markdown links [text](url)
+            // This handles Tiptap's auto-linked URLs
+            content = content.replace(/<a[^>]+href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/gi, (_m, url, text) => {
+                return `[${text}](${url})`
+            })
+
+            // Convert headings
+            content = content.replace(/<h1[^>]*>([^<]*)<\/h1>/gi, '# $1')
+            content = content.replace(/<h2[^>]*>([^<]*)<\/h2>/gi, '## $1')
+            content = content.replace(/<h3[^>]*>([^<]*)<\/h3>/gi, '### $1')
+            content = content.replace(/<h4[^>]*>([^<]*)<\/h4>/gi, '#### $1')
+
+            // Convert blockquotes
+            content = content.replace(/<blockquote[^>]*>([^<]*)<\/blockquote>/gi, '> $1')
+
+            // Convert list items
+            content = content.replace(/<li[^>]*>([^<]*)<\/li>/gi, '- $1')
+
+            // STEP 1b: Fix markdown links that got broken by paragraph tags
+            // Pattern: [text]</p><p>(url) -> [text](url)
+            content = content.replace(/\](<\/p>\s*<p>)\s*\(/gi, '](')
+            content = content.replace(/\]\s*<\/p>\s*<p>\s*\(/gi, '](')
+
+            // Fix text inside brackets broken by p tags
+            content = content.replace(/\[([^\]]*)<\/p>\s*<p>([^\]]*)\]/gi, '[$1 $2]')
+
+            // Remove <br> tags - replace with newline
             content = content.replace(/<br\s*\/?>/gi, '\n')
-            // Replace </p><p> with double newlines (paragraph breaks)
+
+            // Convert paragraph breaks to double newlines
             content = content.replace(/<\/p>\s*<p>/gi, '\n\n')
-            // Remove remaining <p> and </p> tags
+
+            // Remove remaining p tags
             content = content.replace(/<\/?p>/gi, '')
-            // Decode HTML entities
-            content = content
-                .replace(/&amp;/g, '&')
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'")
-                .replace(/&nbsp;/g, ' ')
+
+            // Remove list wrapper tags
+            content = content.replace(/<\/?[ou]l[^>]*>/gi, '')
+
+            // Remove any remaining HTML tags but keep their content
+            content = content.replace(/<[^>]+>/g, '')
+
+            // Clean up excessive whitespace
+            content = content.replace(/\n{3,}/g, '\n\n')
+            content = content.trim()
         }
 
+        // STEP 1c: Fix malformed nested markdown links (CAREFUL - be specific, not greedy!)
+
+        // Fix: [**[text](url) -> [**text**](url)
+        // Pattern: [**[DigitalSquad](http://DigitalSquad.id) -> [**DigitalSquad**](https://digitalsquad.id)
+        // Only matches if [** is followed immediately by another [
+        content = content.replace(/\[\*\*\[([^\]]+)\]\(([^)]+)\)/g, '[**$1**]($2)')
+
+        // Fix: ]([https://url](https://url)) -> ](https://url)
+        // Only when there's [https:// or [http:// inside the parentheses (double-link pattern)
+        content = content.replace(/\]\(\[https?:\/\/[^\]]+\]\((https?:\/\/[^)]+)\)\)/g, ']($1)')
+
+        // Fix: ](url](url) pattern - but ONLY for URLs (starts with http)
+        // Pattern: ](http://url1](https://url2) -> ](https://url2)
+        content = content.replace(/\]\(https?:\/\/[^\s\]]+\]\((https?:\/\/[^)]+)\)/g, ']($1)')
+
+        // Fix: [>> text [**url)**](url) -> [>> text <<](url)
+        // This handles the case where << was converted to a bolded link
+        content = content.replace(/\[\*\*https?:\/\/[^\]]*\)\*\*\]/g, '<<]')
+
+        // Also handle without the closing **
+        content = content.replace(/ \[\*\*https?:\/\/[^\]]+\)\*\*\]\(/g, ' <<](')
+
+        // Clean up orphaned **) that might be left after the link
+        // Pattern: ](url)**) -> ](url)
+        content = content.replace(/\]\(([^)]+)\)\*\*\)/g, ']($1)')
+
+        // Also clean up standalone **) that appears after links
+        content = content.replace(/\)\s*\*\*\)/g, ')')
+
         console.log('After HTML strip (first 300 chars):', content.substring(0, 300))
+
+        // DEBUG: Find CTA links in content
+        const ctaMatch = content.match(/\[.*?(>>|<<|\*\*).*?\]\([^)]+\)/g)
+        console.log('CTA links found after HTML strip:', ctaMatch)
+
+        // DEBUG: Search for digitalsquad.id URLs
+        const urlMatch = content.match(/digitalsquad\.id/g)
+        console.log('digitalsquad.id URLs found:', urlMatch?.length || 0)
 
         // STEP 2: Strip YAML frontmatter (--- block at the start)
         content = content.replace(/^---[\s\S]*?---\s*/m, '')
 
         console.log('After frontmatter strip (first 300 chars):', content.substring(0, 300))
+
+        // DEBUG: Check CTA links after frontmatter strip
+        const ctaMatch2 = content.match(/\[.*?(>>|<<|\*\*).*?\]\([^)]+\)/g)
+        console.log('CTA links after frontmatter strip:', ctaMatch2)
 
         // STEP 3: Parse markdown to HTML using marked v17
         const markedInstance = new Marked({
@@ -121,6 +212,10 @@ export default function BlogPostPage() {
 
         const html = markedInstance.parse(content)
         console.log('Parsed HTML (first 500 chars):', String(html).substring(0, 500))
+
+        // DEBUG: Check if links are in final HTML
+        const linkMatch = String(html).match(/<a[^>]+href="[^"]*digitalsquad[^"]*"[^>]*>/g)
+        console.log('digitalsquad links in final HTML:', linkMatch)
 
         return html as string
     }, [post])
