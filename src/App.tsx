@@ -13,6 +13,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import BlogListPage from './pages/BlogListPage';
 import BlogPostPage from './pages/BlogPostPage';
+import SitemapGenerator from './pages/SitemapGenerator';
 import { useAffiliateTracker } from './hooks/useAffiliateTracker';
 import { Toaster } from 'react-hot-toast';
 
@@ -33,6 +34,7 @@ function AppContent() {
       <Route path="/access-denied" element={<AccessDenied />} />
       <Route path="/blog" element={<BlogListPage />} />
       <Route path="/blog/:slug" element={<BlogPostPage />} />
+      <Route path="/admin/sitemap-generator" element={<SitemapGenerator />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
