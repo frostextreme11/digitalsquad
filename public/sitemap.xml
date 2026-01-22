@@ -1,15 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://digitalsquad.id/</loc>
-    <lastmod>2025-01-02</lastmod>
+    <loc>https://digitalsquad.id</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://digitalsquad.id/blog</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://digitalsquad.id/login</loc>
-    <lastmod>2025-01-02</lastmod>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/payment</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/stop-mengeluh-miskin-5-mindset-yang-wajib-dibuang-jika-ingin-bebas-finansial-sebelum-usia-40</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/waspada-loker-penipuan-ciri-ciri-tawaran-kerja-online-palsu-yang-mengincar-data-pribadi-uang-anda</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/capek-jadi-karyawan-gaji-numpang-lewat-peta-jalan-roadmap-resign-aman-dengan-bisnis-jasa-digital</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/gak-punya-produk-jadilah-makelar-panduan-bangun-agensi-talent-jasa-tanpa-modal-sepeserpun</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/bongkar-rahasia-ternak-akun-cara-membangun-aset-digital-yang-bisa-dijual-mahal-atau-panen-cuan-tiap-bulan</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/gaptek-main-tiktok-tiru-cara-ibu-rumah-tangga-ini-dapat-gaji-setara-umr-cuma-dari-affiliate-tanpa-tampil-wajah</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/korban-phk-ini-5-skill-digital-penyelamat-yang-bisa-anda-pelajari-dalam-24-jam-untuk-mulai-terima-orderan</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/cuma-modal-hp-kuota-7-cara-hasilkan-uang-dari-internet-tanpa-perlu-laptop-terbukti-membayar</loc>
+    <lastmod>2026-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/mental-hancur-diteror-debt-collector-baca-panduan-bangkit-secara-finansial-tanpa-harus-jual-aset</loc>
+    <lastmod>2026-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/galbay-pinjol-jangan-gali-lubang-tutup-lubang-ini-strategi-frugal-living-ekstrem-untuk-lunasi-hutang-dalam-6-bulan</loc>
+    <lastmod>2026-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

@@ -24,7 +24,7 @@ export default function SitemapGenerator() {
             // Fetch blog posts
             const { data: posts, error } = await supabase
                 .from('posts')
-                .select('slug, updated_at, created_at')
+                .select('slug, updated_at, created_at, title, featured_image')
                 .eq('is_published', true)
                 .order('created_at', { ascending: false })
 
@@ -33,7 +33,7 @@ export default function SitemapGenerator() {
             setPostCount(posts?.length || 0)
 
             let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
 
             // Add static routes
             staticRoutes.forEach(route => {
@@ -53,6 +53,15 @@ export default function SitemapGenerator() {
                 sitemap += `    <lastmod>${date}</lastmod>\n`
                 sitemap += '    <changefreq>weekly</changefreq>\n'
                 sitemap += '    <priority>0.7</priority>\n'
+
+                // Add Featured Image for SEO
+                if (post.featured_image) {
+                    sitemap += '    <image:image>\n'
+                    sitemap += `      <image:loc>${post.featured_image.startsWith('http') ? post.featured_image : baseUrl + post.featured_image}</image:loc>\n`
+                    sitemap += `      <image:title>${post.title.replace(/&/g, '&amp;')}</image:title>\n`
+                    sitemap += '    </image:image>\n'
+                }
+
                 sitemap += '  </url>\n'
             })
 
