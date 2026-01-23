@@ -359,30 +359,15 @@ export default function ProductList() {
                     >
                       <Download size={16} className="rotate-0" /> Share
                     </button>
-                    {isPurchased ? (
-                      <a
-                        href={product.file_url}
-                        onClick={(e) => handleDownload(e, product)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition"
-                      >
-                        Akses
-                      </a>
-                    ) : (
-                      <button
-                        onClick={() => handleBuy(product)}
-                        disabled={processingId === product.id || isPaymentOpen}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition disabled:opacity-50 min-w-[100px] justify-center"
-                      >
-                        {processingId === product.id ? (
-                          <span className="flex items-center gap-1 scale-90">
-                            <Loader2 size={12} className="animate-spin" />
-                            Loading...
-                          </span>
-                        ) : 'Beli'}
-                      </button>
-                    )}
+                    <a
+                      href={product.file_url}
+                      onClick={(e) => handleDownload(e, product)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition"
+                    >
+                      Akses
+                    </a>
                   </div>
                 </div>
               </div>
