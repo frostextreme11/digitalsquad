@@ -80,7 +80,8 @@ export default function Dashboard() {
         <Route path="/products" element={profile.role === 'admin' ? <ProductManagement /> : <ProductList />} />
         <Route path="/wallet" element={profile.role === 'admin' ? <AdminWithdrawals /> : <Wallet />} />
         <Route path="/academy" element={profile.role === 'admin' ? <AdminAcademy /> : <AcademyList />} />
-        <Route path="/testimonials" element={profile.role === 'admin' ? <AdminTestimonials /> : <AgentTestimonials />} />
+        <Route path="/testimonials" element={profile.role === 'admin' ? <AdminTestimonials /> : <AgentTestimonials category="testimony" />} />
+        <Route path="/video-content" element={<AgentTestimonials category="content" />} />
         <Route path="/free-zone" element={<FreeZone />} />
         <Route path="/blog" element={<AdminBlogPosts />} />
       </Routes>

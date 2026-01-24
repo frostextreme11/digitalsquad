@@ -27,9 +27,9 @@ export default function AgentOverview({ profile }: { profile: any }) {
    const [loadingTier, setLoadingTier] = useState(true)
 
    // Mission State
-   const [missionVideo, setMissionVideo] = useState<any>(null)
+   const [missions, setMissions] = useState<{ content: any, testimony: any }>({ content: null, testimony: null })
    const [missionLoading, setMissionLoading] = useState(true)
-   const [videoModalOpen, setVideoModalOpen] = useState(false)
+   const [selectedMission, setSelectedMission] = useState<any>(null)
    const [currentTime, setCurrentTime] = useState(new Date())
 
    const DEFAULT_TIER: TierInfo = {
@@ -245,9 +245,13 @@ export default function AgentOverview({ profile }: { profile: any }) {
       try {
          const { data } = await supabase.from('video_testimonials').select('*')
          if (data && data.length > 0) {
-            // Pick random one
-            const random = data[Math.floor(Math.random() * data.length)]
-            setMissionVideo(random)
+            const contentVideos = data.filter(v => v.category === 'content')
+            const testimonyVideos = data.filter(v => !v.category || v.category === 'testimony')
+
+            const randomContent = contentVideos.length > 0 ? contentVideos[Math.floor(Math.random() * contentVideos.length)] : null
+            const randomTestimony = testimonyVideos.length > 0 ? testimonyVideos[Math.floor(Math.random() * testimonyVideos.length)] : null
+
+            setMissions({ content: randomContent, testimony: randomTestimony })
          }
       } catch (err) {
          console.error("Error fetching mission", err)
@@ -256,23 +260,23 @@ export default function AgentOverview({ profile }: { profile: any }) {
       }
    }
 
-   const handleMissionCopy = () => {
-      if (!missionVideo) return
-      const text = `${missionVideo.description || ''}\n\nInfo lebih lanjut: ${affiliateLink}`
+   const handleMissionCopy = (video: any) => {
+      if (!video) return
+      const text = `${video.description || ''}\n\nInfo lebih lanjut: ${affiliateLink}`
       navigator.clipboard.writeText(text)
       toast.success('Caption + Link berhasil disalin!')
    }
 
-   const handleMissionDownload = async () => {
-      if (!missionVideo) return
+   const handleMissionDownload = async (video: any) => {
+      if (!video) return
       toast.loading('Mulai download...', { duration: 2000 })
       try {
-         const response = await fetch(missionVideo.video_url)
+         const response = await fetch(video.video_url)
          const blob = await response.blob()
          const url = window.URL.createObjectURL(blob)
          const a = document.createElement('a')
          a.href = url
-         a.download = `${missionVideo.title.replace(/\s+/g, '_')}.mp4`
+         a.download = `${video.title.replace(/\s+/g, '_')}.mp4`
          document.body.appendChild(a)
          a.click()
          window.URL.revokeObjectURL(url)
@@ -280,7 +284,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
          toast.success('Download berhasil!')
       } catch (err) {
          console.error('Download failed', err)
-         window.open(missionVideo.video_url, '_blank')
+         window.open(video.video_url, '_blank')
       }
    }
 
@@ -555,75 +559,91 @@ export default function AgentOverview({ profile }: { profile: any }) {
                   </div>
 
                   {/* Right: Content Generator */}
-                  <div className="w-full md:w-[400px] shrink-0">
-                     <div className="bg-slate-950/50 border border-indigo-500/20 rounded-2xl p-5 backdrop-blur-sm h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                           <h4 className="text-white font-bold flex items-center gap-2">
-                              <Video size={18} className="text-pink-500" />
-                              Konten Siap Upload
+
+                  {/* Right: Content Generator - Stacked for 2 items */}
+                  <div className="w-full md:w-[400px] shrink-0 flex flex-col gap-4">
+
+                     {/* 1. Testimony Mission */}
+                     <div className="bg-slate-950/50 border border-indigo-500/20 rounded-2xl p-5 backdrop-blur-sm flex-1 flex flex-col">
+                        <div className="flex items-center justify-between mb-2">
+                           <h4 className="text-white font-bold flex items-center gap-2 text-sm">
+                              <Star size={16} className="text-yellow-500" />
+                              Misi: Share Testimoni
                            </h4>
-                           <button
-                              onClick={fetchRandomMission}
-                              disabled={missionLoading}
-                              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
-                              title="Refresh Konten Lain"
-                           >
-                              <RefreshCw size={16} className={missionLoading ? 'animate-spin' : ''} />
+                           <button onClick={fetchRandomMission} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition">
+                              <RefreshCw size={14} className={missionLoading ? 'animate-spin' : ''} />
                            </button>
                         </div>
-
                         {missionLoading ? (
-                           <div className="aspect-[9/16] bg-slate-900 rounded-xl animate-pulse flex items-center justify-center border border-slate-800">
-                              <Loader2 className="animate-spin text-slate-500" />
-                           </div>
-                        ) : missionVideo ? (
-                           <div className="flex flex-col gap-4 flex-1">
-                              {/* Video Preview */}
+                           <div className="h-32 bg-slate-900 rounded-lg animate-pulse"></div>
+                        ) : missions.testimony ? (
+                           <div className="flex gap-3">
                               <div
-                                 className="relative aspect-video rounded-xl overflow-hidden bg-black group border border-slate-800 shadow-lg cursor-pointer"
-                                 onClick={() => setVideoModalOpen(true)}
+                                 className="w-24 aspect-[9/16] bg-black rounded-lg overflow-hidden relative cursor-pointer group shrink-0 border border-slate-700"
+                                 onClick={() => setSelectedMission(missions.testimony)}
                               >
-                                 {missionVideo.thumbnail_url ? (
-                                    <img src={missionVideo.thumbnail_url} alt="thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition duration-300" />
+                                 {missions.testimony.thumbnail_url ? (
+                                    <img src={missions.testimony.thumbnail_url} className="w-full h-full object-cover opacity-80" />
                                  ) : (
-                                    <video src={missionVideo.video_url + '#t=0.001'} className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition duration-300" />
+                                    <video src={missions.testimony.video_url + '#t=1.0'} className="w-full h-full object-cover opacity-80" />
                                  )}
-                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 group-hover:scale-110 transition duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                                       <Play size={24} fill="currentColor" className="ml-1" />
-                                    </div>
-                                 </div>
-                                 <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                                    Click to Preview
+                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-transparent transition">
+                                    <Play size={20} className="text-white drop-shadow-md" />
                                  </div>
                               </div>
-
-                              <div className="flex-1">
-                                 <h5 className="text-white font-medium text-sm line-clamp-1 mb-1">{missionVideo.title}</h5>
-                                 <p className="text-slate-400 text-xs line-clamp-2 mb-4">{missionVideo.description}</p>
-
-                                 <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                       onClick={handleMissionCopy}
-                                       className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-500/20"
-                                    >
-                                       <Copy size={14} /> Copy Caption
-                                    </button>
-                                    <button
-                                       onClick={handleMissionDownload}
-                                       className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-bold transition border border-slate-700"
-                                    >
-                                       <Download size={14} /> Download
-                                    </button>
+                              <div className="flex-1 min-w-0 flex flex-col">
+                                 <h5 className="text-white text-xs font-bold line-clamp-2 leading-tight mb-1">{missions.testimony.title}</h5>
+                                 <p className="text-slate-500 text-[10px] line-clamp-2 mb-auto">{missions.testimony.description}</p>
+                                 <div className="flex gap-2 mt-2">
+                                    <button onClick={() => handleMissionCopy(missions.testimony)} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-lg text-[10px] font-bold">Copy</button>
+                                    <button onClick={() => handleMissionDownload(missions.testimony)} className="px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded-lg"><Download size={12} /></button>
                                  </div>
                               </div>
                            </div>
                         ) : (
-                           <div className="text-center py-10 text-slate-500 text-sm">
-                              Tidak ada konten tersedia.
-                           </div>
+                           <div className="h-20 flex items-center justify-center text-slate-600 text-xs">No testimony available</div>
                         )}
                      </div>
+
+                     {/* 2. Content Mission */}
+                     <div className="bg-slate-950/50 border border-pink-500/20 rounded-2xl p-5 backdrop-blur-sm flex-1 flex flex-col">
+                        <div className="flex items-center justify-between mb-2">
+                           <h4 className="text-white font-bold flex items-center gap-2 text-sm">
+                              <Video size={16} className="text-pink-500" />
+                              Misi: Upload Konten
+                           </h4>
+                        </div>
+                        {missionLoading ? (
+                           <div className="h-32 bg-slate-900 rounded-lg animate-pulse"></div>
+                        ) : missions.content ? (
+                           <div className="flex gap-3">
+                              <div
+                                 className="w-24 aspect-[9/16] bg-black rounded-lg overflow-hidden relative cursor-pointer group shrink-0 border border-slate-700"
+                                 onClick={() => setSelectedMission(missions.content)}
+                              >
+                                 {missions.content.thumbnail_url ? (
+                                    <img src={missions.content.thumbnail_url} className="w-full h-full object-cover opacity-80" />
+                                 ) : (
+                                    <video src={missions.content.video_url + '#t=1.0'} className="w-full h-full object-cover opacity-80" />
+                                 )}
+                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-transparent transition">
+                                    <Play size={20} className="text-white drop-shadow-md" />
+                                 </div>
+                              </div>
+                              <div className="flex-1 min-w-0 flex flex-col">
+                                 <h5 className="text-white text-xs font-bold line-clamp-2 leading-tight mb-1">{missions.content.title}</h5>
+                                 <p className="text-slate-500 text-[10px] line-clamp-2 mb-auto">{missions.content.description}</p>
+                                 <div className="flex gap-2 mt-2">
+                                    <button onClick={() => handleMissionCopy(missions.content)} className="flex-1 bg-pink-600 hover:bg-pink-500 text-white py-1.5 rounded-lg text-[10px] font-bold">Copy</button>
+                                    <button onClick={() => handleMissionDownload(missions.content)} className="px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded-lg"><Download size={12} /></button>
+                                 </div>
+                              </div>
+                           </div>
+                        ) : (
+                           <div className="h-20 flex items-center justify-center text-slate-600 text-xs">No content available</div>
+                        )}
+                     </div>
+
                   </div>
 
                </div>
@@ -632,46 +652,48 @@ export default function AgentOverview({ profile }: { profile: any }) {
 
          {/* Video Modal */}
          <AnimatePresence>
-            {videoModalOpen && missionVideo && (
-               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md px-4" onClick={() => setVideoModalOpen(false)}>
-                  <motion.div
-                     initial={{ opacity: 0, scale: 0.9 }}
-                     animate={{ opacity: 1, scale: 1 }}
-                     exit={{ opacity: 0, scale: 0.9 }}
-                     onClick={(e) => e.stopPropagation()}
-                     className="relative w-full max-w-sm md:max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col max-h-[90vh]"
-                  >
-                     <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800">
-                        <h3 className="text-white font-bold truncate pr-4">{missionVideo.title}</h3>
-                        <button onClick={() => setVideoModalOpen(false)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition">
-                           <X size={20} />
-                        </button>
-                     </div>
-                     <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
-                        <video
-                           src={missionVideo.video_url}
-                           controls
-                           autoPlay
-                           className="w-full h-full object-contain max-h-[70vh]"
-                        />
-                     </div>
-                     <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
-                        <button
-                           onClick={handleMissionCopy}
-                           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
-                        >
-                           <Copy size={16} /> Copy Caption
-                        </button>
-                        <button
-                           onClick={handleMissionDownload}
-                           className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-bold transition border border-slate-700"
-                        >
-                           <Download size={16} /> Download
-                        </button>
-                     </div>
-                  </motion.div>
-               </div>
-            )}
+            <AnimatePresence>
+               {selectedMission && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md px-4" onClick={() => setSelectedMission(null)}>
+                     <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative w-full max-w-sm md:max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col max-h-[90vh]"
+                     >
+                        <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800">
+                           <h3 className="text-white font-bold truncate pr-4">{selectedMission.title}</h3>
+                           <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition">
+                              <X size={20} />
+                           </button>
+                        </div>
+                        <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+                           <video
+                              src={selectedMission.video_url}
+                              controls
+                              autoPlay
+                              className="w-full h-full object-contain max-h-[70vh]"
+                           />
+                        </div>
+                        <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+                           <button
+                              onClick={() => handleMissionCopy(selectedMission)}
+                              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
+                           >
+                              <Copy size={16} /> Copy Caption
+                           </button>
+                           <button
+                              onClick={() => handleMissionDownload(selectedMission)}
+                              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-bold transition border border-slate-700"
+                           >
+                              <Download size={16} /> Download
+                           </button>
+                        </div>
+                     </motion.div>
+                  </div>
+               )}
+            </AnimatePresence>
          </AnimatePresence>
 
          {/* Tier Card */}

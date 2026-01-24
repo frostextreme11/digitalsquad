@@ -383,6 +383,7 @@ export type Database = {
           title: string
           description: string | null
           thumbnail_url: string | null
+          category: 'testimony' | 'content' | null
         }
         Insert: {
           id?: string

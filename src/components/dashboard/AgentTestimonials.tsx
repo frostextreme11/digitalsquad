@@ -13,7 +13,7 @@ interface Testimonial {
     thumbnail_url?: string | null
 }
 
-export default function AgentTestimonials() {
+export default function AgentTestimonials({ category = 'testimony' }: { category?: 'testimony' | 'content' }) {
     const [testimonials, setTestimonials] = useState<Testimonial[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -28,6 +28,7 @@ export default function AgentTestimonials() {
         let query = supabase
             .from('video_testimonials')
             .select('*')
+            .eq('category', category)
             .order('created_at', { ascending: false })
 
         if (search) {
@@ -50,7 +51,7 @@ export default function AgentTestimonials() {
             fetchTestimonials()
         }, 500)
         return () => clearTimeout(timer)
-    }, [search])
+    }, [search, category])
 
     const handleDownload = async (e: React.MouseEvent, video: Testimonial) => {
         e.stopPropagation()
@@ -84,9 +85,9 @@ export default function AgentTestimonials() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                        Success Stories
+                        {category === 'content' ? 'Video Content' : 'Success Stories'}
                     </h2>
-                    <p className="text-slate-400">Learn from other agents and boost your sales.</p>
+                    <p className="text-slate-400">{category === 'content' ? 'Bahan konten iklan untuk promosi.' : 'Learn from other agents and boost your sales.'}</p>
                 </div>
             </div>
 
