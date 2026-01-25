@@ -43,6 +43,9 @@ export default function AgentOverview({ profile }: { profile: any }) {
    }
 
    const [localAffiliateCode, setLocalAffiliateCode] = useState(profile.affiliate_code)
+   const [appendAffiliateLink, setAppendAffiliateLink] = useState(() => {
+      return localStorage.getItem('DS_APPEND_AFFILIATE_LINK') === 'true'
+   })
 
    useEffect(() => {
       // If code is missing from prop, try to fetch it (self-healing for backfilled/newly generated codes)
@@ -262,9 +265,24 @@ export default function AgentOverview({ profile }: { profile: any }) {
 
    const handleMissionCopy = (video: any) => {
       if (!video) return
-      const text = `${video.description || ''}\n\nInfo lebih lanjut: ${affiliateLink}`
+      let text = video.description || ''
+
+      if (appendAffiliateLink) {
+         text += `\n\nInfo lebih lanjut: ${affiliateLink}`
+      }
+
       navigator.clipboard.writeText(text)
-      toast.success('Caption + Link berhasil disalin!')
+      toast.success(appendAffiliateLink ? 'Caption + Link berhasil disalin!' : 'Caption berhasil disalin!')
+   }
+
+   const toggleAppendLink = (checked: boolean) => {
+      setAppendAffiliateLink(checked)
+      localStorage.setItem('DS_APPEND_AFFILIATE_LINK', String(checked))
+      if (checked) {
+         toast.success('Link affiliate akan otomatis ditambahkan')
+      } else {
+         toast.success('Link affiliate tidak akan ditambahkan')
+      }
    }
 
    const handleMissionDownload = async (video: any) => {
@@ -504,6 +522,19 @@ export default function AgentOverview({ profile }: { profile: any }) {
                         </div>
                      </div>
 
+                     {/* Toggle Affiliate Link Settings */}
+                     <div className="mb-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50 flex items-center justify-between">
+                        <div className="flex flex-col">
+                           <span className="text-slate-200 font-medium text-sm">Tambahkan Link Affiliate Di Caption?</span>
+                           <span className="text-slate-500 text-xs">Jika aktif, link akan otomatis ditambahkan di akhir caption.</span>
+                        </div>
+                        <button
+                           onClick={() => toggleAppendLink(!appendAffiliateLink)}
+                           className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${appendAffiliateLink ? 'bg-blue-600' : 'bg-slate-700'}`}
+                        >
+                           <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${appendAffiliateLink ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                        </button>
+                     </div>
                      <div className="space-y-4">
                         {todaySchedule.map((slot, idx) => {
                            const status = getScheduleStatus(slot.time)
@@ -681,7 +712,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
                               onClick={() => handleMissionCopy(selectedMission)}
                               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
                            >
-                              <Copy size={16} /> Copy Caption
+                              <Copy size={16} /> {appendAffiliateLink ? 'Copy Caption + Link' : 'Copy Caption Only'}
                            </button>
                            <button
                               onClick={() => handleMissionDownload(selectedMission)}
@@ -697,78 +728,80 @@ export default function AgentOverview({ profile }: { profile: any }) {
          </AnimatePresence>
 
          {/* Tier Card */}
-         {loadingTier ? (
-            <div className="bg-slate-900/50 rounded-3xl p-8 h-48 animate-pulse border border-slate-800"></div>
-         ) : (
-            <motion.div
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.4 }}
-               className={`bg-gradient-to-br ${getTierGradient(activeTier.tier_key)} border p-1 rounded-3xl shadow-xl relative overflow-hidden`}>
-               <div className="bg-slate-950/20 backdrop-blur-sm rounded-[22px] p-6 h-full relative z-10">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-                     {/* Tier Identity */}
-                     <div className="flex items-center gap-5">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-inner ${activeTier.tier_key === 'vip' ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' : activeTier.tier_key === 'pro' ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
-                           {getTierIcon(activeTier.tier_key)}
-                        </div>
-                        <div>
-                           <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Current Membership</p>
-                           <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{activeTier.name}</h3>
-                           {activeTier.tier_key === 'vip' && <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded text-[10px] text-yellow-300 font-bold uppercase">Sultan Access</span>}
-                        </div>
-                     </div>
-
-                     {/* Benefits Grid */}
-                     <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                           <p className="text-white/50 text-[10px] uppercase">Komisi Penjualan</p>
-                           <p className="text-white font-bold text-xl">{(activeTier.commission_rate * 100).toFixed(0)}%</p>
-                        </div>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                           <p className="text-white/50 text-[10px] uppercase">Auto Upgrade</p>
-                           <p className="text-white font-bold text-xl">{totalSales} Sales</p>
-                        </div>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-3 col-span-2 flex items-center justify-between">
+         {
+            loadingTier ? (
+               <div className="bg-slate-900/50 rounded-3xl p-8 h-48 animate-pulse border border-slate-800"></div>
+            ) : (
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className={`bg-gradient-to-br ${getTierGradient(activeTier.tier_key)} border p-1 rounded-3xl shadow-xl relative overflow-hidden`}>
+                  <div className="bg-slate-950/20 backdrop-blur-sm rounded-[22px] p-6 h-full relative z-10">
+                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                        {/* Tier Identity */}
+                        <div className="flex items-center gap-5">
+                           <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-inner ${activeTier.tier_key === 'vip' ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' : activeTier.tier_key === 'pro' ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                              {getTierIcon(activeTier.tier_key)}
+                           </div>
                            <div>
-                              <p className="text-white/50 text-[10px] uppercase">Minimum Withdrawal</p>
-                              <p className="text-white font-bold">Rp {activeTier.min_withdraw.toLocaleString()}</p>
+                              <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Current Membership</p>
+                              <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{activeTier.name}</h3>
+                              {activeTier.tier_key === 'vip' && <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded text-[10px] text-yellow-300 font-bold uppercase">Sultan Access</span>}
                            </div>
-                           {activeTier.priority_withdrawal && <div className="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded">Priority</div>}
                         </div>
-                     </div>
 
-                     {/* Next Tier Progress */}
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        {nextTier && nextTier.upgrade_sales_threshold ? (
-                           <div className="space-y-3">
-                              <div className="flex justify-between items-end">
-                                 <div>
-                                    <p className="text-white/60 text-xs mb-1">Next Tier: <span className="text-white font-semibold">{nextTier.name}</span></p>
-                                    <p className="text-xs text-white/40">Need {nextTier.upgrade_sales_threshold - totalSales} more sales</p>
-                                 </div>
-                                 <div className="text-right">
-                                    <p className="text-white font-bold">{Math.round(upgradeProgress)}%</p>
-                                 </div>
-                              </div>
-                              <div className="w-full bg-slate-900/50 h-2 rounded-full overflow-hidden">
-                                 <div className="bg-white h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${upgradeProgress}%` }}></div>
-                              </div>
+                        {/* Benefits Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                           <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                              <p className="text-white/50 text-[10px] uppercase">Komisi Penjualan</p>
+                              <p className="text-white font-bold text-xl">{(activeTier.commission_rate * 100).toFixed(0)}%</p>
                            </div>
-                        ) : (
-                           <div className="flex items-center justify-center h-full text-center">
+                           <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                              <p className="text-white/50 text-[10px] uppercase">Auto Upgrade</p>
+                              <p className="text-white font-bold text-xl">{totalSales} Sales</p>
+                           </div>
+                           <div className="bg-white/5 border border-white/10 rounded-xl p-3 col-span-2 flex items-center justify-between">
                               <div>
-                                 <Crown className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                                 <p className="text-white font-bold">Max Tier Reached!</p>
-                                 <p className="text-white/50 text-xs">You are at the top of the food chain.</p>
+                                 <p className="text-white/50 text-[10px] uppercase">Minimum Withdrawal</p>
+                                 <p className="text-white font-bold">Rp {activeTier.min_withdraw.toLocaleString()}</p>
                               </div>
+                              {activeTier.priority_withdrawal && <div className="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded">Priority</div>}
                            </div>
-                        )}
+                        </div>
+
+                        {/* Next Tier Progress */}
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                           {nextTier && nextTier.upgrade_sales_threshold ? (
+                              <div className="space-y-3">
+                                 <div className="flex justify-between items-end">
+                                    <div>
+                                       <p className="text-white/60 text-xs mb-1">Next Tier: <span className="text-white font-semibold">{nextTier.name}</span></p>
+                                       <p className="text-xs text-white/40">Need {nextTier.upgrade_sales_threshold - totalSales} more sales</p>
+                                    </div>
+                                    <div className="text-right">
+                                       <p className="text-white font-bold">{Math.round(upgradeProgress)}%</p>
+                                    </div>
+                                 </div>
+                                 <div className="w-full bg-slate-900/50 h-2 rounded-full overflow-hidden">
+                                    <div className="bg-white h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${upgradeProgress}%` }}></div>
+                                 </div>
+                              </div>
+                           ) : (
+                              <div className="flex items-center justify-center h-full text-center">
+                                 <div>
+                                    <Crown className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                                    <p className="text-white font-bold">Max Tier Reached!</p>
+                                    <p className="text-white/50 text-xs">You are at the top of the food chain.</p>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
                      </div>
                   </div>
-               </div>
-            </motion.div>
-         )}
+               </motion.div>
+            )
+         }
 
          {/* Stats Grid */}
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -852,6 +885,6 @@ export default function AgentOverview({ profile }: { profile: any }) {
                <StatsChart data={chartData} mode="agent" />
             </div>
          </motion.div>
-      </motion.div>
+      </motion.div >
    )
 }

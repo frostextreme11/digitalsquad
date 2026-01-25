@@ -18,6 +18,18 @@ export default function AgentTestimonials({ category = 'testimony' }: { category
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [selectedVideo, setSelectedVideo] = useState<Testimonial | null>(null)
+    const [affiliateCode, setAffiliateCode] = useState<string | null>(null)
+
+    useEffect(() => {
+        const getProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data } = await supabase.from('profiles').select('affiliate_code').eq('id', user.id).single()
+                if (data) setAffiliateCode(data.affiliate_code)
+            }
+        }
+        getProfile()
+    }, [])
 
     useEffect(() => {
         fetchTestimonials()
@@ -76,8 +88,17 @@ export default function AgentTestimonials({ category = 'testimony' }: { category
     const handleCopyDescription = (e: React.MouseEvent, description: string | null) => {
         e.stopPropagation()
         if (!description) return
-        navigator.clipboard.writeText(description)
-        toast.success('Description copied to clipboard')
+
+        let text = description
+        const shouldAppend = localStorage.getItem('DS_APPEND_AFFILIATE_LINK') === 'true'
+
+        if (shouldAppend && affiliateCode) {
+            const affiliateLink = `${window.location.origin}/?ref=${affiliateCode}`
+            text += `\n\nInfo lebih lanjut: ${affiliateLink}`
+        }
+
+        navigator.clipboard.writeText(text)
+        toast.success(shouldAppend ? 'Description + Link copied!' : 'Description copied to clipboard')
     }
 
     return (
@@ -224,7 +245,13 @@ export default function AgentTestimonials({ category = 'testimony' }: { category
                                 <button
                                     onClick={() => {
                                         if (selectedVideo.description) {
-                                            navigator.clipboard.writeText(selectedVideo.description)
+                                            const shouldAppend = localStorage.getItem('DS_APPEND_AFFILIATE_LINK') === 'true'
+                                            let text = selectedVideo.description
+                                            if (shouldAppend && affiliateCode) {
+                                                const affiliateLink = `${window.location.origin}/?ref=${affiliateCode}`
+                                                text += `\n\nInfo lebih lanjut: ${affiliateLink}`
+                                            }
+                                            navigator.clipboard.writeText(text)
                                             toast.success('Copied to clipboard')
                                         }
                                     }}

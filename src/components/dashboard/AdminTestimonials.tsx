@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Plus, Search, Edit, Trash2, Video, X, Save, Loader2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Video, X, Save, Loader2, Copy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Testimonial {
@@ -99,6 +99,54 @@ export default function AdminTestimonials() {
 
         if (error) {
             alert('Error deleting video')
+        } else {
+            fetchTestimonials()
+        }
+    }
+
+    const handleDuplicate = async (item: Testimonial) => {
+        // Find base title (remove ending numbers)
+        const match = item.title.match(/^(.*?)( \d+)?$/)
+        const baseTitle = match ? match[1] : item.title
+
+        // Find all titles starting with baseTitle
+        const { data: similarItems } = await supabase
+            .from('video_testimonials')
+            .select('title')
+            .ilike('title', `${baseTitle}%`)
+
+        // Calculate next number
+        let nextNum = 2
+        if (similarItems) {
+            const numbers = similarItems
+                .map(t => {
+                    const m = t.title.match(new RegExp(`^${baseTitle}( (\\d+))?$`))
+                    if (!m) return 0
+                    return m[2] ? parseInt(m[2]) : 1
+                })
+                .filter(n => n > 0)
+
+            if (numbers.length > 0) {
+                nextNum = Math.max(...numbers) + 1
+            }
+        }
+
+        const newTitle = `${baseTitle} ${nextNum}`
+
+        const payload = {
+            title: newTitle,
+            description: item.description,
+            video_url: item.video_url,
+            thumbnail_url: item.thumbnail_url,
+            category: item.category
+        }
+
+        const { error } = await supabase
+            .from('video_testimonials')
+            .insert([payload])
+
+        if (error) {
+            alert('Error duplicating video: ' + error.message)
         } else {
             fetchTestimonials()
         }
@@ -226,14 +274,23 @@ export default function AdminTestimonials() {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
+                                                        onClick={() => handleDuplicate(item)}
+                                                        className="p-2 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition"
+                                                        title="Duplicate"
+                                                    >
+                                                        <Copy size={18} />
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleOpenModal(item)}
                                                         className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                                                        title="Edit"
                                                     >
                                                         <Edit size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(item.id)}
                                                         className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                                                        title="Delete"
                                                     >
                                                         <Trash2 size={18} />
                                                     </button>
