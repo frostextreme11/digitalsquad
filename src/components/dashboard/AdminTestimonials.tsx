@@ -10,7 +10,7 @@ interface Testimonial {
     title: string
     description: string | null
     thumbnail_url?: string | null
-    category?: 'testimony' | 'content'
+    category?: 'testimony' | 'content' | null
 }
 
 export default function AdminTestimonials() {

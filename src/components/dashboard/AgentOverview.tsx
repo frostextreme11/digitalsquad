@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap, Crown, Star, Shield, ArrowUp, RefreshCw, Download, Play, MessageCircle, Instagram, Twitter, Music2, Calendar, Clock, Video, Loader2, X } from 'lucide-react'
+import { Copy, CheckCircle, Users, TrendingUp, MousePointer, GraduationCap, Crown, Star, Shield, ArrowUp, RefreshCw, Download, Play, MessageCircle, Instagram, Twitter, Music2, Calendar, Clock, Video, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
