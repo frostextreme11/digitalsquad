@@ -79,6 +79,12 @@
   }
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Blog Content Styling - Using standard CSS for Tailwind v4 compatibility */
 .blog-content {
   color: #cbd5e1;

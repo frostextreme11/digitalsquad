@@ -52,6 +52,14 @@ serve(async (req) => {
 
         console.log(`Event: ${event} | Tx ID: ${mayarTxId} | Product ID: ${mayarProductId} | Status: ${mayarStatus} | Amount: ${amount}`)
 
+        if (event === 'payment.reminder') {
+            console.log("Skipping payment.reminder event to prevent status overwrites.")
+            return new Response(
+                JSON.stringify({ status: 'ignored', message: 'payment.reminder event is ignored' }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            )
+        }
+
         // Find transaction by mayar_id - try multiple IDs
         let existingTx = null
         let findError = null

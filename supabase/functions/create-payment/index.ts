@@ -230,6 +230,7 @@ serve(async (req) => {
         mobile: customerDetails?.phone || '081234567890',
         redirectUrl: redirectUrl,
         description: type === 'product_purchase' ? 'Pembayaran produk Digital Squad' : 'Pembayaran pendaftaran member Digital Squad',
+        expiredAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year expired
       }
       console.log(`[Mayar] Request Payload:`, JSON.stringify(mayarPayload))
 

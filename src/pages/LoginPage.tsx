@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../lib/supabase'
 import { useNavigate, Link } from 'react-router-dom'
+import AnimatedAlert from '../components/ui/AnimatedAlert'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -9,6 +10,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const navigate = useNavigate()
+
+  // Alert State
+  const [alertState, setAlertState] = useState<{
+    isVisible: boolean
+    message: string
+    type: 'success' | 'error'
+  }>({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  })
 
   useEffect(() => {
     setMounted(true)
@@ -23,6 +35,13 @@ export default function LoginPage() {
       if (error) throw error
 
       if (user) {
+        // Show success alert before redirecting
+        setAlertState({
+          isVisible: true,
+          message: 'Berhasil masuk! Mengalihkan...',
+          type: 'success'
+        })
+
         // Check transaction status
         const { data: transaction } = await supabase
           .from('transactions')
@@ -33,14 +52,21 @@ export default function LoginPage() {
           .limit(1)
           .maybeSingle()
 
-        if (transaction) {
-          navigate('/dashboard')
-        } else {
-          navigate('/payment')
-        }
+        // Small delay to let user see success message
+        setTimeout(() => {
+          if (transaction) {
+            navigate('/dashboard')
+          } else {
+            navigate('/payment')
+          }
+        }, 1500)
       }
     } catch (error: any) {
-      alert(error.message)
+      setAlertState({
+        isVisible: true,
+        message: error.message || 'Gagal masuk. Silakan cek email dan password Anda.',
+        type: 'error'
+      })
     } finally {
       setLoading(false)
     }
@@ -52,6 +78,14 @@ export default function LoginPage() {
         <title>Login Member Area - Digital Squad</title>
         <meta name="description" content="Masuk ke member area Digital Squad untuk mengakses materi pembelajaran, tools bisnis online, dan dashboard affiliate." />
       </Helmet>
+
+      {/* Custom Alert */}
+      <AnimatedAlert
+        isVisible={alertState.isVisible}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={() => setAlertState(prev => ({ ...prev, isVisible: false }))}
+      />
 
       {/* Animated Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
