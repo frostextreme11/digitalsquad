@@ -10,14 +10,14 @@ const steps = [
     },
     {
         icon: CloudDownload,
-        title: "Akses Produk",
-        desc: "Download di gudang aset digital premium gratis di member area.",
+        title: "Akses Platform",
+        desc: "Akses platform Digital Squad dan dapatkan akses ke semua fitur. Dapatkan cuan dari aset digital yang ada di dalamnya.",
         color: "from-purple-400 to-purple-600"
     },
     {
         icon: Wallet,
         title: "Cuan Mengalir",
-        desc: "Sebar link affiliate atau jual produk, dan tarik komisi kapanpun.",
+        desc: "Sebar link affiliate atau jual produk, diajarin step by step di academy Digital Squad! Sampe Cuan!",
         color: "from-green-400 to-green-600"
     }
 ]

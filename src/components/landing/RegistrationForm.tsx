@@ -516,6 +516,9 @@ export default function RegistrationForm() {
                 ) : `Daftar ${currentTier.name} - Rp ${(currentTier.price || 0).toLocaleString('id-ID')}`}
               </button>
               <p className="text-xs text-slate-500 text-center mt-4">
+                Mohon Gunakan Email Dan Password Dengan Data Yang Valid, Agar Memudahkan Anda Mengakses Platform Digital Squad :)
+              </p>
+              <p className="text-xs text-slate-500 text-center mt-4">
                 Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.
               </p>
               <div className="mt-6 pt-6 border-t border-slate-800 text-center">
