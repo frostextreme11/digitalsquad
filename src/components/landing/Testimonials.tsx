@@ -3,11 +3,11 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react'
 
 const testimonials = [
-  { id: 1, name: "Budi Santoso", earning: "Ojek Online", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Di_Ajak_Temen_Ojol.mp4" },
+  { id: 1, name: "Vemia", earning: "Ibu Rumah Tangga", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/mahasiswi_penasaran_1.mp4" },
   { id: 2, name: "Siti", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Di_Ajak_Temen_Sekelas.mp4" },
   { id: 3, name: "Rofidah", earning: "Ibu Rumah Tangga", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Iseng_Liat_Status_WA_Temen_(2).mp4" },
   { id: 4, name: "Faris", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Lagi_Gabut_Di_Kosan.mp4" },
-  { id: 5, name: "Hendri", earning: "Ojek Online", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Ojol_Liat_Iklan_Di_Facebook.mp4" },
+  { id: 5, name: "Yunita", earning: "Pegawai Swasta", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/mahasiswi_penasaran_2.mp4" },
   { id: 6, name: "Meilani", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Penasaran_Tapi_Happy.mp4" },
   { id: 7, name: "Cacha", earning: "Mahasiswa", video: "https://cdn.jsdelivr.net/gh/frostextreme11/DigitalSquadStorage@main/Public/assets/FULL_Story_Temen_Gk_Nyesel.mp4" },
 ]
