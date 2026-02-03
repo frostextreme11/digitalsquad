@@ -9,19 +9,31 @@ import { Users, TrendingUp } from 'lucide-react'
 export default function AdminOverview() {
     const [stats, setStats] = useState({
         users: 0,
+        monthlyUsers: 0,
         leads: 0,
         incomeTotal: 0,
+        monthlyIncome: 0,
         incomeAffiliate: 0,
         incomeOrganic: 0,
         totalWithdrawal: 0,
-        netProfit: 0
+        monthlyWithdrawal: 0,
+        netProfit: 0,
+        monthlyNetProfit: 0
     })
     const [chartData, setChartData] = useState<any[]>([])
 
     useEffect(() => {
         const fetchStats = async () => {
+            const startOfCurrentMonth = startOfMonth(new Date()).toISOString()
+
             // 1. Total Users
             const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+
+            // 1b. Monthly New Users
+            const { count: monthlyUsers } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', startOfCurrentMonth)
 
             // 2. Leads (Unpaid Organic)
             const { data: organicProfiles } = await supabase
@@ -82,20 +94,43 @@ export default function AdminOverview() {
             })
 
             const incomeTotal = incomeAffiliate + incomeOrganic
+
+            // Calculate Monthly Omset (Income) from loaded transactions
+            const monthlyIncome = transactions
+                ?.filter((t: any) => t.created_at >= startOfCurrentMonth)
+                .reduce((sum, t) => sum + t.amount, 0) || 0
+
             const totalCommission = commissions?.reduce((sum, c) => sum + c.amount, 0) || 0
+
+            // Calculate Total Withdrawal matches logic: amount + 2500 fee
             const totalWithdrawal = withdrawals?.reduce((sum, w) => sum + (w.amount + 2500), 0) || 0
+
+            // Calculate Monthly Withdrawal
+            const monthlyWithdrawal = withdrawals
+                ?.filter((w: any) => w.created_at >= startOfCurrentMonth)
+                .reduce((sum, w) => sum + (w.amount + 2500), 0) || 0
+
+            const monthlyCommission = commissions
+                ?.filter((c: any) => c.created_at >= startOfCurrentMonth)
+                .reduce((sum, c) => sum + c.amount, 0) || 0
 
             // Net Profit = Total Income - Total Commissions
             const netProfit = incomeTotal - totalCommission
+            // Monthly Net Profit
+            const monthlyNetProfit = monthlyIncome - monthlyCommission
 
             setStats({
                 users: users || 0,
+                monthlyUsers: monthlyUsers || 0,
                 leads: organicLeadsCount,
                 incomeTotal,
+                monthlyIncome,
                 incomeAffiliate,
                 incomeOrganic,
                 totalWithdrawal,
-                netProfit
+                monthlyWithdrawal,
+                netProfit,
+                monthlyNetProfit
             })
 
             // 6. Chart Data
@@ -167,6 +202,10 @@ export default function AdminOverview() {
                         <h3 className="text-slate-400 text-sm font-medium">Total Users</h3>
                     </div>
                     <p className="text-3xl font-bold text-white">{stats.users}</p>
+                    <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                        <TrendingUp size={12} />
+                        +{stats.monthlyUsers} this month
+                    </p>
                 </motion.div>
 
                 <Link to="/dashboard/leads">
@@ -187,6 +226,10 @@ export default function AdminOverview() {
                     </div>
                     <p className="text-3xl font-bold text-green-400">Rp {stats.incomeTotal.toLocaleString()}</p>
                     <div className="mt-4 space-y-1 text-xs">
+                        <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-1 mb-1">
+                            <span>This Month:</span>
+                            <span className="text-green-400 font-bold">Rp {stats.monthlyIncome.toLocaleString()}</span>
+                        </div>
                         <div className="flex justify-between text-slate-400">
                             <span>Organic:</span>
                             <span className="text-white">Rp {stats.incomeOrganic.toLocaleString()}</span>
@@ -205,6 +248,10 @@ export default function AdminOverview() {
                         <h3 className="text-slate-400 text-sm font-medium">Total Withdrawal</h3>
                     </div>
                     <p className="text-3xl font-bold text-red-400">Rp {stats.totalWithdrawal.toLocaleString()}</p>
+                    <p className="text-xs text-slate-400 mt-2 flex items-center justify-between">
+                        <span>This Month:</span>
+                        <span className="text-white font-bold">Rp {stats.monthlyWithdrawal.toLocaleString()}</span>
+                    </p>
                 </motion.div>
 
                 {/* Net Profit */}
@@ -214,7 +261,11 @@ export default function AdminOverview() {
                         <h3 className="text-slate-400 text-sm font-medium">Net Profit</h3>
                     </div>
                     <p className="text-3xl font-bold text-emerald-400">Rp {stats.netProfit.toLocaleString()}</p>
-                    <p className="text-slate-500 text-xs mt-2">
+                    <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1 font-bold">
+                        <TrendingUp size={12} />
+                        +{stats.monthlyNetProfit.toLocaleString()} this month
+                    </p>
+                    <p className="text-slate-500 text-xs mt-1">
                         Profit bersih dari selisih total pemasukan dan total komisi affiliate.
                     </p>
                 </motion.div>

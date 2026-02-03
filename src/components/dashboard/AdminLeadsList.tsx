@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter, Copy, Check, Link as LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 
@@ -11,6 +11,13 @@ export default function AdminLeadsList() {
     const [limit, setLimit] = useState(10)
     const [page, setPage] = useState(0)
     const [totalCount, setTotalCount] = useState(0)
+    const [copiedId, setCopiedId] = useState<string | null>(null)
+
+    const handleCopy = (id: string, url: string) => {
+        navigator.clipboard.writeText(url)
+        setCopiedId(id)
+        setTimeout(() => setCopiedId(null), 2000)
+    }
 
     const fetchLeads = async () => {
         setLoading(true)
@@ -23,7 +30,41 @@ export default function AdminLeadsList() {
             })
 
             if (error) throw error
-            setLeads(leadsData || [])
+            if (error) throw error
+
+            // Fetch associated pending transactions for payment URLs
+            const ids = leadsData?.map((l: any) => l.id) || []
+            let paymentMap: Record<string, string> = {}
+
+            if (ids.length > 0) {
+                const { data: userTxns } = await supabase
+                    .from('transactions')
+                    .select('user_id, mayar_payment_url')
+                    .eq('status', 'pending')
+                    .not('mayar_payment_url', 'is', null) // Only fetch if URL exists
+                    .in('user_id', ids)
+
+                const { data: leadTxns } = await supabase
+                    .from('transactions')
+                    .select('lead_id, mayar_payment_url')
+                    .eq('status', 'pending')
+                    .not('mayar_payment_url', 'is', null)
+                    .in('lead_id', ids)
+
+                userTxns?.forEach((t: any) => {
+                    if (t.mayar_payment_url) paymentMap[t.user_id] = t.mayar_payment_url
+                })
+                leadTxns?.forEach((t: any) => {
+                    if (t.mayar_payment_url) paymentMap[t.lead_id] = t.mayar_payment_url
+                })
+            }
+
+            const leadsWithPayment = leadsData?.map((l: any) => ({
+                ...l,
+                paymentUrl: paymentMap[l.id]
+            })) || []
+
+            setLeads(leadsWithPayment)
 
             // Fetch count
             const { data: countData } = await (supabase.rpc as any)('get_organic_leads_count', {
@@ -132,10 +173,21 @@ export default function AdminLeadsList() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                        Organic Lead
-                                    </span>
+                                <div className="flex flex-col items-end gap-2 mt-4 md:mt-0">
+                                    {lead.paymentUrl && (
+                                        <button
+                                            onClick={() => handleCopy(lead.id, lead.paymentUrl)}
+                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
+                                        >
+                                            {copiedId === lead.id ? <Check size={14} /> : <LinkIcon size={14} />}
+                                            {copiedId === lead.id ? 'Copied!' : 'Copy Payment Link'}
+                                        </button>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                            Organic Lead
+                                        </span>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
@@ -167,8 +219,9 @@ export default function AdminLeadsList() {
                         </div>
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     )
 }
 

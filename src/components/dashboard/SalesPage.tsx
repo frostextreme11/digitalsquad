@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
 import { TrendingUp, UserPlus, ShoppingBag, Filter, Calendar, Search, ChevronDown } from 'lucide-react'
 
+import { startOfMonth } from 'date-fns'
+
 interface SalesPageProps {
     role?: string
 }
@@ -12,6 +14,11 @@ export default function SalesPage({ role }: SalesPageProps) {
         totalProfit: 0,
         registrationCount: 0,
         productSaleCount: 0
+    })
+    const [monthlyStats, setMonthlyStats] = useState({
+        omset: 0,
+        withdrawal: 0,
+        newUsers: 0
     })
     const [transactions, setTransactions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -25,6 +32,36 @@ export default function SalesPage({ role }: SalesPageProps) {
         }, 500) // Debounce search
         return () => clearTimeout(timeoutId)
     }, [filter, role, limit, searchQuery])
+
+    useEffect(() => {
+        if (role === 'admin') {
+            const fetchMonthly = async () => {
+                const start = startOfMonth(new Date()).toISOString()
+
+                // Monthly Omset (Transactions where status=success)
+                const { data: txns } = await supabase.from('transactions')
+                    .select('amount')
+                    .eq('status', 'success')
+                    .gte('created_at', start)
+                const omset = txns?.reduce((sum, t: any) => sum + t.amount, 0) || 0
+
+                // Monthly Withdrawals
+                const { data: wds } = await supabase.from('withdrawals')
+                    .select('amount')
+                    .eq('status', 'success')
+                    .gte('created_at', start)
+                const withdrawal = wds?.reduce((sum, w: any) => sum + (w.amount + 2500), 0) || 0
+
+                // Monthly New Users
+                const { count } = await supabase.from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', start)
+
+                setMonthlyStats({ omset, withdrawal, newUsers: count || 0 })
+            }
+            fetchMonthly()
+        }
+    }, [role])
 
     const fetchSalesData = async () => {
         setLoading(true)
@@ -260,6 +297,38 @@ export default function SalesPage({ role }: SalesPageProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Monthly Stats (Admin Only) */}
+            {role === 'admin' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-green-500/10 rounded-lg text-green-400"><TrendingUp size={20} /></div>
+                            <h3 className="text-slate-400 text-sm font-medium">Monthly Omset</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-green-400">Rp {monthlyStats.omset.toLocaleString()}</p>
+                        <p className="text-xs text-slate-500 mt-1">Total revenue this month</p>
+                    </div>
+
+                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-red-500/10 rounded-lg text-red-400"><TrendingUp size={20} className="rotate-180" /></div>
+                            <h3 className="text-slate-400 text-sm font-medium">Monthly Withdrawal</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-red-400">Rp {monthlyStats.withdrawal.toLocaleString()}</p>
+                        <p className="text-xs text-slate-500 mt-1">Total payouts this month (incl. fees)</p>
+                    </div>
+
+                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><UserPlus size={20} /></div>
+                            <h3 className="text-slate-400 text-sm font-medium">New User Joins</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-white">{monthlyStats.newUsers}</p>
+                        <p className="text-xs text-slate-500 mt-1">Users registered this month</p>
+                    </div>
+                </div>
+            )}
 
             {/* Controls: Filter, Search, Limit */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
