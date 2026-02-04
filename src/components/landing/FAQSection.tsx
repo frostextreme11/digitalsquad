@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Minus } from 'lucide-react'
 
-const faqs = [
+export const faqs = [
     {
         question: "Apakah sekali bayar untuk selamanya?",
         answer: "Ya, betul! Cukup bayar Rp 50.000 di awal pendaftaran, Anda langsung mendapatkan akses seumur hidup ke semua fitur, produk digital, dan sistem affiliate tanpa biaya bulanan atau tahunan."
