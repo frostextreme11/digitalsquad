@@ -5,7 +5,7 @@ const steps = [
     {
         icon: UserPlus,
         title: "Daftar & Upgrade",
-        desc: "Isi form pendaftaran dan bayar 50rb sekali seumur hidup.",
+        desc: "Isi form pendaftaran dengan harga 1 cup kopi kekinian.",
         color: "from-blue-400 to-blue-600"
     },
     {

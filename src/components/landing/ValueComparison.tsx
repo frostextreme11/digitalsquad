@@ -41,33 +41,34 @@ export default function ValueComparison() {
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="relative p-8 rounded-3xl border border-slate-800 bg-slate-900/50 grayscale hover:grayscale-0 transition-all duration-500 group"
+                        className="relative p-8 rounded-3xl border border-red-900/30 bg-slate-900/80 transition-all duration-500 overflow-hidden shadow-[0_0_40px_rgba(239,68,68,0.15)]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-slate-800/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {/* Red glow effect - pulsating */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-red-600/10 to-transparent rounded-3xl animate-pulse" />
 
-                        <div className="flex justify-center mb-6">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <Trash2 className="w-8 h-8 text-slate-500" />
+                        <div className="flex justify-center mb-6 relative z-10">
+                            <div className="w-16 h-16 rounded-2xl bg-red-900/20 flex items-center justify-center border border-red-500/20 shadow-inner shadow-red-500/10">
+                                <Trash2 className="w-8 h-8 text-red-500" />
                             </div>
                         </div>
 
-                        <h3 className="text-2xl font-bold text-slate-400 text-center mb-8">Rp 50.000 untuk Gaya Hidup</h3>
+                        <h3 className="text-2xl font-bold text-red-200 text-center mb-8 relative z-10">Rp 50.000 untuk Gaya Hidup</h3>
 
-                        <ul className="space-y-4 text-slate-500">
+                        <ul className="space-y-4 text-slate-400 relative z-10">
                             <li className="flex items-start gap-3">
-                                <Coffee className="w-5 h-5 mt-1 shrink-0 opacity-70" />
+                                <Coffee className="w-5 h-5 mt-1 shrink-0 opacity-70 text-red-300" />
                                 <span>2 Cup Kopi Kekinian (Habis dalam 30 menit)</span>
                             </li>
                             <li className="flex items-start gap-3">
-                                <div className="w-5 h-5 mt-1 flex items-center justify-center text-lg leading-none shrink-0 opacity-70">🍔</div>
+                                <div className="w-5 h-5 mt-1 flex items-center justify-center text-lg leading-none shrink-0 grayscale-[0.5]">🍔</div>
                                 <span>1 Paket Burger (Kenyang sesaat)</span>
                             </li>
                             <li className="flex items-start gap-3">
-                                <div className="w-5 h-5 mt-1 flex items-center justify-center shrink-0 opacity-70">📉</div>
+                                <div className="w-5 h-5 mt-1 flex items-center justify-center shrink-0 grayscale-[0.5]">📉</div>
                                 <span>ROI: 0% (Uang hilang selamanya)</span>
                             </li>
-                            <li className="flex items-start gap-3 text-red-900/70 group-hover:text-red-400 transition-colors">
-                                <AlertTriangle className="w-5 h-5 mt-1 shrink-0" />
+                            <li className="flex gap-3 text-red-400 font-bold bg-red-950/30 p-2 rounded-lg border border-red-900/30">
+                                <AlertTriangle className="w-5 h-5 mt-1 shrink-0 animate-bounce" />
                                 <span>Risiko: Gula darah naik, uang habis.</span>
                             </li>
                         </ul>
@@ -100,7 +101,7 @@ export default function ValueComparison() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <Briefcase className="w-5 h-5 mt-1 text-emerald-400 shrink-0" />
-                                <span className="text-slate-200">Hak Bisnis & Lisensi Resell (Jual Ulang)</span>
+                                <span className="text-slate-200">Hak Bisnis & Lisensi Resell (Rahasia Sebar Link Dapet Cuan)</span>
                             </li>
                             <li className="flex items-start gap-3">
                                 <GraduationCap className="w-5 h-5 mt-1 text-emerald-400 shrink-0" />
@@ -131,11 +132,12 @@ export default function ValueComparison() {
                     <div className="space-y-4 text-slate-300 text-lg leading-relaxed text-left">
                         <p>Banyak orang ragu mengeluarkan Rp 50.000 untuk bisnis. Padahal:</p>
                         <ol className="list-decimal list-outside pl-5 space-y-2">
-                            <li>Harga 1 Ebook Premium di pasaran rata-rata <strong className="text-white">Rp 50.000 - Rp 100.000</strong>. Itu hanya untuk satu judul. Mirip harga 2 cup kopi kekinian.</li>
-                            <li>Di Digital Squad, dengan Rp 50.000 Anda dapat <strong className="text-emerald-400">Akses Perpustakaan Ebook</strong> (Bukan cuma satu, tapi banyak!).</li>
-                            <li>PLUS: Ebook ini bisa Anda <strong className="text-amber-400">jual lagi</strong>! Beli akses gudang seharga 1 buku, jual isinya berkali-kali.</li>
-                            <li>Jual ke 2 orang = Balik Modal. Jual ke-3 = <strong className="text-emerald-400">Profit 100%</strong>.</li>
-                            <li>Fakta nya semua member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
+                            <li>Harga 1 Produk Digital di pasaran rata-rata <strong className="text-white">Rp 50.000 - Rp 100.000</strong>. Itu hanya untuk satu judul. Mirip harga 2 cup kopi kekinian.</li>
+                            <li>Di Digital Squad, dengan Rp 50.000 Anda dapat <strong className="text-emerald-400">Akses Ke Platform Digital Squad</strong> (Gudang Produk Digital!).</li>
+                            <li>PLUS: Produk Digital ini bisa Anda <strong className="text-amber-400">jual lagi</strong>! Beli akses gudang seharga 2 cup kopi, jual isinya berkali-kali.</li>
+                            <li><strong className="text-amber-400">Jual ke 2 orang = Balik Modal.</strong> Jual ke-3 = <strong className="text-emerald-400">Profit 100%</strong>.</li>
+                            <li>Fakta nya ribuan member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
+                            <li><strong className="text-amber-400">Cuman Sebar Link Bisa Langsung Cuan!</strong></li>
                         </ol>
                     </div>
                 </motion.div>

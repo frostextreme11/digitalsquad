@@ -64,7 +64,7 @@ export default function Hero3D() {
   return (
     <div className="h-[90vh] w-full relative bg-slate-950 overflow-hidden flex items-center justify-center">
       <AuroraBackground />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay z-0"></div>
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay z-0"></div>
 
       {/* Navigation Buttons - Absolute Top Right */}
       <motion.div
@@ -117,7 +117,7 @@ export default function Hero3D() {
           transition={{ duration: 0.6 }} // Faster animation
         >
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 drop-shadow-2xl">
-            Bebas Hutang<br /> Bersama<br />
+            Solusi Gajian Setiap Hari<br /> Bersama<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Squad!</span>
           </h1>
         </motion.div>
@@ -128,7 +128,8 @@ export default function Hero3D() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h2 className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto font-light">
-            Ubah <span className="text-yellow-400 font-bold">Modal 50 Ribu</span> Jadi Solusi Lunas Hutang & Bebas Teror Pinjol. Bergabunglah dengan DigitalSquad: cara termudah hasilkan jutaan rupiah hanya dari menyebar link. <span className="italic">Bukan sulap, ini strategi digital.</span>
+            <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin punya penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
+            <span className="text-yellow-400 font-bold"> Solusi Lunas Hutang & Bebas Teror Pinjol.</span> Bergabunglah dengan DigitalSquad: cara termudah hasilkan jutaan rupiah. <span className="italic">Bukan sulap, ini strategi digital.</span>
           </h2>
         </motion.div>
 
@@ -139,9 +140,9 @@ export default function Hero3D() {
           className="relative group"
         >
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
-          <a href="#register" className="relative flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-5 px-12 rounded-full text-lg md:text-xl shadow-2xl transform transition duration-200 hover:scale-[1.02]">
-            Saya Mau Lunasi Hutang Sekarang
-          </a>
+          {/* <a href="#register" className="relative flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-5 px-12 rounded-full text-lg md:text-xl shadow-2xl transform transition duration-200 hover:scale-[1.02]">
+            Lihat Cara Kerja Nya
+          </a> */}
         </motion.div>
 
         <motion.p
@@ -151,7 +152,7 @@ export default function Hero3D() {
           className="mt-4 text-sm text-slate-500 font-medium flex items-center gap-2"
         >
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          Sudah dibuktikan oleh 1.000+ member.
+          Sudah dibuktikan oleh 5.000+ member.
         </motion.p>
       </div>
     </div>

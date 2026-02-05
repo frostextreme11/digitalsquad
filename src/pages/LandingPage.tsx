@@ -1,5 +1,9 @@
+import { lazy, Suspense } from 'react'
 import { Helmet } from 'react-helmet-async'
-import Hero3D from '../components/landing/Hero3D'
+
+// 1. Lazy load the heavy 3D component
+const Hero3D = lazy(() => import('../components/landing/Hero3D'))
+
 import Testimonials from '../components/landing/Testimonials'
 import HowItWorks from '../components/landing/HowItWorks'
 import ProductShowcase from '../components/landing/ProductShowcase'
@@ -10,6 +14,13 @@ import FAQSection, { faqs } from '../components/landing/FAQSection'
 import RegistrationForm from '../components/landing/RegistrationForm'
 import FloatingToast from '../components/landing/FloatingToast'
 import ValueComparison from '../components/landing/ValueComparison'
+
+// Fallback component while 3D engine loads
+const HeroFallback = () => (
+  <div className="h-[90vh] w-full bg-slate-950 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)
 
 export default function LandingPage() {
   const baseUrl = 'https://digitalsquad.id'
@@ -110,12 +121,14 @@ export default function LandingPage() {
           {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
-      <Hero3D />
+      <Suspense fallback={<HeroFallback />}>
+        <Hero3D />
+      </Suspense>
       <Testimonials />
       <HowItWorks />
+      <ValueComparison />
       <ProductShowcase />
       <IncomeCalculator />
-      <ValueComparison />
       <Benefits />
       <FAQSection />
       <TierPricing />

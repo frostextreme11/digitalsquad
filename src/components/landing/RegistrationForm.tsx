@@ -447,7 +447,7 @@ export default function RegistrationForm() {
 
             {/* Total Display */}
             <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-4 mb-6 text-center">
-              <p className="text-slate-400 text-sm mb-1">Total yang harus dibayar:</p>
+              <p className="text-slate-400 text-sm mb-1">Total Investasi:</p>
               <p className="text-3xl font-black text-white">
                 Rp {(currentTier.price || 0).toLocaleString('id-ID')}
               </p>

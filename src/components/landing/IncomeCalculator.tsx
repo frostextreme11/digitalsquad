@@ -150,7 +150,7 @@ export default function IncomeCalculator() {
             <div className="lg:col-span-2 space-y-8">
               <div>
                 <label className="flex justify-between text-white mb-2 font-medium">
-                  <span>Teman yang Diundang</span>
+                  <span>Jual Lisensi Digital Squad</span>
                   <span className="text-blue-400 font-bold">{invites} Orang</span>
                 </label>
                 <input
@@ -167,7 +167,7 @@ export default function IncomeCalculator() {
 
               <div>
                 <label className="flex justify-between text-white mb-2 font-medium">
-                  <span>Produk Terjual</span>
+                  <span>Jual Produk Digital</span>
                   <span className="text-purple-400 font-bold">{sales} Pcs</span>
                 </label>
                 <input

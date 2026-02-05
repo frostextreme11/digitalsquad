@@ -13,7 +13,7 @@ export const faqs = [
     },
     {
         question: "Apakah saya diajari cara jualannya?",
-        answer: "Tentu saja! Di member area, kami menyediakan video tutorial lengkap, template promosi, dan grup support eksklusif. Anda akan dibimbing langkah demi langkah mulai dari nol sampai menghasilkan."
+        answer: "Tentu saja! Di member area, Anda akan dibimbing melalui Academy Digital Squad langkah demi langkah mudah untuk menghasilkan uang dengan Digital Squad."
     },
     {
         question: "Apa saja produk yang bisa saya jual?",

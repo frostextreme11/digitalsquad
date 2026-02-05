@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter, Copy, Check, Link as LinkIcon } from 'lucide-react'
+import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter, Check, Link as LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 

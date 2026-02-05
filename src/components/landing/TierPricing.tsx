@@ -211,14 +211,22 @@ export default function TierPricing() {
 
                                     {/* Price */}
                                     <div className={`text-center mb-6 py-4 rounded-2xl ${style.isBestSeller ? 'bg-gradient-to-b from-slate-800/80 to-slate-900/80 border border-slate-700/50' : 'bg-slate-800/50'}`}>
+                                        <div className="text-slate-500 font-bold text-lg line-through decoration-red-500/50 decoration-2 mb-1">
+                                            {tier.key === 'basic' ? 'Rp 125.000' : 'Rp 400.000'}
+                                        </div>
                                         <div className="text-4xl font-black text-white mb-1 tracking-tight">
                                             Rp {(tier.price || 0).toLocaleString('id-ID')}
                                         </div>
                                         <p className="text-slate-400 text-sm">sekali bayar, seumur hidup</p>
                                         {tier.key === 'pro' && (
-                                            <p className="text-xs text-blue-300/80 mt-2 font-medium bg-blue-900/20 inline-block px-3 py-1 rounded-full border border-blue-500/20">
-                                                ★ Investasi terbaik jangka panjang
-                                            </p>
+                                            <div className="mt-3 flex flex-col items-center gap-1.5">
+                                                <p className="text-xs text-blue-300/80 font-medium bg-blue-900/20 inline-block px-3 py-1 rounded-full border border-blue-500/20">
+                                                    ★ Investasi terbaik jangka panjang
+                                                </p>
+                                                <p className="text-xs text-red-400 font-extrabold animate-pulse">
+                                                    Khusus untuk 10 orang saja, sisa kuota 4 orang lagi.
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
 

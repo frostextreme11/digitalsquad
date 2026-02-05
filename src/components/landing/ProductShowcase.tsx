@@ -25,7 +25,7 @@ export default function ProductShowcase() {
                     {items.map((item, idx) => (
                         <div key={idx} className="w-64 flex-shrink-0 bg-slate-800 rounded-xl overflow-hidden shadow-xl border border-slate-700 transform hover:scale-105 transition duration-300">
                             <div className="h-80 bg-slate-700 relative">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition" />
+                                <img src={item.image} alt={item.title} loading="lazy" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition" />
                                 <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">
                                     PREMIUM
                                 </div>
