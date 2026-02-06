@@ -3,11 +3,11 @@ import { Video, LayoutTemplate, Mail, MonitorPlay, PenTool, Search } from 'lucid
 // Mock Data for Carousel
 const products = [
     { title: "Mastering TikTok Ads", price: 150000, icon: Video, color: "from-pink-500 to-rose-600" },
-    { title: "100+ Canva Templates", price: 200000, icon: LayoutTemplate, color: "from-blue-400 to-cyan-500" },
-    { title: "Email Marketing Kit", price: 175000, icon: Mail, color: "from-yellow-400 to-orange-500" },
-    { title: "Video Editing Preset", price: 125000, icon: MonitorPlay, color: "from-purple-500 to-indigo-600" },
-    { title: "Copywriting Secrets", price: 190000, icon: PenTool, color: "from-green-400 to-emerald-600" },
-    { title: "SEO for Beginners", price: 150000, icon: Search, color: "from-blue-600 to-indigo-700" },
+    { title: "10 Juta Dari Canva", price: 200000, icon: LayoutTemplate, color: "from-blue-400 to-cyan-500" },
+    { title: "Gajian Dollar Dari Email", price: 175000, icon: Mail, color: "from-yellow-400 to-orange-500" },
+    { title: "VideoAI Jadi Cuan", price: 125000, icon: MonitorPlay, color: "from-purple-500 to-indigo-600" },
+    { title: "Psikologi Copywriting", price: 190000, icon: PenTool, color: "from-green-400 to-emerald-600" },
+    { title: "Rahasia Affiliate Marketing", price: 150000, icon: Search, color: "from-blue-600 to-indigo-700" },
 ]
 
 // Duplicate for infinite loop
@@ -18,12 +18,12 @@ export default function ProductShowcase() {
         <section className="py-20 bg-slate-900 overflow-hidden">
             <div className="container mx-auto px-4 mb-12 text-center">
                 <h2 className="text-3xl font-bold text-white mb-4">Apa Yang Kamu Dapatkan?</h2>
-                <p className="text-slate-400">Dapatkan akses ke gudang aset premium secara <span className="text-yellow-400 font-bold">GRATIS</span> <br></br>setelah jadi member. Bisa dijual lagi dan <span className="text-yellow-400 font-bold">dapet untung.</span></p>
+                <p className="text-slate-400">Dapatkan akses ke gudang aset premium secara <span className="text-yellow-400 font-bold">GRATIS</span>. Bisa dijual lagi dan <span className="text-yellow-400 font-bold">langsung untung.</span></p>
             </div>
 
             {/* Infinite Slider Container */}
             <div className="relative w-full flex overflow-hidden group">
-                <div className="flex gap-6 animate-scroll whitespace-nowrap hover:pause-scroll">
+                <div className="flex gap-6 animate-scroll whitespace-nowrap hover:pause-scroll" style={{ animationDuration: '20s' }}>
                     {items.map((item, idx) => (
                         <div key={idx} className="w-64 flex-shrink-0 bg-slate-800 rounded-xl overflow-hidden shadow-xl border border-slate-700 transform hover:scale-105 transition duration-300">
                             <div className={`h-80 bg-gradient-to-br ${item.color} relative flex items-center justify-center group-hover:saturate-150 transition-all`}>

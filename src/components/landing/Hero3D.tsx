@@ -108,16 +108,15 @@ export default function Hero3D() {
           <div className="w-[300px] h-[300px] bg-indigo-600/30 rounded-full blur-[80px] animate-pulse"></div>
         </div>
       )}
-
       {/* Content Layer */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 text-center flex flex-col items-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }} // Reduced y distance
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }} // Faster animation
-        >
+        ><br></br><br></br>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 drop-shadow-2xl">
-            Dapatkan Penghasilan Tambahan<br /> Bersama<br />
+            Dapatkan Penghasilan Tambahan Bersama<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Squad!</span>
           </h1>
         </motion.div>
@@ -156,7 +155,7 @@ export default function Hero3D() {
           className="mt-4 text-sm text-slate-500 font-medium flex items-center gap-2"
         >
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          🔒 Sistem Transparan: Komisi & penjualan bisa dipantau
+          🔒 Komisi dan penjualan bisa dipantau
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
