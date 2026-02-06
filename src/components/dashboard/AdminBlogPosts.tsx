@@ -6,10 +6,11 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import { useNavigate } from 'react-router-dom'
 import {
     Plus, Edit, Trash2, Eye, EyeOff, ChevronDown, ChevronUp,
     Bold, Italic, List, ListOrdered, Image as ImageIcon, Link as LinkIcon,
-    Heading1, Heading2, Undo, Redo, X
+    Heading1, Heading2, Undo, Redo, X, Globe
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -202,6 +203,7 @@ function SEOPreview({
 }
 
 export default function AdminBlogPosts() {
+    const navigate = useNavigate()
     const [posts, setPosts] = useState<BlogPost[]>([])
     const [loading, setLoading] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -424,13 +426,22 @@ export default function AdminBlogPosts() {
                     <h1 className="text-2xl font-bold text-white">Blog Posts</h1>
                     <p className="text-slate-400 text-sm mt-1">Manage your blog content</p>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
-                >
-                    <Plus size={20} />
-                    New Post
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => navigate('/admin/sitemap-generator')}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl transition-colors"
+                    >
+                        <Globe size={20} />
+                        Sitemap
+                    </button>
+                    <button
+                        onClick={handleCreate}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+                    >
+                        <Plus size={20} />
+                        New Post
+                    </button>
+                </div>
             </div>
 
             {/* Posts List */}
@@ -467,8 +478,8 @@ export default function AdminBlogPosts() {
                                     </td>
                                     <td className="p-4 hidden md:table-cell">
                                         <span className={`px-2 py-1 rounded-lg text-xs font-medium ${post.is_published
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : 'bg-yellow-500/20 text-yellow-400'
+                                            ? 'bg-green-500/20 text-green-400'
+                                            : 'bg-yellow-500/20 text-yellow-400'
                                             }`}>
                                             {post.is_published ? 'Published' : 'Draft'}
                                         </span>
@@ -480,8 +491,8 @@ export default function AdminBlogPosts() {
                                             <button
                                                 onClick={() => handleTogglePublish(post)}
                                                 className={`p-2 rounded-lg transition-colors ${post.is_published
-                                                        ? 'text-yellow-400 hover:bg-yellow-500/20'
-                                                        : 'text-green-400 hover:bg-green-500/20'
+                                                    ? 'text-yellow-400 hover:bg-yellow-500/20'
+                                                    : 'text-green-400 hover:bg-green-500/20'
                                                     }`}
                                                 title={post.is_published ? 'Unpublish' : 'Publish'}
                                             >
