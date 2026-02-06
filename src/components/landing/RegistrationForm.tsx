@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Link, useNavigate } from 'react-router-dom'
-import { Star, Crown, Check, Gift, Timer } from 'lucide-react'
+import { Star, Crown, Check, Gift, Timer, MessageCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { trackEvent } from '../../lib/pixel'
 
@@ -521,10 +521,26 @@ export default function RegistrationForm() {
               <p className="text-xs text-slate-500 text-center mt-4">
                 Dengan mendaftar, Anda menyetujui Syarat & Ketentuan kami.
               </p>
+
+              {/* Whatsapp Support Button */}
+              <div className="mt-8 pt-6 border-t border-slate-800">
+                <p className="text-slate-500 text-xs mb-3 text-center">Bingung atau susah daftar?</p>
+                <a
+                  href="https://wa.me/6281224621353?text=Hi%20Admin%20saya%20berminat%20join%20ke%20Digital%20Squad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white py-3 px-6 rounded-full font-bold transition-all shadow-lg hover:shadow-green-500/30 group w-full"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                  Masih Ragu? WA Admin Kami :)
+                </a>
+              </div>
+
               <div className="mt-6 pt-6 border-t border-slate-800 text-center">
                 <p className="text-slate-400">
                   Sudah join? akses ke sini: <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline">Login</Link>
                 </p>
+
               </div>
             </form>
           </div>

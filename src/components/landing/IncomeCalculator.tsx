@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, animate } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
+
 
 const Counter = ({ from, to }: { from: number, to: number }) => {
   const nodeRef = useRef<HTMLSpanElement>(null);
@@ -26,78 +26,68 @@ const Counter = ({ from, to }: { from: number, to: number }) => {
 }
 
 export default function IncomeCalculator() {
-  const [invites, setInvites] = useState(10)
+  const [invites, setInvites] = useState(10) // This will now represent 'Pro' invites
+  const [basicInvites, setBasicInvites] = useState(10)
   const [sales, setSales] = useState(5)
   // Ensure we default to 'basic' if 'pro' is risky, 
   // but we initialize 'pro' because we provide default config.
   const [selectedTier, setSelectedTier] = useState<'basic' | 'pro'>('pro')
 
-  const [tierConfig, setTierConfig] = useState<Record<string, any>>({
+  const [tierConfig] = useState<Record<string, any>>({
     basic: {
       name: 'Basic',
-      inviteCommission: 25000,
-      productCommission: 41666,
+      inviteCommission: 75000, // Comission for inviting Pro (Basic member invites Pro?) - Waiting for logic clarification, assuming same commission for now or adjustable
+      basicInviteCommission: 25000,
+      productCommission: 50000,
       registrationCost: 50000,
       color: 'slate',
       commissionRate: 0.5
     },
     pro: {
       name: 'Pro',
-      inviteCommission: 35000,
-      productCommission: 58333,
+      inviteCommission: 105000, // Commission for inviting Pro
+      basicInviteCommission: 35000, // Commission for inviting Basic
+      productCommission: 50000,
       registrationCost: 150000,
       color: 'blue',
       commissionRate: 0.7
     }
   })
 
-  useEffect(() => {
-    const fetchTiers = async () => {
-      const { data, error } = await supabase
-        .from('tiers')
-        .select('*')
-        .in('tier_key', ['basic', 'pro'])
-
-      if (data && !error && data.length > 0) {
-        setTierConfig(prevConfig => {
-          const newConfig: Record<string, any> = { ...prevConfig }
-          const avgProductPrice = 83333; // Derived from original logic
-
-          data.forEach(t => {
-            if (t.tier_key) {
-              // Use hard fallback if DB returns 0 or null for registration_price
-              const regCost = Number(t.registration_price) || 50000;
-              const commissionRate = Number(t.commission_rate) || (t.tier_key === 'basic' ? 0.5 : 0.7);
-
-              newConfig[t.tier_key] = {
-                name: t.tier_key === 'basic' ? 'Basic' : 'Pro',
-                inviteCommission: commissionRate * 50000,
-                productCommission: commissionRate * avgProductPrice,
-                registrationCost: regCost,
-                color: t.tier_key === 'pro' ? 'blue' : 'slate',
-                commissionRate: commissionRate
-              }
-            }
-          })
-          return newConfig
-        })
-      }
-    }
-    fetchTiers()
-  }, [])
+  // ... (commented out useEffect) ...
 
   // Safe fallback
   const config = tierConfig[selectedTier] || tierConfig.basic;
 
-  const totalIncome = ((invites || 0) * (config.inviteCommission || 0)) + ((sales || 0) * (config.productCommission || 0))
+  // Manual calculation logic based on current requirements:
+  // 1. Inviting Basic Member (Rp 50.000) -> Commission depends on your tier rate
+  //    - If You Basic (50%): 25.000
+  //    - If You Pro (70%): 35.000
+  // 2. Inviting Pro Member (Rp 150.000) -> Commission depends on your tier rate
+  //    - If You Basic (50%): 75.000
+  //    - If You Pro (70%): 105.000
+
+  const totalIncome =
+    ((basicInvites || 0) * (config.basicInviteCommission || 0)) +
+    ((invites || 0) * (config.inviteCommission || 0)) +
+    ((sales || 0) * (config.productCommission || 0))
+
   const netProfit = totalIncome - (config.registrationCost || 0)
 
   // Calculate comparison
-  const basicConfig = tierConfig.basic || config; // fallback to current if basic missing (unlikely)
-  const proConfig = tierConfig.pro || config; // fallback
+  const basicConfig = tierConfig.basic || config;
+  const proConfig = tierConfig.pro || config;
 
-  const basicIncome = ((invites || 0) * (basicConfig.inviteCommission || 0)) + ((sales || 0) * (basicConfig.productCommission || 0))
-  const proIncome = ((invites || 0) * (proConfig.inviteCommission || 0)) + ((sales || 0) * (proConfig.productCommission || 0))
+  const basicIncome =
+    ((basicInvites || 0) * (basicConfig.basicInviteCommission || 0)) +
+    ((invites || 0) * (basicConfig.inviteCommission || 0)) +
+    ((sales || 0) * (basicConfig.productCommission || 0))
+
+  const proIncome =
+    ((basicInvites || 0) * (proConfig.basicInviteCommission || 0)) +
+    ((invites || 0) * (proConfig.inviteCommission || 0)) +
+    ((sales || 0) * (proConfig.productCommission || 0))
+
   const proDifference = proIncome - basicIncome
 
   return (
@@ -148,10 +138,30 @@ export default function IncomeCalculator() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Sliders */}
             <div className="lg:col-span-2 space-y-8">
+
+              {/* Slider 1: Basic Invites */}
               <div>
                 <label className="flex justify-between text-white mb-2 font-medium">
-                  <span>Jual Lisensi Digital Squad</span>
-                  <span className="text-blue-400 font-bold">{invites} Orang</span>
+                  <span>Jual Lisensi Digital Squad Basic</span>
+                  <span className="text-slate-400 font-bold">{basicInvites}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0" max="1000"
+                  value={basicInvites}
+                  onChange={(e) => setBasicInvites(parseInt(e.target.value) || 0)}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-400"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Komisi: Rp {(config.basicInviteCommission || 0).toLocaleString('id-ID')} / invite
+                </p>
+              </div>
+
+              {/* Slider 2: Pro Invites */}
+              <div>
+                <label className="flex justify-between text-white mb-2 font-medium">
+                  <span>Jual Lisensi Digital Squad Pro</span>
+                  <span className="text-blue-400 font-bold">{invites}</span>
                 </label>
                 <input
                   type="range"
@@ -161,10 +171,11 @@ export default function IncomeCalculator() {
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  Komisi: Rp {(config.inviteCommission || 0).toLocaleString('id-ID')} / invite ({Math.round((config.commissionRate || 0) * 100)}%)
+                  Komisi: Rp {(config.inviteCommission || 0).toLocaleString('id-ID')} / invite
                 </p>
               </div>
 
+              {/* Slider 3: Product Sales */}
               <div>
                 <label className="flex justify-between text-white mb-2 font-medium">
                   <span>Jual Produk Digital</span>
@@ -197,7 +208,7 @@ export default function IncomeCalculator() {
                 </div>
                 {proDifference > 0 && (
                   <p className="text-center mt-3 text-green-400 text-sm font-medium">
-                    Pro untung Rp {proDifference.toLocaleString('id-ID')} lebih banyak! 🚀
+                    Pro untung Rp {proDifference.toLocaleString('id-ID')} lebih banyak dengan kerja yang sama! 🚀
                   </p>
                 )}
               </div>
@@ -222,11 +233,17 @@ export default function IncomeCalculator() {
                 </p>
               </div>
 
+              <div className="mt-6">
+                <button
+                  onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl transition shadow-lg shadow-yellow-500/20"
+                >
+                  Saya Mau Income Segini!
+                </button>
+              </div>
+
               <p className="text-xs text-slate-500 mt-4">
-                {netProfit >= 0
-                  ? `✅ Balik modal setelah ${Math.ceil((config.registrationCost || 1) / (config.inviteCommission || 1))} invite!`
-                  : `Butuh ${Math.ceil(((config.registrationCost || 0) - totalIncome) / (config.inviteCommission || 1))} invite lagi untuk BEP`
-                }
+                *Simulasi ini hanya perkiraan kasar berdasarkan tingkat komisi tier. Hasil dapat bervariasi.
               </p>
             </div>
           </div>

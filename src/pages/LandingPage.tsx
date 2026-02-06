@@ -5,7 +5,8 @@ import { Helmet } from 'react-helmet-async'
 const Hero3D = lazy(() => import('../components/landing/Hero3D'))
 
 import Testimonials from '../components/landing/Testimonials'
-import HowItWorks from '../components/landing/HowItWorks'
+// import HowItWorks from '../components/landing/HowItWorks'
+// import HowItWorks from '../components/landing/HowItWorks' 
 import ProductShowcase from '../components/landing/ProductShowcase'
 import TierPricing from '../components/landing/TierPricing'
 import IncomeCalculator from '../components/landing/IncomeCalculator'
@@ -14,6 +15,9 @@ import FAQSection, { faqs } from '../components/landing/FAQSection'
 import RegistrationForm from '../components/landing/RegistrationForm'
 import FloatingToast from '../components/landing/FloatingToast'
 import ValueComparison from '../components/landing/ValueComparison'
+import RealityCheck from '../components/landing/RealityCheck'
+import SneakPeek from '../components/landing/SneakPeek'
+import BonusProducts from '../components/landing/BonusProducts'
 
 // Fallback component while 3D engine loads
 const HeroFallback = () => (
@@ -124,15 +128,38 @@ export default function LandingPage() {
       <Suspense fallback={<HeroFallback />}>
         <Hero3D />
       </Suspense>
+
+      {/* New Flow: Reality Check Phase */}
+      <RealityCheck />
+
+      {/* Social Proof */}
       <Testimonials />
-      <HowItWorks />
-      <ValueComparison />
+
+      {/* Logic/Mechanism Phase */}
+      <SneakPeek />
+
+      {/* Product Showcase */}
       <ProductShowcase />
-      <IncomeCalculator />
+
+      {/* Rationalization Phase */}
+      <ValueComparison /> {/* The 50k Challenge */}
+
+      {/* Benefits */}
       <Benefits />
-      <FAQSection />
+
+      {/* Interactive/Hook Phase */}
+      <IncomeCalculator />
+
+      {/* FOMO Bonuses */}
+      <BonusProducts />
+
       <TierPricing />
+
+      {/* FAQ & Closing */}
+      <FAQSection />
+
       <RegistrationForm />
+
       <FloatingToast />
       <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">
         <p>&copy; {new Date().getFullYear()} Digital Squad. All rights reserved.</p>

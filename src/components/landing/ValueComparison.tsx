@@ -101,7 +101,7 @@ export default function ValueComparison() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <Briefcase className="w-5 h-5 mt-1 text-emerald-400 shrink-0" />
-                                <span className="text-slate-200">Hak Bisnis & Lisensi Resell (Rahasia Sebar Link Dapet Cuan)</span>
+                                <span className="text-slate-200">Hak Bisnis & Lisensi Resell <span className="text-emerald-400 font-semibold">(Rahasia Sebar Link Dapet Cuan)</span></span>
                             </li>
                             <li className="flex items-start gap-3">
                                 <GraduationCap className="w-5 h-5 mt-1 text-emerald-400 shrink-0" />
@@ -135,9 +135,9 @@ export default function ValueComparison() {
                             <li>Harga 1 Produk Digital di pasaran rata-rata <strong className="text-white">Rp 50.000 - Rp 100.000</strong>. Itu hanya untuk satu judul. Mirip harga 2 cup kopi kekinian.</li>
                             <li>Di Digital Squad, dengan Rp 50.000 Anda dapat <strong className="text-emerald-400">Akses Ke Platform Digital Squad</strong> (Gudang Produk Digital!).</li>
                             <li>PLUS: Produk Digital ini bisa Anda <strong className="text-amber-400">jual lagi</strong>! Beli akses gudang seharga 2 cup kopi, jual isinya berkali-kali.</li>
-                            <li><strong className="text-amber-400">Jual ke 2 orang = Balik Modal.</strong> Jual ke-3 = <strong className="text-emerald-400">Profit 100%</strong>.</li>
-                            <li>Fakta nya ribuan member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
-                            <li><strong className="text-amber-400">Cuman Sebar Link Bisa Langsung Cuan!</strong></li>
+                            <li><strong className="text-amber-400">Jual ke 2 orang = Balik Modal.</strong><br></br><strong className="text-emerald-400">Jual ke-3 = Profit 100%</strong>.</li>
+                            <li>Ribuan member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
+                            <li><strong className="text-amber-400">Cuman Sebar Link Bisa Langsung Dapet Cuan!</strong></li>
                         </ol>
                     </div>
                 </motion.div>
@@ -150,7 +150,7 @@ export default function ValueComparison() {
                     className="text-center"
                 >
                     <button
-                        onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                        onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
                         className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-slate-950 transition-all duration-200 bg-emerald-500 rounded-full hover:bg-emerald-400 hover:scale-105 hover:shadow-[0_0_40px_rgba(16,185,129,0.3)]"
                     >
                         <span>Saya Mau Untung Hari Ini!</span>

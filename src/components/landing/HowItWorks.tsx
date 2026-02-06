@@ -5,7 +5,7 @@ const steps = [
     {
         icon: UserPlus,
         title: "Daftar & Upgrade",
-        desc: "Isi form pendaftaran dengan harga 1 cup kopi kekinian.",
+        desc: "Isi form pendaftaran dan Dapatkan Produk Gratis dari kami",
         color: "from-blue-400 to-blue-600"
     },
     {
@@ -17,7 +17,7 @@ const steps = [
     {
         icon: Wallet,
         title: "Cuan Mengalir",
-        desc: "Sebar link affiliate atau jual produk, diajarin step by step di academy Digital Squad! Sampe Cuan!",
+        desc: "Sebar link affiliate atau jual produk, diajarin step by step di Academy Digital Squad! Sampe Cuan!",
         color: "from-green-400 to-green-600"
     }
 ]

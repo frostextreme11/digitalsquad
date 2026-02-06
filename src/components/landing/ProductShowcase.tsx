@@ -1,11 +1,13 @@
+import { Video, LayoutTemplate, Mail, MonitorPlay, PenTool, Search } from 'lucide-react'
+
 // Mock Data for Carousel
 const products = [
-    { title: "Mastering TikTok Ads", price: 150000, image: "https://placehold.co/300x400/1e293b/ffffff?text=Ebook+TikTok" },
-    { title: "100+ Canva Templates", price: 200000, image: "https://placehold.co/300x400/1e293b/ffffff?text=Canva+Templates" },
-    { title: "Email Marketing Kit", price: 175000, image: "https://placehold.co/300x400/1e293b/ffffff?text=Email+Kit" },
-    { title: "Video Editing Preset", price: 125000, image: "https://placehold.co/300x400/1e293b/ffffff?text=Presets" },
-    { title: "Copywriting Secrets", price: 190000, image: "https://placehold.co/300x400/1e293b/ffffff?text=Copywriting" },
-    { title: "SEO for Beginners", price: 150000, image: "https://placehold.co/300x400/1e293b/ffffff?text=SEO+Guide" },
+    { title: "Mastering TikTok Ads", price: 150000, icon: Video, color: "from-pink-500 to-rose-600" },
+    { title: "100+ Canva Templates", price: 200000, icon: LayoutTemplate, color: "from-blue-400 to-cyan-500" },
+    { title: "Email Marketing Kit", price: 175000, icon: Mail, color: "from-yellow-400 to-orange-500" },
+    { title: "Video Editing Preset", price: 125000, icon: MonitorPlay, color: "from-purple-500 to-indigo-600" },
+    { title: "Copywriting Secrets", price: 190000, icon: PenTool, color: "from-green-400 to-emerald-600" },
+    { title: "SEO for Beginners", price: 150000, icon: Search, color: "from-blue-600 to-indigo-700" },
 ]
 
 // Duplicate for infinite loop
@@ -24,9 +26,10 @@ export default function ProductShowcase() {
                 <div className="flex gap-6 animate-scroll whitespace-nowrap hover:pause-scroll">
                     {items.map((item, idx) => (
                         <div key={idx} className="w-64 flex-shrink-0 bg-slate-800 rounded-xl overflow-hidden shadow-xl border border-slate-700 transform hover:scale-105 transition duration-300">
-                            <div className="h-80 bg-slate-700 relative">
-                                <img src={item.image} alt={item.title} loading="lazy" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition" />
-                                <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">
+                            <div className={`h-80 bg-gradient-to-br ${item.color} relative flex items-center justify-center group-hover:saturate-150 transition-all`}>
+                                <item.icon size={80} className="text-white opacity-80 drop-shadow-lg transform group-hover:scale-110 transition duration-500" />
+                                <div className="absolute inset-0 bg-black/10"></div>
+                                <div className="absolute top-2 right-2 bg-white/90 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg backdrop-blur-sm">
                                     PREMIUM
                                 </div>
                             </div>
