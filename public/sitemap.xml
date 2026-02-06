@@ -2,21 +2,63 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://digitalsquad.id</loc>
-    <lastmod>2026-01-22</lastmod>
+    <lastmod>2026-02-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://digitalsquad.id/blog</loc>
-    <lastmod>2026-01-22</lastmod>
+    <lastmod>2026-02-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://digitalsquad.id/login</loc>
-    <lastmod>2026-01-22</lastmod>
+    <lastmod>2026-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/payment</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/solusi-pinjol-menumpuk-strategi-cerdas-lunas-hutang-tanpa-gali-lubang-tutup-lubang</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/bisnis-online-tanpa-modal-7-ide-usaha-yang-bisa-dimulai-sekarang-juga-gratis</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/kerja-online-gaji-harian-5-cara-sah-hasilkan-uang-langsung-cair-hari-ini-tanpa-deposit</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/kerja-online-untuk-pelajar-5-cara-dapat-uang-jajan-tambahan-tanpa-ganggu-sekolah</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/kerja-online-tanpa-modal-lewat-hp-5-cara-terbukti-hasilkan-uang</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://digitalsquad.id/blog/pengangguran-tapi-punya-penghasilan-5-juta-per-minggu-kok-bisa</loc>
+    <lastmod>2026-02-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://digitalsquad.id/blog/stop-mengeluh-miskin-5-mindset-yang-wajib-dibuang-jika-ingin-bebas-finansial-sebelum-usia-40</loc>
