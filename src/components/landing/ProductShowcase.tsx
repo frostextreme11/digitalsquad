@@ -17,8 +17,8 @@ export default function ProductShowcase() {
     return (
         <section className="py-20 bg-slate-900 overflow-hidden">
             <div className="container mx-auto px-4 mb-12 text-center">
-                <h2 className="text-3xl font-bold text-white mb-4">Gudang Digital Product</h2>
-                <p className="text-slate-400">Dapatkan akses ke gudang aset premium secara <span className="text-yellow-400 font-bold">GRATIS</span> setelah jadi member.</p>
+                <h2 className="text-3xl font-bold text-white mb-4">Apa Yang Kamu Dapatkan?</h2>
+                <p className="text-slate-400">Dapatkan akses ke gudang aset premium secara <span className="text-yellow-400 font-bold">GRATIS</span> <br></br>setelah jadi member. Bisa dijual lagi dan <span className="text-yellow-400 font-bold">dapet untung.</span></p>
             </div>
 
             {/* Infinite Slider Container */}

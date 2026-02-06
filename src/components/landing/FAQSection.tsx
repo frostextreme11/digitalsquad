@@ -4,8 +4,20 @@ import { Plus, Minus } from 'lucide-react'
 
 export const faqs = [
     {
+        question: "Digital Squad itu apa?",
+        answer: "Digital Squad adalah platform affiliate & jual produk digital untuk membantu kamu dapat penghasilan tambahan."
+    },
+    {
+        question: "Saya pemula apa bisa ikut?",
+        answer: "Bisa. Sistemnya dibuat untuk pemula, ada panduan step by step di Academy Digital Squad."
+    },
+    {
         question: "Apakah sekali bayar untuk selamanya?",
         answer: "Ya, betul! Cukup bayar Rp 50.000 di awal pendaftaran, Anda langsung mendapatkan akses seumur hidup ke semua fitur, produk digital, dan sistem affiliate tanpa biaya bulanan atau tahunan."
+    },
+    {
+        question: "Apakah saya harus stock barang?",
+        answer: "Tidak. Karena ini produk digital, jadi tidak perlu stock barang."
     },
     {
         question: "Kapan saya bisa tarik tunai?",
@@ -20,8 +32,8 @@ export const faqs = [
         answer: "Tersedia gudang produk digital (PLR) seperti Ebook yang bisa Anda jual kembali dengan keuntungan masuk ke kantong Anda sendiri."
     },
     {
-        question: "Apakah ada jaminan uang kembali?",
-        answer: "Karena ini adalah produk digital yang bisa langsung diakses dan didownload, kami tidak memberlakukan refund. Namun kami menjamin nilai produk yang Anda dapatkan jauh melebihi biaya pendaftaran."
+        question: "Kapan saya dapat komisi?",
+        answer: "Komisi masuk saat ada transaksi dari link affiliate kamu. Link affiliate bisa diakses di dashboard member setelah bergabung."
     }
 ]
 

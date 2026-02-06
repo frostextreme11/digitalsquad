@@ -18,6 +18,7 @@ import ValueComparison from '../components/landing/ValueComparison'
 import RealityCheck from '../components/landing/RealityCheck'
 import SneakPeek from '../components/landing/SneakPeek'
 import BonusProducts from '../components/landing/BonusProducts'
+import MemberResults from '../components/landing/MemberResults'
 
 // Fallback component while 3D engine loads
 const HeroFallback = () => (
@@ -152,6 +153,9 @@ export default function LandingPage() {
 
       {/* FOMO Bonuses */}
       <BonusProducts />
+
+      {/* Member Results / Social Proof */}
+      <MemberResults />
 
       <TierPricing />
 

@@ -3,7 +3,7 @@ import { Gift, Zap } from 'lucide-react'
 
 const bonuses = [
     {
-        title: "Rahasia Gelap Jualan Apapun Susah Di Tolak",
+        title: "Rahasia Psikologi Jualan Apapun Susah Di Tolak",
         value: "Rp 10.000.000",
         desc: "Teknik copywriting terlarang yang memanipulasi psikologi pembeli agar transfer seketika.",
         gradient: "from-red-600 to-rose-900",

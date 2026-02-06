@@ -238,7 +238,7 @@ export default function IncomeCalculator() {
                   onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
                   className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl transition shadow-lg shadow-yellow-500/20"
                 >
-                  Saya Mau Income Segini!
+                  Saya Mau Join Sekarang!
                 </button>
               </div>
 

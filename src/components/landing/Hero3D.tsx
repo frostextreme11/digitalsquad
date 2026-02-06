@@ -117,7 +117,7 @@ export default function Hero3D() {
           transition={{ duration: 0.6 }} // Faster animation
         >
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 drop-shadow-2xl">
-            Gajian Setiap Hari<br /> Bersama<br />
+            Dapatkan Penghasilan Tambahan<br /> Bersama<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Squad!</span>
           </h1>
         </motion.div>
@@ -129,7 +129,7 @@ export default function Hero3D() {
         >
           <h2 className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto font-light">
             <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin punya penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
-            <span className="text-yellow-400 font-bold"> Solusi Lunas Hutang & Bebas Teror Pinjol.</span> Bergabunglah dengan DigitalSquad: cara termudah hasilkan jutaan rupiah. <span className="italic">Bukan sulap, ini strategi digital.</span>
+            <span className="text-yellow-400 font-bold"> Cara simple dapetin uang dari internet.</span> Sistemnya jelas: ambil link → sebar → dapat komisi. <span className="italic">Bukan sulap, ini strategi digital.</span>
           </h2>
         </motion.div>
 
@@ -144,11 +144,29 @@ export default function Hero3D() {
             onClick={() => document.getElementById('reality-check')?.scrollIntoView({ behavior: 'smooth' })}
             className="relative flex items-center justify-center bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold py-4 px-10 rounded-full text-lg shadow-2xl shadow-green-500/30 transform transition duration-200 hover:scale-[1.05] hover:-translate-y-1"
           >
-            Saya Mau Join
+            Gabung Sekarang
             <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all" />
           </button>
         </motion.div>
 
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-4 text-sm text-slate-500 font-medium flex items-center gap-2"
+        >
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          🔒 Sistem Transparan: Komisi & penjualan bisa dipantau
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-4 text-sm text-slate-500 font-medium flex items-center gap-2"
+        >
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          📲 Bisa dari HP: Cocok untuk pemula
+        </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

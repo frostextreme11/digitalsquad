@@ -143,7 +143,7 @@ export default function ValueComparison() {
                 </motion.div>
 
                 {/* CTA */}
-                <motion.div
+                {/* <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
@@ -156,7 +156,7 @@ export default function ValueComparison() {
                         <span>Saya Mau Untung Hari Ini!</span>
                         <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all" />
                     </button>
-                </motion.div>
+                </motion.div> */}
 
             </div>
         </section>
