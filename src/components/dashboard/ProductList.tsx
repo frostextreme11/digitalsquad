@@ -180,7 +180,7 @@ export default function ProductList() {
                       className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition"
                       title="Copy Affiliate Link"
                     >
-                      <Download size={16} className="rotate-0" /> Share
+                      <Download size={16} className="rotate-0" /> Jual
                     </button>
                     <a
                       href={product.file_url}
