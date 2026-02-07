@@ -14,6 +14,15 @@ export default function UserManagement() {
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
+  const [tiers, setTiers] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const { data } = await supabase.from('tiers').select('*')
+      if (data) setTiers(data)
+    }
+    fetchTiers()
+  }, [])
 
   // Modal State
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; userId: string | null; name: string }>({
@@ -26,32 +35,117 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      // Fetch data
-      const { data, error } = await (supabase.rpc as any)('get_user_performance_stats', {
-        search_query: search,
-        page_limit: limit,
-        page_offset: page * limit,
-        status_filter: statusFilter || null,
-        sort_by: sortBy
-      })
+      let usersData: any[] = []
+      let count = 0
 
-      if (error) throw error
-      setUsers(data || [])
+      if (sortBy === 'created_at desc') {
+        const from = page * limit
+        const to = from + limit - 1
 
-      // Fetch count
-      const { data: countData, error: countError } = await (supabase.rpc as any)('get_user_performance_count', {
-        search_query: search,
-        status_filter: statusFilter || null
-      })
+        // 1. Fetch profiles sorted by created_at desc
+        let query = supabase
+          .from('profiles')
+          .select('*, tier:tiers(*)', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(from, to)
 
-      if (countError) throw countError
-      setTotalCount(countData || 0)
+        if (search) {
+          query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`)
+        }
+
+        const { data: profiles, error: profilesError, count: total } = await query
+        if (profilesError) throw profilesError
+
+        count = total || 0
+
+        // 2. Hydrate stats for these profiles manually
+        if (profiles && profiles.length > 0) {
+          usersData = await Promise.all(profiles.map(async (profile: any) => {
+            // Fetch basic stats in parallel
+            const [clicksRes, leadsRes, txRes] = await Promise.all([
+              supabase.from('visits').select('id', { count: 'exact', head: true }).eq('affiliate_code', profile.affiliate_code || ''),
+              supabase.from('leads').select('id', { count: 'exact', head: true }).eq('referred_by_code', profile.affiliate_code || ''),
+              supabase.from('transactions').select('amount, status, type').eq('user_id', profile.id)
+            ])
+
+            const transactions = txRes.data || []
+            const successPurchases = transactions.filter((t: any) => t.status === 'success' && t.type === 'product_purchase')
+            const registration = transactions.find((t: any) => t.type === 'registration')
+
+            return {
+              ...profile,
+              clicks: clicksRes.count || 0,
+              leads: leadsRes.count || 0,
+              sales: successPurchases.length,
+              omset_lifetime: successPurchases.reduce((sum: number, t: any) => sum + (t.amount || 0), 0),
+              omset_current_month: 0, // Simplified for now
+              payment_status: registration?.status || 'pending', // Infer status
+            }
+          }))
+        }
+      } else {
+        // Use RPC for standard sorts
+        const { data, error } = await (supabase.rpc as any)('get_user_performance_stats', {
+          search_query: search,
+          page_limit: limit,
+          page_offset: page * limit,
+          status_filter: statusFilter || null,
+          sort_by: sortBy
+        })
+
+        if (error) throw error
+        usersData = data || []
+
+        // Sync Tier ID & Date just in case
+        if (usersData.length > 0) {
+          const userIds = usersData.map((u: any) => u.id)
+          const { data: profilesData } = await supabase.from('profiles').select('id, tier_id, created_at').in('id', userIds)
+          if (profilesData) {
+            usersData = usersData.map((user: any) => {
+              const profile = profilesData.find((p: any) => p.id === user.id)
+              return {
+                ...user,
+                tier_id: profile?.tier_id || user.tier_id,
+                created_at: profile?.created_at || user.created_at
+              }
+            })
+          }
+        }
+
+        // Fetch count
+        const { data: countData } = await (supabase.rpc as any)('get_user_performance_count', {
+          search_query: search,
+          status_filter: statusFilter || null
+        })
+        count = countData || 0
+      }
+
+      setUsers(usersData)
+      setTotalCount(count)
 
     } catch (err) {
       console.error("Error fetching users:", err)
       toast.error("Failed to fetch users")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleTierUpdate = async (userId: string, newTierId: string | null) => {
+    // Optimistic Update
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, tier_id: newTierId } : u))
+
+    const { error } = await supabase.from('profiles').update({ tier_id: newTierId }).eq('id', userId)
+
+    if (error) {
+      toast.error('Failed to update tier')
+      console.error(error)
+      // Revert (conceptually, or just fetch again)
+      fetchUsers()
+    } else {
+      toast.success('User tier updated')
+      // No need to fetch immediately if optimistic update was accurate, but checking consistency is good
+      // fetchUsers() 
     }
   }
 
@@ -113,6 +207,21 @@ export default function UserManagement() {
     }
   }
 
+  const getTierBadge = (tierId: string) => {
+    const tier = tiers.find(t => t.id === tierId)
+    const tierKey = tier?.tier_key || 'free'
+
+    switch (tierKey) {
+      case 'pro':
+      case 'vip':
+        return <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-lg shadow-blue-500/30 uppercase">{tierKey}</span>
+      case 'basic':
+        return <span className="bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg text-xs font-medium uppercase">{tierKey}</span>
+      default:
+        return <span className="bg-slate-800 text-slate-500 px-2.5 py-1 rounded-lg text-xs font-medium uppercase">FREE</span>
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / limit)
 
   return (
@@ -165,6 +274,7 @@ export default function UserManagement() {
               >
                 <option value="omset_current_month">Monthly Omset</option>
                 <option value="omset_lifetime">Lifetime Omset</option>
+                <option value="created_at desc">Latest Register</option>
                 <option value="clicks">Clicks</option>
                 <option value="leads">Leads</option>
                 <option value="sales">Sales</option>
@@ -197,6 +307,7 @@ export default function UserManagement() {
             <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-semibold">
               <tr>
                 <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4 text-center">Tier</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4 text-center">Clicks</th>
                 <th className="px-6 py-4 text-center">Leads</th>
@@ -233,6 +344,19 @@ export default function UserManagement() {
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">{user.full_name || 'No Name'}</div>
                       <div className="text-sm text-slate-500">{user.email}</div>
+                      <div className="text-xs text-slate-600 mt-1">
+                        {user.created_at ? new Date(user.created_at).toLocaleString('id-ID', {
+                          timeZone: 'Asia/Jakarta',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center">{getTierBadge(user.tier_id)}</div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center">{getStatusBadge(user.payment_status)}</div>
@@ -253,14 +377,30 @@ export default function UserManagement() {
                       Rp {user.omset_current_month?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {user.payment_status === 'pending' && (
-                        <button
-                          onClick={() => openApproveModal(user)}
-                          className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg transition shadow-lg shadow-green-500/20"
+                      <div className="flex flex-col gap-2 items-center">
+                        <select
+                          value={user.tier_id || ''}
+                          onChange={(e) => {
+                            const newTierId = e.target.value || null
+                            handleTierUpdate(user.id, newTierId)
+                          }}
+                          className="bg-slate-800 text-xs text-slate-300 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-blue-500 max-w-[100px]"
                         >
-                          Approve
-                        </button>
-                      )}
+                          <option value="">FREE</option>
+                          {tiers.map(t => (
+                            <option key={t.id} value={t.id}>{t.tier_key?.toUpperCase()}</option>
+                          ))}
+                        </select>
+
+                        {user.payment_status === 'pending' && (
+                          <button
+                            onClick={() => openApproveModal(user)}
+                            className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg transition shadow-lg shadow-green-500/20 w-full"
+                          >
+                            Approve
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 ))
