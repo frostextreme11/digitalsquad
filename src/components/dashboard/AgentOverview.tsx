@@ -15,6 +15,7 @@ interface TierInfo {
    min_withdraw: number
    upgrade_sales_threshold: number | null
    priority_withdrawal: boolean
+   upgrade_price?: number
 }
 
 export default function AgentOverview({ profile }: { profile: any }) {
@@ -25,6 +26,7 @@ export default function AgentOverview({ profile }: { profile: any }) {
    const [nextTier, setNextTier] = useState<TierInfo | null>(null)
    const [totalSales, setTotalSales] = useState(0)
    const [loadingTier, setLoadingTier] = useState(true)
+   const [upgrading, setUpgrading] = useState(false) // New state for upgrade button loading
 
    // Mission State
    const [missions, setMissions] = useState<{ content: any, testimony: any }>({ content: null, testimony: null })
@@ -46,6 +48,32 @@ export default function AgentOverview({ profile }: { profile: any }) {
    const [appendAffiliateLink, setAppendAffiliateLink] = useState(() => {
       return localStorage.getItem('DS_APPEND_AFFILIATE_LINK') === 'true'
    })
+
+   // Load Snap Script for Upgrade Payment
+   useEffect(() => {
+      const loadSnap = async () => {
+         const { data: configs } = await supabase
+            .from('app_config')
+            .select('key, value')
+            .in('key', ['midtrans_snap_url', 'midtrans_client_key'])
+
+         const configMap = configs?.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {}) || {}
+
+         const snapUrl = configMap['midtrans_snap_url'] || 'https://app.sandbox.midtrans.com/snap/snap.js'
+         const clientKey = configMap['midtrans_client_key'] !== 'SB-Mid-client-placeholder'
+            ? configMap['midtrans_client_key']
+            : (import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-placeholder')
+
+         if (!document.querySelector(`script[src="${snapUrl}"]`)) {
+            const script = document.createElement('script')
+            script.src = snapUrl
+            script.setAttribute('data-client-key', clientKey)
+            script.async = true
+            document.body.appendChild(script)
+         }
+      }
+      loadSnap()
+   }, [])
 
    useEffect(() => {
       // If code is missing from prop, try to fetch it (self-healing for backfilled/newly generated codes)
@@ -366,6 +394,80 @@ export default function AgentOverview({ profile }: { profile: any }) {
          case 'pro': return 'from-blue-600 to-indigo-700 border-blue-500'
          case 'vip': return 'from-yellow-500 to-amber-600 border-yellow-400'
          default: return 'from-slate-700 to-slate-800 border-slate-600'
+      }
+   }
+
+   const handleUpgrade = async () => {
+      if (!nextTier || !nextTier.upgrade_price) return
+      setUpgrading(true)
+
+      try {
+         // Call Edge Function to create payment
+         const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`
+
+         const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+               amount: nextTier.upgrade_price,
+               userId: profile.id,
+               type: 'tier_upgrade',
+               targetTierId: nextTier.id, // Pass target tier ID
+               selectedTier: nextTier.tier_key, // Add this for robustness
+               customerDetails: {
+                  first_name: profile.full_name,
+                  email: profile.email,
+                  phone: profile.phone
+               }
+            })
+         })
+
+         if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`Payment Error: ${errorText}`)
+         }
+
+         const data = await response.json()
+
+         if (data.error) throw new Error(data.error)
+
+         // Handle Gateway Response
+         if (data.gateway === 'mayar' && data.payment_url) {
+            window.location.href = data.payment_url
+         } else if (data.token) {
+            // @ts-ignore
+            if (window.snap) {
+               // @ts-ignore
+               window.snap.pay(data.token, {
+                  onSuccess: function (result: any) {
+                     console.log('Payment success:', result)
+                     toast.success('Upgrade Berhasil! Refreshing...')
+                     setTimeout(() => window.location.reload(), 1500)
+                  },
+                  onPending: function (result: any) {
+                     console.log('Payment pending:', result)
+                     toast("Menunggu pembayaran...", { icon: '⏳' })
+                  },
+                  onError: function (result: any) {
+                     console.error('Payment error:', result)
+                     toast.error("Pembayaran Gagal")
+                  }
+               })
+            } else {
+               toast.error("Sistem pembayaran belum siap, coba refresh")
+            }
+         } else {
+            toast.error("Gagal inisialisasi pembayaran")
+         }
+
+      } catch (error: any) {
+         console.error("Upgrade failed:", error)
+         toast.error(error.message || "Gagal memproses upgrade")
+      } finally {
+         setUpgrading(false)
       }
    }
 
@@ -786,6 +888,27 @@ export default function AgentOverview({ profile }: { profile: any }) {
                                  <div className="w-full bg-slate-900/50 h-2 rounded-full overflow-hidden">
                                     <div className="bg-white h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${upgradeProgress}%` }}></div>
                                  </div>
+
+                                 {/* Upgrade Button */}
+                                 {nextTier.tier_key !== 'basic' && (
+                                    <div className="mt-4 pt-3 border-t border-white/10">
+                                       <div className="flex items-center justify-between">
+                                          <div className="text-xs text-white/60">
+                                             Or upgrade instantly:
+                                          </div>
+                                          <div className="font-bold text-white text-sm">
+                                             Rp {nextTier.upgrade_price?.toLocaleString() || '0'}
+                                          </div>
+                                       </div>
+                                       <button
+                                          onClick={handleUpgrade}
+                                          disabled={upgrading || !nextTier.upgrade_price}
+                                          className="w-full mt-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                       >
+                                          {upgrading ? 'Loading...' : `Upgrade to ${nextTier.name}`}
+                                       </button>
+                                    </div>
+                                 )}
                               </div>
                            ) : (
                               <div className="flex items-center justify-center h-full text-center">

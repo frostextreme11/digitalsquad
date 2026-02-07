@@ -145,6 +145,9 @@ serve(async (req) => {
             } else if (txType === 'product_purchase') {
                 console.log("Processing PRODUCT PURCHASE success logic...")
                 await handleProductPurchaseSuccess(supabase, transaction, supabaseUrl, supabaseKey)
+            } else if (txType === 'tier_upgrade') {
+                console.log("Processing TIER UPGRADE success logic...")
+                await handleTierUpgradeSuccess(supabase, transaction)
             }
         } else {
             console.log(`Status is ${status}, skipping success logic.`)
@@ -373,3 +376,35 @@ async function handleProductPurchaseSuccess(supabase: any, transaction: any, sup
         }
     }
 }
+
+async function handleTierUpgradeSuccess(supabase: any, transaction: any) {
+    console.log(`Processing TIER UPGRADE logic for user: ${transaction.user_id} with amount: ${transaction.amount}`)
+
+    // Find tier by upgrade_price matching transaction amount
+    const { data: tier, error } = await supabase
+        .from('tiers')
+        .select('id, name')
+        .eq('upgrade_price', transaction.amount)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Error finding tier by price:", error);
+        return;
+    }
+
+    if (tier) {
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ tier_id: tier.id })
+            .eq('id', transaction.user_id);
+
+        if (updateError) {
+            console.error("Failed to update user tier:", updateError);
+        } else {
+            console.log(`✅ User ${transaction.user_id} upgraded to tier ${tier.name} (${tier.id})`);
+        }
+    } else {
+        console.error(`❌ No tier found for upgrade price: ${transaction.amount}`);
+    }
+}
+

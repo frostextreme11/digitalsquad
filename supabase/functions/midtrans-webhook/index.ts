@@ -98,6 +98,9 @@ serve(async (req) => {
       } else if (txType === 'product_purchase') {
         console.log("Processing PRODUCT PURCHASE success logic...")
         await handleProductPurchaseSuccess(supabase, transaction, supabaseUrl, supabaseKey)
+      } else if (txType === 'tier_upgrade') {
+        console.log("Processing TIER UPGRADE success logic...")
+        await handleTierUpgradeSuccess(supabase, transaction)
       }
     } else {
       console.log(`Status is ${status}, skipping success logic.`)
@@ -464,5 +467,45 @@ async function handleProductPurchaseSuccess(supabase: any, transaction: any, sup
     }
   } else {
     console.log("Product not found for email sending.")
+  }
+}
+
+async function handleTierUpgradeSuccess(supabase: any, transaction: any) {
+  console.log(`Processing TIER UPGRADE logic for user: ${transaction.user_id} with amount: ${transaction.amount}`)
+
+  // Find tier matching the amount. 
+  // We infer target tier from the price since we can't easily store metadata
+  const { data: tier, error } = await supabase
+    .from('tiers')
+    .select('id, name')
+    .eq('upgrade_price', transaction.amount)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error finding tier by price:", error);
+    return;
+  }
+
+  if (tier) {
+    // 1. Update user profile Tier
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ tier_id: tier.id })
+      .eq('id', transaction.user_id);
+
+    if (updateError) {
+      console.error("Failed to update user tier:", updateError);
+    } else {
+      console.log(`✅ User ${transaction.user_id} upgraded to tier ${tier.name} (${tier.id})`);
+    }
+
+    // 2. Record this as a Sale for the referrer? 
+    // Usually upgrades count towards upline sales if strict MLM, but here requirement didn't specify.
+    // However, we should check if there's commission for upgrade?
+    // "Biaya upgrade bisa di ambil dari upgrade_price" suggests pricing logic.
+    // If there's commission logic, it should look like registration.
+    // For now, minimal viability: Update the Tier.
+  } else {
+    console.error(`❌ No tier found for upgrade price: ${transaction.amount}`);
   }
 }
