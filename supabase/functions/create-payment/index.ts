@@ -20,6 +20,7 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
 
     let finalOrderId = orderId
+    let existingTx = null
 
     // If no orderId provided, check for existing pending transaction or create new one
     if (!finalOrderId) {
@@ -39,7 +40,7 @@ serve(async (req) => {
       }
 
       // Check for existing PENDING transaction for this user
-      const { data: existingTx } = await supabaseAdmin
+      const { data: tx } = await supabaseAdmin
         .from('transactions')
         .select('*')
         .eq('user_id', userId)
@@ -48,6 +49,8 @@ serve(async (req) => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
+
+      existingTx = tx
 
       if (existingTx) {
         finalOrderId = existingTx.id
@@ -221,6 +224,21 @@ serve(async (req) => {
       console.log(`[Mayar] API URL: ${mayarApiUrl}`)
       console.log(`[Mayar] Redirect URL: ${redirectUrl}`)
       console.log(`[Mayar] API Key (first 20 chars): ${mayarApiKey.substring(0, 20)}...`)
+
+      // CHECK: If existing pending transaction already has a mayar_payment_url, return it!
+      // This prevents spamming create calls for the same intent.
+      if (existingTx && existingTx.mayar_payment_url && existingTx.status === 'pending') {
+        console.log(`[Mayar] Reusing existing ACTIVE payment link: ${existingTx.mayar_payment_url}`);
+        return new Response(
+          JSON.stringify({
+            gateway: 'mayar',
+            payment_url: existingTx.mayar_payment_url,
+            mayar_id: existingTx.mayar_id,
+            transaction_id: finalOrderId
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        )
+      }
 
       // Build request payload - Mayar requires: name, amount (int), email, mobile, description, redirectUrl
       const mayarPayload = {

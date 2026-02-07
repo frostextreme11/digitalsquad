@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter, Check, Link as LinkIcon } from 'lucide-react'
+import { Mail, Calendar, Phone, UserX, Search, ChevronLeft, ChevronRight, Filter, Check, Link as LinkIcon, MessageSquare } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 
@@ -11,13 +11,45 @@ export default function AdminLeadsList() {
     const [limit, setLimit] = useState(10)
     const [page, setPage] = useState(0)
     const [totalCount, setTotalCount] = useState(0)
-    const [copiedId, setCopiedId] = useState<string | null>(null)
+    const [copiedState, setCopiedState] = useState<string | null>(null)
 
-    const handleCopy = (id: string, url: string) => {
-        navigator.clipboard.writeText(url)
-        setCopiedId(id)
-        setTimeout(() => setCopiedId(null), 2000)
+    const handleCopy = (id: string, text: string, type: string) => {
+        navigator.clipboard.writeText(text)
+        setCopiedState(`${id}-${type}`)
+        setTimeout(() => setCopiedState(null), 2000)
     }
+
+    const getFollowUp1 = (name: string, url: string) => `Halo Kak ${name}, admin Digital Squad di sini 👋
+
+Kami lihat Kakak tadi sudah selangkah lagi untuk bergabung jadi bagian dari Digital Squad, tapi sepertinya transaksinya belum selesai ya?
+
+Apakah ada kendala saat pembayaran atau bingung cara transfernya?
+
+Kalau butuh bantuan, bisa balas chat ini ya. Atau kalau Kakak mau langsung lanjut, link pembayarannya masih aktif di sini:
+
+👉 ${url}`
+
+    const getFollowUp2 = (name: string, url: string) => `Halo Kak ${name},
+
+Sayang banget lho kalau kesempatan ini dilewatkan. Bayangkan, dengan join Digital Squad, Kakak bisa mulai belajar dan bangun aset digital/dapat income passive dari sosmed] cuma dari HP/Laptop.
+
+Banyak member lain yang sudah mulai take action. Yakin Kakak mau menunda lagi?
+
+Amankan akses Kakak sekarang sebelum antrean makin panjang: 👉 ${url}
+
+Yuk, mulai langkah pertamanya hari ini! 🚀`
+
+    const getFollowUp3 = (name: string, url: string) => `Halo Kak ${name},
+
+Ini reminder terakhir dari kami ya. Sistem akan otomatis me-reset pendaftaran yang belum lunas dalam 1x24 jam ke depan.
+
+Kalau Kakak tidak menyelesaikan pembayaran sekarang, Kakak harus daftar ulang dari awal lagi nanti (dan kami tidak menjamin harga/promonya masih sama).
+
+Jangan sampai menyesal karena telat take action. Klik link di bawah untuk selesaikan sekarang:
+
+✅ ${url}
+
+Sampai jumpa di member area Digital Squad! 👋`
 
     const fetchLeads = async () => {
         setLoading(true)
@@ -174,16 +206,52 @@ export default function AdminLeadsList() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2 mt-4 md:mt-0">
-                                    {lead.paymentUrl && (
-                                        <button
-                                            onClick={() => handleCopy(lead.id, lead.paymentUrl)}
-                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
-                                        >
-                                            {copiedId === lead.id ? <Check size={14} /> : <LinkIcon size={14} />}
-                                            {copiedId === lead.id ? 'Copied!' : 'Copy Payment Link'}
-                                        </button>
-                                    )}
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                        {lead.phone && (
+                                            <button
+                                                onClick={() => handleCopy(lead.id, lead.phone, 'phone')}
+                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition"
+                                                title="Copy No Hp"
+                                            >
+                                                {copiedState === `${lead.id}-phone` ? <Check size={14} /> : <Phone size={14} />}
+                                                No Hp
+                                            </button>
+                                        )}
+                                        {lead.paymentUrl && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleCopy(lead.id, lead.paymentUrl, 'link')}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
+                                                    title="Copy Payment Link Only"
+                                                >
+                                                    {copiedState === `${lead.id}-link` ? <Check size={14} /> : <LinkIcon size={14} />}
+                                                    Link
+                                                </button>
+                                                <button
+                                                    onClick={() => handleCopy(lead.id, getFollowUp1(lead.full_name || 'Kak', lead.paymentUrl), 'fu1')}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition"
+                                                >
+                                                    {copiedState === `${lead.id}-fu1` ? <Check size={14} /> : <MessageSquare size={14} />}
+                                                    FU 1
+                                                </button>
+                                                <button
+                                                    onClick={() => handleCopy(lead.id, getFollowUp2(lead.full_name || 'Kak', lead.paymentUrl), 'fu2')}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition"
+                                                >
+                                                    {copiedState === `${lead.id}-fu2` ? <Check size={14} /> : <MessageSquare size={14} />}
+                                                    FU 2
+                                                </button>
+                                                <button
+                                                    onClick={() => handleCopy(lead.id, getFollowUp3(lead.full_name || 'Kak', lead.paymentUrl), 'fu3')}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition"
+                                                >
+                                                    {copiedState === `${lead.id}-fu3` ? <Check size={14} /> : <MessageSquare size={14} />}
+                                                    FU 3
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-2">
                                         <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                             Organic Lead
                                         </span>
