@@ -166,7 +166,9 @@ export default function LandingPage() {
 
       <FloatingToast />
       <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">
-        <p>&copy; {new Date().getFullYear()} Digital Squad. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Digital Squad. All rights reserved. This site is not part of the Facebook website or Facebook Inc</p>
+        <p>Tempat Belajar & Platform Bisnis - Disclaimer: Bahwa hasil setiap orang berbeda-beda</p>
+        <p><a href="/privacy-policy.md">Privacy Policy</a> | <a href="/terms-of-service.md">Terms of Service</a></p>
       </footer>
     </div>
   )
