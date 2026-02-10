@@ -65,7 +65,7 @@ export default function RealityCheck() {
                             Kami menciptakan sistem dimana Anda bisa mulai belajar bisnis digital sambil menghasilkan uang
                             <span className="text-indigo-400 font-bold"> tanpa skill khusus</span>,
                             <span className="text-indigo-400 font-bold"> tanpa produk sendiri</span>,
-                            dan dengan modal <span className="text-green-400 font-bold">minim.</span>.
+                            dan dengan modal <span className="text-green-400 font-bold">minim</span>.
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-slate-500 text-sm">

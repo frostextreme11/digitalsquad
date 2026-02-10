@@ -105,7 +105,7 @@ export default function ValueComparison() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <GraduationCap className="w-5 h-5 mt-1 text-emerald-400 shrink-0" />
-                                <span className="text-slate-200">Akses Digital Squad Academy</span>
+                                <span className="text-slate-200">Akses Digital Squad Academy (Tempat Belajar Bisnis Digital Mudah Cocok Untuk Pemula)</span>
                             </li>
                             <li className="flex items-start gap-3">
                                 <div className="w-5 h-5 mt-1 flex items-center justify-center shrink-0">🚀</div>
@@ -113,7 +113,7 @@ export default function ValueComparison() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <ShieldCheck className="w-5 h-5 mt-1 text-yellow-400 shrink-0" />
-                                <span className="bg-yellow-500/10 text-yellow-300 px-2 py-0.5 rounded -ml-2">Risiko: NOL (Ikuti dan Praktekan Academy Digital Squad Maka Anda Akan Profit!).</span>
+                                <span className="bg-yellow-500/10 text-yellow-300 px-2 py-0.5 rounded -ml-2">Risiko: NOL (Belajar Dan Praktek Bisnis Digital Bersama Digital Squad Hingga Profit!)</span>
                             </li>
                         </ul>
                     </motion.div>
@@ -137,7 +137,7 @@ export default function ValueComparison() {
                             <li>PLUS: Produk Digital ini bisa Anda <strong className="text-amber-400">jual lagi</strong>! Beli akses gudang seharga 2 cup kopi, jual isinya berkali-kali.</li>
                             <li><strong className="text-amber-400">Jual ke 2 orang = Balik Modal.</strong><br></br><strong className="text-emerald-400">Jual ke-3 = Profit 100%</strong>.</li>
                             <li>Ribuan member Digital Squad balik modal hanya dalam 1 hari kurang <strong className="text-emerald-400">bahkan beberapa jam setelah mengikuti Academy nya!</strong></li>
-                            <li><strong className="text-amber-400">Cuman Sebar Link Bisa Langsung Dapet Cuan!</strong></li>
+                            <li><strong className="text-amber-400">Kita Ajarin Ilmu Bisnis Digital Sampai Profit! Bareng Ribuan Member Lainnya!</strong></li>
                         </ol>
                     </div>
                 </motion.div>

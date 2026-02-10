@@ -401,11 +401,11 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
                 type="button"
                 onClick={() => setSelectedTier('basic')}
                 className={`p-4 rounded-xl border-2 transition duration-200 text-left relative overflow-hidden ${selectedTier === 'basic'
-                    ? (showBasicOnly
-                      ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]' // Fancy style for Basic if Only
-                      : 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
-                    )
-                    : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
+                  ? (showBasicOnly
+                    ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]' // Fancy style for Basic if Only
+                    : 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
+                  )
+                  : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
                   }`}
               >
                 {showBasicOnly && (
@@ -499,7 +499,7 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
                   name="email"
                   required
                   className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                  placeholder="nama@email.com"
+                  placeholder="nama@email.com Email Valid"
                   onChange={handleChange}
                 />
               </div>
@@ -510,7 +510,7 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
                   name="phone"
                   required
                   className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                  placeholder="081234567890"
+                  placeholder="081234567890 Nomor Hp Valid"
                   onChange={handleChange}
                 />
               </div>
@@ -522,7 +522,7 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
                   required
                   minLength={6}
                   className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                  placeholder="******"
+                  placeholder="Password Untuk Akses Dashboard"
                   onChange={handleChange}
                 />
               </div>

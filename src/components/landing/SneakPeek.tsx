@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { Copy, Share2, Wallet, Instagram, Twitter, MessageCircle, Music2 } from 'lucide-react'
+import { Copy, Share2, Wallet, Instagram, Twitter, MessageCircle, Music2, GraduationCap, CheckCircle2 } from 'lucide-react'
 
 export default function SneakPeek() {
     const [animationStep, setAnimationStep] = useState(-1)
@@ -16,20 +16,24 @@ export default function SneakPeek() {
         let timeout: any
 
         const runSequence = async () => {
-            // Step 0: Copy (2s duration)
+            // Step 0: Academy (Learning) - 4s
             setAnimationStep(0)
             timeout = setTimeout(() => {
-                // Step 1: Share (2s duration)
+                // Step 1: Copy Link - 2s
                 setAnimationStep(1)
                 timeout = setTimeout(() => {
-                    // Step 2: Profit (5s duration)
+                    // Step 2: Share - 2s
                     setAnimationStep(2)
                     timeout = setTimeout(() => {
-                        // Loop back
-                        runSequence()
-                    }, 5000)
+                        // Step 3: Profit - 5s
+                        setAnimationStep(3)
+                        timeout = setTimeout(() => {
+                            // Loop
+                            runSequence()
+                        }, 5000)
+                    }, 2000)
                 }, 2000)
-            }, 2000)
+            }, 4000)
         }
 
         runSequence()
@@ -53,7 +57,7 @@ export default function SneakPeek() {
                         Semudah Apa Kerjanya?
                     </h2>
                     <p className="text-slate-400">
-                        Gak perlu jago jualan. Sistem kami yang bekerja untuk Anda.
+                        Belajar di platform Digital Squad, Sambil Praktek Untuk Menghasilkan Cuan.
                     </p>
                 </div>
 
@@ -95,8 +99,48 @@ export default function SneakPeek() {
 
                                     <AnimatePresence mode="wait">
 
-                                        {/* STEP 1: COPY LINK */}
+                                        {/* STEP 0: ACADEMY */}
                                         {animationStep === 0 && (
+                                            <motion.div
+                                                key="step0"
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                transition={{ duration: 0.4 }}
+                                                className="w-full"
+                                            >
+                                                <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl text-center">
+                                                    <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                        <GraduationCap className="text-orange-400" size={24} />
+                                                    </div>
+                                                    <h4 className="text-white font-bold mb-2">Belajar Bisnis Online Di</h4>
+                                                    <h3 className="text-white font-bold mb-4">Digital Squad Academy</h3>
+                                                    <div className="space-y-2 text-left">
+                                                        {[
+                                                            "Bisnis Online Mastery",
+                                                            "Instagram Marketing",
+                                                            "TikTok Marketing",
+                                                            "WhatsApp Marketing",
+                                                            "X / Twitter Marketing"
+                                                        ].map((topic, i) => (
+                                                            <motion.div
+                                                                key={i}
+                                                                initial={{ x: -20, opacity: 0 }}
+                                                                animate={{ x: 0, opacity: 1 }}
+                                                                transition={{ delay: 0.2 + (i * 0.15) }}
+                                                                className="flex items-center gap-2 bg-slate-900/80 p-2 rounded-lg border border-slate-700/50"
+                                                            >
+                                                                <CheckCircle2 size={14} className="text-green-400 shrink-0" />
+                                                                <span className="text-xs text-slate-300 font-medium">{topic}</span>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        {/* STEP 1: COPY LINK */}
+                                        {animationStep === 1 && (
                                             <motion.div
                                                 key="step1"
                                                 initial={{ opacity: 0, scale: 0.9 }}
@@ -109,6 +153,7 @@ export default function SneakPeek() {
                                                     <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                                         <Copy className="text-blue-400" size={24} />
                                                     </div>
+                                                    <h3 className="text-white font-bold mb-2">Praktek Bisnis Digital</h3>
                                                     <h3 className="text-white font-bold mb-2">Ambil Link Affiliate</h3>
                                                     <div className="bg-slate-950 p-3 rounded-lg border border-slate-600 mb-4 flex items-center justify-between gap-2">
                                                         <span className="text-xs text-slate-300 truncate">digitalsquad.id/ref=namakamu</span>
@@ -133,7 +178,7 @@ export default function SneakPeek() {
                                         )}
 
                                         {/* STEP 2: SHARE SOCIAL */}
-                                        {animationStep === 1 && (
+                                        {animationStep === 2 && (
                                             <motion.div
                                                 key="step2"
                                                 initial={{ opacity: 0, scale: 0.9 }}
@@ -174,7 +219,7 @@ export default function SneakPeek() {
                                         )}
 
                                         {/* STEP 3: PROFIT STREAM */}
-                                        {animationStep === 2 && (
+                                        {animationStep === 3 && (
                                             <motion.div
                                                 key="step3"
                                                 variants={{
@@ -252,28 +297,36 @@ export default function SneakPeek() {
                     <div className="space-y-8">
                         {[
                             {
-                                icon: Copy,
-                                title: "1. Ambil Link Khusus Anda",
-                                desc: "Login ke dashboard yang sudah disiapkan. Pilih produk yang mau dijual (sudah tersedia ribuan), lalu klik 'Copy Link'.",
-                                color: "text-blue-400",
-                                bg: "bg-blue-500/10",
+                                icon: GraduationCap,
+                                title: "1. Belajar di Digital Squad Academy",
+                                desc: "Akses materi pembelajaran bisnis digital komprehensif. Mulai dari mindset, strategi, hingga teknis marketing (IG, TikTok, WA, FB Ads, dll).",
+                                color: "text-orange-400",
+                                bg: "bg-orange-500/10",
                                 active: animationStep === 0
                             },
                             {
-                                icon: Share2,
-                                title: "2. Sebar di Sosmed / WA",
-                                desc: "Paste link tersebut di Story WA, Facebook, atau grup keluarga. Kami sediakan materi promosi (kata-kata & gambar) tinggal copas.",
-                                color: "text-purple-400",
-                                bg: "bg-purple-500/10",
+                                icon: Copy,
+                                title: "2. Praktek Bisnis Digital",
+                                desc: "Login ke dashboard yang sudah disiapkan. Pilih produk yang mau dijual (sudah tersedia banyak), lalu klik 'Copy Link'.",
+                                color: "text-blue-400",
+                                bg: "bg-blue-500/10",
                                 active: animationStep === 1
                             },
                             {
+                                icon: Share2,
+                                title: "3. Sebar di Sosmed / WA",
+                                desc: "Paste link tersebut di Story WA, Facebook, atau grup keluarga. Kami sediakan materi promosi (kata-kata & gambar) tinggal copas.",
+                                color: "text-purple-400",
+                                bg: "bg-purple-500/10",
+                                active: animationStep === 2
+                            },
+                            {
                                 icon: Wallet,
-                                title: "3. Terima Komisi Otomatis",
+                                title: "4. Terima Komisi Otomatis",
                                 desc: "Saat ada yang klik dan daftar, sistem mencatat itu referensi Anda. Komisi otomatis masuk ke dompet Digital Squad Anda.",
                                 color: "text-green-400",
                                 bg: "bg-green-500/10",
-                                active: animationStep === 2
+                                active: animationStep === 3
                             }
                         ].map((step, idx) => (
                             <motion.div
@@ -293,16 +346,6 @@ export default function SneakPeek() {
                                 </div>
                             </motion.div>
                         ))}
-
-                        {/* <div className="pt-6">
-                            <button
-                                onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="flex items-center gap-2 text-white font-bold bg-white/10 hover:bg-white/20 border border-white/10 px-6 py-3 rounded-full transition-all group"
-                            >
-                                <span>Saya Mau Coba Sekarang</span>
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </div> */}
                     </div>
                 </div>
             </div>
