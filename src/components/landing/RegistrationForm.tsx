@@ -5,7 +5,11 @@ import { Star, Crown, Check, Gift, Timer, MessageCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { trackEvent } from '../../lib/pixel'
 
-export default function RegistrationForm() {
+interface RegistrationFormProps {
+  showBasicOnly?: boolean;
+}
+
+export default function RegistrationForm({ showBasicOnly }: RegistrationFormProps) {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const [selectedTier, setSelectedTier] = useState<'basic' | 'pro'>('basic')
@@ -129,6 +133,14 @@ export default function RegistrationForm() {
       // }
     }
   }, [])
+
+  // Enforce showBasicOnly logic
+  useEffect(() => {
+    if (showBasicOnly) {
+      setSelectedTier('basic');
+    }
+  }, [showBasicOnly]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -364,85 +376,97 @@ export default function RegistrationForm() {
 
         <motion.div
           animate={{
-            boxShadow: selectedTier === 'pro'
+            boxShadow: (selectedTier === 'pro' || showBasicOnly) // If showBasicOnly, allow nice shadow
               ? '0 0 40px rgba(59, 130, 246, 0.3)'
               : '0 0 0px rgba(0, 0, 0, 0)',
-            borderColor: selectedTier === 'pro'
+            borderColor: (selectedTier === 'pro' || showBasicOnly)
               ? 'rgba(59, 130, 246, 0.5)'
               : 'rgba(51, 65, 85, 0.5)'
           }}
           transition={{ duration: 0.5 }}
           className={`bg-slate-900/80 backdrop-blur-lg p-8 rounded-2xl border shadow-2xl ring-1 ring-white/10 transition-colors duration-500 relative overflow-hidden`}
         >
-          {/* Background Ambient Glow for Pro */}
-          {selectedTier === 'pro' && (
+          {/* Background Ambient Glow for Pro or Basic (if showBasicOnly) */}
+          {(selectedTier === 'pro' || showBasicOnly) && (
             <div className="absolute inset-0 bg-blue-500/5 z-0 pointer-events-none animate-pulse" />
           )}
 
           <div className="relative z-10">
             <h2 className="text-3xl font-bold text-white text-center mb-2">Join Digital Squad</h2>
-            <p className="text-center text-slate-400 mb-6">Pilih tier dan mulai perjalanan cuan-mu!</p>
+            <p className="text-center text-slate-400 mb-6">Belajar Digital Marketing & Bisnis Online Di Academy Digital Squad</p>
 
             {/* Tier Selection */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className={`grid ${showBasicOnly ? 'grid-cols-1' : 'grid-cols-2'} gap-3 mb-6`}>
               <button
                 type="button"
                 onClick={() => setSelectedTier('basic')}
-                className={`p-4 rounded-xl border-2 transition duration-200 text-left ${selectedTier === 'basic'
-                  ? 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
-                  : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
+                className={`p-4 rounded-xl border-2 transition duration-200 text-left relative overflow-hidden ${selectedTier === 'basic'
+                    ? (showBasicOnly
+                      ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]' // Fancy style for Basic if Only
+                      : 'border-slate-500 bg-slate-800/50 ring-2 ring-slate-500/50'
+                    )
+                    : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
                   }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Star size={18} className="text-slate-400" />
-                  <span className="font-bold text-white text-sm">Basic</span>
-                  {selectedTier === 'basic' && <Check size={16} className="text-green-400 ml-auto" />}
+                {showBasicOnly && (
+                  <div className="absolute inset-0 rounded-xl bg-blue-500/5 blur-xl animate-pulse" />
+                )}
+                <div className="flex items-center gap-2 mb-2 relative z-10">
+                  <div className={`p-1.5 rounded-lg ${showBasicOnly ? 'bg-blue-500/20 text-blue-300' : ''}`}>
+                    <Star size={showBasicOnly ? 20 : 18} className={showBasicOnly ? 'fill-blue-500/20 text-blue-300' : 'text-slate-400'} />
+                  </div>
+                  <span className={`font-bold text-sm ${showBasicOnly ? 'text-white' : 'text-white'}`}>
+                    {showBasicOnly ? 'SQUAD MEMBER (BASIC)' : 'Basic'}
+                  </span>
+                  {selectedTier === 'basic' && <Check size={16} className={`${showBasicOnly ? 'text-blue-400' : 'text-green-400'} ml-auto`} />}
                 </div>
-                <p className="text-lg font-bold text-white">Rp {(tierPricing.basic?.price || 0).toLocaleString('id-ID')}</p>
-                <p className="text-xs text-slate-400">Komisi {tierPricing.basic?.commission || '...'}</p>
+                <p className="text-lg font-bold text-white relative z-10">Rp {(tierPricing.basic?.price || 0).toLocaleString('id-ID')}</p>
+                <p className={`text-xs ${showBasicOnly ? 'text-blue-200' : 'text-slate-400'} relative z-10`}>Komisi {tierPricing.basic?.commission || '...'}</p>
               </button>
 
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(59, 130, 246, 0.4)" }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedTier('pro')}
-                className={`p-4 rounded-xl border-2 transition-all duration-300 text-left relative overflow-visible ${selectedTier === 'pro'
-                  ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
-                  : 'border-slate-700 bg-slate-800/30 hover:border-blue-500 hover:bg-slate-800/50 shadow-[0_0_15px_rgba(59,130,246,0.15)] animate-pulse-slow' /* Added shadow and slow pulse to unselected state */
-                  }`}
-              >
-                {/* Glowing Pulse Effect for Pro */}
-                <div className="absolute inset-0 rounded-xl bg-blue-500/5 blur-xl animate-pulse" />
+              {!showBasicOnly && (
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(59, 130, 246, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedTier('pro')}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 text-left relative overflow-visible ${selectedTier === 'pro'
+                    ? 'border-blue-400 bg-gradient-to-br from-blue-900/60 via-indigo-900/40 to-slate-900/60 ring-2 ring-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                    : 'border-slate-700 bg-slate-800/30 hover:border-blue-500 hover:bg-slate-800/50 shadow-[0_0_15px_rgba(59,130,246,0.15)] animate-pulse-slow' /* Added shadow and slow pulse to unselected state */
+                    }`}
+                >
+                  {/* Glowing Pulse Effect for Pro */}
+                  <div className="absolute inset-0 rounded-xl bg-blue-500/5 blur-xl animate-pulse" />
 
-                <div className="absolute -top-3 -right-2 transform rotate-2">
-                  <span className="relative flex h-6 w-auto">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span className="relative inline-flex items-center justify-center px-3 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-lg ring-1 ring-white/20">
-                      Most Popular
+                  <div className="absolute -top-3 -right-2 transform rotate-2">
+                    <span className="relative flex h-6 w-auto">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                      <span className="relative inline-flex items-center justify-center px-3 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-lg ring-1 ring-white/20">
+                        Most Popular
+                      </span>
                     </span>
-                  </span>
-                </div>
+                  </div>
 
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`p-1.5 rounded-lg ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-400'}`}>
-                      <Crown size={18} className={selectedTier === 'pro' ? 'fill-blue-500/20' : ''} />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`p-1.5 rounded-lg ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-400'}`}>
+                        <Crown size={18} className={selectedTier === 'pro' ? 'fill-blue-500/20' : ''} />
+                      </div>
+                      <span className={`font-bold text-sm ${selectedTier === 'pro' ? 'text-white' : 'text-slate-300'}`}>Squad Elite</span>
+                      {selectedTier === 'pro' && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check size={18} className="text-blue-400 ml-auto drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" /></motion.div>}
                     </div>
-                    <span className={`font-bold text-sm ${selectedTier === 'pro' ? 'text-white' : 'text-slate-300'}`}>Squad Elite</span>
-                    {selectedTier === 'pro' && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check size={18} className="text-blue-400 ml-auto drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" /></motion.div>}
-                  </div>
 
-                  <div className="flex items-end gap-1 mb-1">
-                    <p className="text-2xl font-black text-white tracking-tight">Rp {(tierPricing.pro?.price || 0).toLocaleString('id-ID')}</p>
-                    {/* <p className="text-xs text-slate-500 line-through mb-1.5">Rp 300.000</p> */}
-                  </div>
+                    <div className="flex items-end gap-1 mb-1">
+                      <p className="text-2xl font-black text-white tracking-tight">Rp {(tierPricing.pro?.price || 0).toLocaleString('id-ID')}</p>
+                      {/* <p className="text-xs text-slate-500 line-through mb-1.5">Rp 300.000</p> */}
+                    </div>
 
-                  <div className={`text-xs px-2 py-1 rounded-md inline-block font-medium ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-200 border border-blue-500/30' : 'text-slate-500 bg-slate-800'}`}>
-                    🔥 Komisi {tierPricing.pro?.commission || '...'} / penjualan
+                    <div className={`text-xs px-2 py-1 rounded-md inline-block font-medium ${selectedTier === 'pro' ? 'bg-blue-500/20 text-blue-200 border border-blue-500/30' : 'text-slate-500 bg-slate-800'}`}>
+                      🔥 Komisi {tierPricing.pro?.commission || '...'} / penjualan
+                    </div>
                   </div>
-                </div>
-              </motion.button>
+                </motion.button>
+              )}
             </div>
 
             {/* Total Display */}

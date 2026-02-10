@@ -4,42 +4,42 @@ import { Gift, Zap } from 'lucide-react'
 const bonuses = [
     {
         title: "Rahasia Psikologi Jualan Apapun Susah Di Tolak",
-        value: "Rp 10.000.000",
+        value: "Rp 1.000.000",
         desc: "Teknik copywriting terlarang yang memanipulasi psikologi pembeli agar transfer seketika.",
         gradient: "from-red-600 to-rose-900",
         icon: "🔥"
     },
     {
         title: "Cara Ternak Akun & Buat Mesin Cuan Otomatis",
-        value: "Rp 7.000.000",
+        value: "Rp 1.000.000",
         desc: "Bikin 1000 pasukan akun sosmed yang bekerja 24 jam mencari uang untuk Anda.",
         gradient: "from-purple-600 to-indigo-900",
         icon: "🤖"
     },
     {
         title: "Rahasia Jual Produk Digital 1 Milyar Pertama Mu",
-        value: "Rp 9.000.000",
+        value: "Rp 500.000",
         desc: "Blueprint rahasia 'Dapur' Digital Squad mencetak omzet miliaran dalam setahun.",
         gradient: "from-amber-500 to-orange-800",
         icon: "💎"
     },
     {
         title: "Gajian Dollar Hanya Dari Email",
-        value: "Rp 6.000.000",
+        value: "Rp 500.000",
         desc: "Cara orang malas dapet gaji dollar cuma modal ngetik email marketing.",
         gradient: "from-emerald-500 to-green-900",
         icon: "💵"
     },
     {
         title: "Akses Landing Page Premium",
-        value: "Rp 11.000.000",
+        value: "Rp 1.000.000",
         desc: "Landing page yang bikin kamu makin cuan kalo udah join. Siap pakai, konversi tinggi!",
         gradient: "from-cyan-500 to-blue-900",
         icon: "🚀"
     },
     {
         title: "Akses Dashboard Bisnis Digital",
-        value: "Rp 15.000.000",
+        value: "Rp 1.000.000",
         desc: "Pantau omzet, traffic, dan komisi secara real-time. Kelola bisnis semudah main game.",
         gradient: "from-violet-600 to-indigo-900",
         icon: "💻"
@@ -64,7 +64,7 @@ export default function BonusProducts() {
                         🚨 SPESIAL BONUS MEMBER BARU
                     </motion.div>
                     <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
-                        Bongkar <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Rahasia Senilai 58 Juta</span> Secara GRATIS!
+                        Bongkar <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Rahasia Senilai 5 Juta</span> Secara GRATIS!
                     </h2>
                     <p className="text-slate-300 text-lg md:text-xl">
                         Materi kelas "Dewa" ini biasanya kami jual mahal. Tapi khusus member hari ini, <span className="text-green-400 font-bold underline decoration-wavy">GRATIS 100%</span>.

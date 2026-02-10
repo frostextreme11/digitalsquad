@@ -27,7 +27,11 @@ const HeroFallback = () => (
   </div>
 )
 
-export default function LandingPage() {
+interface LandingPageProps {
+  showBasicOnly?: boolean;
+}
+
+export default function LandingPage({ showBasicOnly }: LandingPageProps) {
   const baseUrl = 'https://digitalsquad.id'
   const imageUrl = `${baseUrl}/android-chrome-512x512.png`
 
@@ -148,8 +152,8 @@ export default function LandingPage() {
       {/* Benefits */}
       <Benefits />
 
-      {/* Interactive/Hook Phase */}
-      <IncomeCalculator />
+      {/* Interactive/Hook Phase - Conditional Render */}
+      {!showBasicOnly && <IncomeCalculator />}
 
       {/* FOMO Bonuses */}
       <BonusProducts />
@@ -157,12 +161,12 @@ export default function LandingPage() {
       {/* Member Results / Social Proof */}
       <MemberResults />
 
-      <TierPricing />
+      <TierPricing showOnlyTier={showBasicOnly ? 'basic' : undefined} />
 
       {/* FAQ & Closing */}
       <FAQSection />
 
-      <RegistrationForm />
+      <RegistrationForm showBasicOnly={showBasicOnly} />
 
       <FloatingToast />
       <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">

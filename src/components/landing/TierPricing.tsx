@@ -12,8 +12,8 @@ const tierConfig: Record<string, any> = {
             'Link affiliate personal',
             // Commission will be injected dynamically
             // Min withdraw will be injected dynamically
-            'Akses Agent Academy',
-            'Support via grup'
+            'Akses Digital Squad Academy',
+            'Admin Support'
         ],
         isBestSeller: false,
         gradient: 'from-slate-600 to-slate-700',
@@ -26,8 +26,8 @@ const tierConfig: Record<string, any> = {
             'Semua fitur Basic +',
             // Commission will be injected dynamically
             // Min withdraw will be injected dynamically
-            'Akses materi eksklusif',
-            'Priority support',
+            'Akses Digital Squad Academy VIP',
+            'Admin Support',
             'Badge Elite Member'
         ],
         isBestSeller: true,
@@ -37,7 +37,11 @@ const tierConfig: Record<string, any> = {
     }
 }
 
-export default function TierPricing() {
+interface TierPricingProps {
+    showOnlyTier?: string
+}
+
+export default function TierPricing({ showOnlyTier }: TierPricingProps) {
     const [tiers, setTiers] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
@@ -119,6 +123,14 @@ export default function TierPricing() {
         return <div className="py-20 bg-slate-950 text-center text-slate-500">Loading pricing...</div>
     }
 
+    const displayedTiers = showOnlyTier
+        ? tiers.filter(t => t.key === showOnlyTier)
+        : tiers;
+
+    const gridClass = displayedTiers.length === 1
+        ? "flex justify-center max-w-lg mx-auto"
+        : "grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto";
+
     return (
         <section id="pricing" className="py-20 bg-slate-950 relative overflow-hidden">
             {/* Background Effects */}
@@ -133,44 +145,50 @@ export default function TierPricing() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Pilih Tier Keanggotaanmu
+                        Ayo Belajar Digital Marketing & Bisnis Online
                     </h2>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-                        Mulai dari Basic atau langsung ke Pro untuk komisi lebih besar!
+                        Sekaligus Praktek dan Dapatkan Keuntungan Nya Langsung!
                     </p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {tiers.map((tier, index) => {
+                <div className={gridClass}>
+                    {displayedTiers.map((tier, index) => {
                         // Safe fallback
                         const style = tierConfig[tier.key || 'basic'] || tierConfig.basic;
                         // Extra safety for safety's sake
                         if (!style) return null;
 
                         const commissionPercent = tier.commission_rate ? Math.round(tier.commission_rate * 100) : 0;
-
-
+                        const isSingleView = displayedTiers.length === 1;
+                        // Upgrade design if it's the only one shown
+                        const effectiveIsBestSeller = isSingleView ? true : style.isBestSeller;
+                        // If upgrading Basic, use Pro-like gradient? Or stick to own color but enhanced?
+                        // Let's use blue/purple glow if effectiveIsBestSeller is forced, 
+                        // but maybe keep the icon background original or enhanced.
+                        // Actually the user said "design tier 50.000 menjadi sebagus 150.000".
+                        // So we should probably apply the glow/shadow/border effects.
 
                         return (
                             <motion.div
                                 key={tier.key || index}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                whileHover={style.isBestSeller ? { scale: 1.02 } : {}}
+                                whileHover={effectiveIsBestSeller ? { scale: 1.02 } : {}}
                                 viewport={{ once: true, margin: "-50px" }}
                                 transition={{ delay: index * 0.15 }}
-                                className={`relative rounded-3xl p-8 ${style.isBestSeller
+                                className={`relative rounded-3xl p-8 w-full ${effectiveIsBestSeller
                                     ? 'bg-slate-900/90 border-transparent shadow-[0_0_60px_rgba(37,99,235,0.3)] overflow-visible z-10' // Increased shadow, overflow-visible for aura, z-10
                                     : 'bg-slate-900/80 backdrop-blur-md border-2 ' + style.borderColor
                                     }`}
                             >
                                 {/* Strong Ambient Aura for Best Seller */}
-                                {style.isBestSeller && (
+                                {effectiveIsBestSeller && (
                                     <div className="absolute inset-0 bg-blue-600/20 blur-[60px] rounded-3xl -z-10 animate-pulse-slow"></div>
                                 )}
 
                                 {/* Moving Gradient Border for Best Seller */}
-                                {style.isBestSeller && (
+                                {effectiveIsBestSeller && (
                                     <div className="overflow-hidden absolute inset-0 rounded-3xl pointer-events-none">
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-purple-500/30 animate-spin-slow opacity-70 z-0 rounded-3xl" style={{ margin: '-2px' }} />
                                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 z-0" />
@@ -182,8 +200,8 @@ export default function TierPricing() {
                                 )}
 
                                 <div className="relative z-10">
-                                    {/* Best Seller Badge with Animation */}
-                                    {style.isBestSeller && (
+                                    {/* Best Seller Badge with Animation - Only show if truly best seller OR if we want to hype the single option */}
+                                    {effectiveIsBestSeller && (
                                         <div className="absolute -top-13 left-1/2 transform -translate-x-1/2 z-20">
                                             <motion.div
                                                 animate={{ y: [5, -5, 5] }}
@@ -193,7 +211,7 @@ export default function TierPricing() {
                                                 <div className="absolute inset-0 bg-yellow-400 blur-lg opacity-40 animate-pulse"></div>
                                                 <div className="relative bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 bg-[length:200%_auto] animate-gradient text-slate-900 font-black text-sm px-6 py-2 rounded-full flex items-center gap-1.5 shadow-[0_4px_20px_rgba(245,158,11,0.4)] border border-yellow-200/50">
                                                     <Zap size={16} className="fill-slate-900 animate-pulse" />
-                                                    <span className="tracking-wide">BEST SELLER</span>
+                                                    <span className="tracking-wide">{isSingleView ? 'LIMITED OFFER' : 'BEST SELLER'}</span>
                                                 </div>
                                             </motion.div>
                                         </div>
@@ -210,7 +228,7 @@ export default function TierPricing() {
                                     </div>
 
                                     {/* Price */}
-                                    <div className={`text-center mb-6 py-4 rounded-2xl ${style.isBestSeller ? 'bg-gradient-to-b from-slate-800/80 to-slate-900/80 border border-slate-700/50' : 'bg-slate-800/50'}`}>
+                                    <div className={`text-center mb-6 py-4 rounded-2xl ${effectiveIsBestSeller ? 'bg-gradient-to-b from-slate-800/80 to-slate-900/80 border border-slate-700/50' : 'bg-slate-800/50'}`}>
                                         <div className="text-slate-500 font-bold text-lg line-through decoration-red-500/50 decoration-2 mb-1">
                                             {tier.key === 'basic' ? 'Rp 125.000' : 'Rp 400.000'}
                                         </div>
@@ -218,7 +236,7 @@ export default function TierPricing() {
                                             Rp {(tier.price || 0).toLocaleString('id-ID')}
                                         </div>
                                         <p className="text-slate-400 text-sm">sekali bayar, seumur hidup</p>
-                                        {tier.key === 'pro' && (
+                                        {(tier.key === 'pro' || isSingleView) && (
                                             <div className="mt-3 flex flex-col items-center gap-1.5">
                                                 <p className="text-xs text-blue-300/80 font-medium bg-blue-900/20 inline-block px-3 py-1 rounded-full border border-blue-500/20">
                                                     ★ Investasi terbaik jangka panjang
@@ -270,13 +288,13 @@ export default function TierPricing() {
                                     {/* CTA Button */}
                                     <button
                                         onClick={() => scrollToRegister(tier.key)}
-                                        className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden group ${style.isBestSeller
+                                        className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden group ${effectiveIsBestSeller
                                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-[1.02]'
                                             : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
                                             }`}
                                     >
                                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                        <span className="relative z-10">{style.isBestSeller ? 'Pilih Pro - Paling Untung!' : 'Pilih Basic'}</span>
+                                        <span className="relative z-10">{effectiveIsBestSeller && !isSingleView ? 'Pilih Pro - Paling Untung!' : 'Ambil Promo Sekarang!'}</span>
                                     </button>
                                 </div>
                             </motion.div>
@@ -284,7 +302,7 @@ export default function TierPricing() {
                     })}
                 </div>
 
-                {/* VIP Teaser */}
+                {/* VIP Teaser - Hide if single view basic only? Maybe keep it as upsell idea but user asked to hide income calculator etc. Let's keep it for now unless requested strictly. */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

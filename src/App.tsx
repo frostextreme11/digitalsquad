@@ -23,6 +23,7 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/50" element={<LandingPage showBasicOnly={true} />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />

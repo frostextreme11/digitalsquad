@@ -31,7 +31,7 @@ export default function IncomeCalculator() {
   const [sales, setSales] = useState(5)
   // Ensure we default to 'basic' if 'pro' is risky, 
   // but we initialize 'pro' because we provide default config.
-  const [selectedTier, setSelectedTier] = useState<'basic' | 'pro'>('pro')
+  const [selectedTier, setSelectedTier] = useState<'basic' | 'pro'>('basic')
 
   const [tierConfig] = useState<Record<string, any>>({
     basic: {

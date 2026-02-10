@@ -132,7 +132,7 @@ export default function Testimonials() {
           Jangan Percaya Kata Kami
         </h1>
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
-          Tapi Kata Mereka yang Udah Cuan!
+          Tapi Kata Mereka yang sudah belajar dan Praktek!
         </h2>
         <p className="text-center text-slate-400 text-lg max-w-2xl mx-auto">
           Ribuan member telah membuktikan keberhasilan metode kami. Tonton testimoni mereka.

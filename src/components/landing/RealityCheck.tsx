@@ -62,16 +62,14 @@ export default function RealityCheck() {
                         </h3>
                         <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
                             Karena itu <span className="text-white font-bold">Digital Squad</span> lahir.
-                            Kami menciptakan sistem dimana Anda bisa mulai menghasilkan uang
+                            Kami menciptakan sistem dimana Anda bisa mulai belajar bisnis digital sambil menghasilkan uang
                             <span className="text-indigo-400 font-bold"> tanpa skill khusus</span>,
                             <span className="text-indigo-400 font-bold"> tanpa produk sendiri</span>,
-                            dan dengan modal <span className="text-green-400 font-bold">setara 2 porsi bakso</span>.
+                            dan dengan modal <span className="text-green-400 font-bold">minim.</span>.
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-slate-500 text-sm">
-                            <span>Bukan MLM</span>
-                            <span className="hidden sm:inline">•</span>
-                            <span>Bukan Investasi Bodong</span>
+                            <span>Platform #1 Untuk Pemula</span>
                             <span className="hidden sm:inline">•</span>
                             <span>100% Bisnis Digital Halal</span>
                         </div>

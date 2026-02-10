@@ -116,7 +116,7 @@ export default function Hero3D() {
           transition={{ duration: 0.6 }} // Faster animation
         ><br></br><br></br>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 drop-shadow-2xl">
-            Dapatkan Penghasilan Tambahan Bersama<br />
+            Belajar Bisnis Digital & Dapat Penghasilan Tambahan Di<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Squad!</span>
           </h1>
         </motion.div>
@@ -127,8 +127,8 @@ export default function Hero3D() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h2 className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto font-light">
-            <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin punya penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
-            <span className="text-yellow-400 font-bold"> Cara simple dapetin uang dari internet.</span> Sistemnya jelas: ambil link → sebar → dapat komisi. <span className="italic">Bukan sulap, ini strategi digital.</span>
+            <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin belajar bisnis digital & dapat penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
+            <span className="text-yellow-400 font-bold"> Cara mudah belajar bisnis digital.</span> Sambil praktek dan dapat penghasilan tambahan <span className="italic"></span>
           </h2>
         </motion.div>
 
