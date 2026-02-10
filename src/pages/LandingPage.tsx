@@ -9,7 +9,7 @@ import Testimonials from '../components/landing/Testimonials'
 // import HowItWorks from '../components/landing/HowItWorks' 
 import ProductShowcase from '../components/landing/ProductShowcase'
 import TierPricing from '../components/landing/TierPricing'
-import IncomeCalculator from '../components/landing/IncomeCalculator'
+import PlatformAccess from '../components/landing/PlatformAccess'
 import Benefits from '../components/landing/Benefits'
 import FAQSection, { faqs } from '../components/landing/FAQSection'
 import RegistrationForm from '../components/landing/RegistrationForm'
@@ -153,7 +153,7 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
       <Benefits />
 
       {/* Interactive/Hook Phase - Conditional Render */}
-      {!showBasicOnly && <IncomeCalculator />}
+      <PlatformAccess />
 
       {/* FOMO Bonuses */}
       <BonusProducts />
