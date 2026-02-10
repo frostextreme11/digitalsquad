@@ -38,7 +38,7 @@ const accessItems = [
         shadowColor: "shadow-emerald-500/30",
         features: [ // Tailored features
             "Jual Ulang & 100% Profit Milik Anda",
-            "Hemat Puluhan Juta Biaya Produksi",
+            "Hemat Jutaan Rupiah Biaya Produksi",
             "Terima Beres: Landing Page & Marketing Kit Ready"
         ]
     }

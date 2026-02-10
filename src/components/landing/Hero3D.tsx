@@ -127,8 +127,8 @@ export default function Hero3D() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h2 className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto font-light">
-            <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin belajar bisnis digital & dapat penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
-            <span className="text-yellow-400 font-bold"> Cara mudah belajar bisnis digital.</span> Sambil praktek dan dapat penghasilan tambahan <span className="italic"></span>
+            <span className="text-yellow-400 font-bold">Platform #1 untuk pemula</span> yang ingin belajar bisnis digital & dapatkan penghasilan tambahan dari HP tanpa perlu bikin produk sendiri.
+            <span className="text-yellow-400 font-bold"> Cara mudah belajar bisnis digital.</span> Anda tinggal Contek, Praktek, dan Hasilkan! <span className="italic"></span>
           </h2>
         </motion.div>
 
@@ -143,7 +143,7 @@ export default function Hero3D() {
             onClick={() => document.getElementById('reality-check')?.scrollIntoView({ behavior: 'smooth' })}
             className="relative flex items-center justify-center bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold py-4 px-10 rounded-full text-lg shadow-2xl shadow-green-500/30 transform transition duration-200 hover:scale-[1.05] hover:-translate-y-1"
           >
-            Gabung Sekarang
+            Pelajari Selengkapnya
             <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all" />
           </button>
         </motion.div>
