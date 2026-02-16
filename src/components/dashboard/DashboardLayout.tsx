@@ -15,7 +15,7 @@ export default function DashboardLayout({ children, role }: { children: React.Re
   }
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Overview', roles: ['agent', 'admin'] },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['agent', 'admin'] },
     { path: '/dashboard/users', icon: Users, label: 'Members', roles: ['admin'] },
     { path: '/dashboard/leads', icon: Users, label: 'Leads', roles: ['admin', 'agent'] },
     { path: '/dashboard/tiers', icon: Crown, label: 'Tier Settings', roles: ['admin'] },
