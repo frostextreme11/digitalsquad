@@ -1,7 +1,26 @@
+# Digital Squad - Robots.txt
+# https://digitalsquad.id
+
 User-agent: *
 Allow: /
+Allow: /blog
+Allow: /blog/
+Allow: /login
+Allow: /50
+
+# Disallow private/authenticated areas
 Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /payment/
+Disallow: /payment-success
+Disallow: /forgot-password
+Disallow: /update-password
+Disallow: /buy/
+Disallow: /access-denied
+Disallow: /maintenance
 
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Sitemap location
 Sitemap: https://digitalsquad.id/sitemap.xml

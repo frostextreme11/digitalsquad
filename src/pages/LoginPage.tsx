@@ -77,6 +77,7 @@ export default function LoginPage() {
       <Helmet>
         <title>Login Member Area - Digital Squad</title>
         <meta name="description" content="Masuk ke member area Digital Squad untuk mengakses materi pembelajaran, tools bisnis online, dan dashboard affiliate." />
+        <link rel="canonical" href="https://digitalsquad.id/login" />
       </Helmet>
 
       {/* Custom Alert */}

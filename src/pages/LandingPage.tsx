@@ -107,7 +107,7 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
         <meta name="keywords" content="bebas hutang, lunas pinjol, bisnis modal kecil, digital marketing, bisnis online, digital squad, affiliate marketing, cari uang online, peluang usaha, kerja sampingan" />
 
         {/* Canonical URL */}
-        <link rel="canonical" href={baseUrl} />
+        <link rel="canonical" href={showBasicOnly ? `${baseUrl}/50` : baseUrl} />
 
         {/* Open Graph */}
         <meta property="og:title" content="Digital Squad - Solusi Bebas Hutang & Bisnis Online Modal Kecil" />
