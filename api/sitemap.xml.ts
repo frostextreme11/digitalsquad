@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
-    const baseUrl = 'https://digitalsquad.id'
+    const baseUrl = 'https://www.digitalsquad.id'
     const today = new Date().toISOString().split('T')[0]
 
     try {

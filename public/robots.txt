@@ -23,4 +23,4 @@ Disallow: /maintenance
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://digitalsquad.id/sitemap.xml
+Sitemap: https://www.digitalsquad.id/sitemap.xml

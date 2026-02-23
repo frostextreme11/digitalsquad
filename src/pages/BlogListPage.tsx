@@ -75,7 +75,7 @@ export default function BlogListPage() {
         '@type': 'Blog',
         name: 'Digital Squad Blog',
         description: 'Tips, strategi, dan insight tentang digital marketing untuk mengembangkan bisnis Anda.',
-        url: 'https://digitalsquad.id/blog',
+        url: 'https://www.digitalsquad.id/blog',
         publisher: {
             '@type': 'Organization',
             name: 'Digital Squad',
@@ -98,11 +98,11 @@ export default function BlogListPage() {
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Blog | Digital Squad" />
                 <meta property="og:description" content="Tips, strategi, dan insight tentang digital marketing untuk mengembangkan bisnis Anda." />
-                <meta property="og:url" content="https://digitalsquad.id/blog" />
+                <meta property="og:url" content="https://www.digitalsquad.id/blog" />
                 <meta property="og:site_name" content="Digital Squad" />
 
                 {/* Canonical URL */}
-                <link rel="canonical" href="https://digitalsquad.id/blog" />
+                <link rel="canonical" href="https://www.digitalsquad.id/blog" />
 
                 {/* JSON-LD */}
                 <script type="application/ld+json">

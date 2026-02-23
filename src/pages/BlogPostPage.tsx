@@ -311,7 +311,7 @@ export default function BlogPostPage() {
         keywords: post.keywords.join(', '),
         mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': `https://digitalsquad.id/blog/${post.slug}`
+            '@id': `https://www.digitalsquad.id/blog/${post.slug}`
         }
     }
 
@@ -329,7 +329,7 @@ export default function BlogPostPage() {
                 <meta property="og:title" content={post.title} />
                 <meta property="og:description" content={post.meta_description || ''} />
                 <meta property="og:image" content={ogImage} />
-                <meta property="og:url" content={`https://digitalsquad.id/blog/${post.slug}`} />
+                <meta property="og:url" content={`https://www.digitalsquad.id/blog/${post.slug}`} />
                 <meta property="og:site_name" content="Digital Squad" />
                 <meta property="article:published_time" content={post.created_at} />
                 <meta property="article:modified_time" content={post.updated_at} />
@@ -342,7 +342,7 @@ export default function BlogPostPage() {
                 <meta name="twitter:image" content={ogImage} />
 
                 {/* Canonical URL */}
-                <link rel="canonical" href={`https://digitalsquad.id/blog/${post.slug}`} />
+                <link rel="canonical" href={`https://www.digitalsquad.id/blog/${post.slug}`} />
 
                 {/* JSON-LD Structured Data */}
                 <script type="application/ld+json">

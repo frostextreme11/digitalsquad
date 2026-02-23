@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
-    const baseUrl = 'https://digitalsquad.id'
+    const baseUrl = 'https://www.digitalsquad.id'
 
     try {
         // Handle blog post pages
@@ -228,7 +228,7 @@ function generateNotFoundHTML(): string {
 <body>
     <h1>404 - Page Not Found</h1>
     <p>The page you are looking for does not exist.</p>
-    <a href="https://digitalsquad.id/blog">Back to Blog</a>
+    <a href="https://www.digitalsquad.id/blog">Back to Blog</a>
 </body>
 </html>`
 }
