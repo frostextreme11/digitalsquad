@@ -19,11 +19,12 @@ import RealityCheck from '../components/landing/RealityCheck'
 import SneakPeek from '../components/landing/SneakPeek'
 import BonusProducts from '../components/landing/BonusProducts'
 import MemberResults from '../components/landing/MemberResults'
+import { TrackSection } from '../components/landing/TrackSection';
 
 // Fallback component while 3D engine loads
 const HeroFallback = () => (
-  <div className="h-[90vh] w-full bg-slate-950 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center w-full h-[90vh] bg-slate-950">
+    <div className="w-8 h-8 border-4 border-t-transparent border-indigo-500 rounded-full animate-spin"></div>
   </div>
 )
 
@@ -100,7 +101,7 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
   }
 
   return (
-    <div className="bg-slate-950 min-h-screen">
+    <div className="min-h-screen bg-slate-950">
       <Helmet>
         <title>Digital Squad - Solusi Bebas Hutang & Bisnis Online Modal Kecil</title>
         <meta name="description" content="Ubah modal 50 ribu jadi solusi lunas hutang & bebas teror pinjol bersama Digital Squad. Cara termudah hasilkan jutaan rupiah dari strategi digital marketing." />
@@ -130,46 +131,73 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
           {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
-      <Suspense fallback={<HeroFallback />}>
-        <Hero3D />
-      </Suspense>
+
+      <TrackSection name="Hero">
+        <Suspense fallback={<HeroFallback />}>
+          <Hero3D />
+        </Suspense>
+      </TrackSection>
 
       {/* New Flow: Reality Check Phase */}
-      <RealityCheck />
+      <TrackSection name="Reality Check">
+        <RealityCheck />
+      </TrackSection>
 
       {/* Social Proof */}
-      <Testimonials />
+      <TrackSection name="Testimonials (Social Proof)">
+        <Testimonials />
+      </TrackSection>
 
       {/* Logic/Mechanism Phase */}
-      <SneakPeek />
+      <TrackSection name="Sneak Peek (Logic)">
+        <SneakPeek />
+      </TrackSection>
 
       {/* Product Showcase */}
-      <ProductShowcase />
+      <TrackSection name="Product Showcase">
+        <ProductShowcase />
+      </TrackSection>
 
       {/* Rationalization Phase */}
-      <ValueComparison /> {/* The 50k Challenge */}
+      <TrackSection name="Value Comparison (50k Challenge)">
+        <ValueComparison />
+      </TrackSection>
 
       {/* Benefits */}
-      <Benefits />
+      <TrackSection name="Benefits">
+        <Benefits />
+      </TrackSection>
 
       {/* Interactive/Hook Phase - Conditional Render */}
-      <PlatformAccess />
+      <TrackSection name="Platform Access (Interactive)">
+        <PlatformAccess />
+      </TrackSection>
 
       {/* FOMO Bonuses */}
-      <BonusProducts />
+      <TrackSection name="FOMO Bonuses">
+        <BonusProducts />
+      </TrackSection>
 
       {/* Member Results / Social Proof */}
-      <MemberResults />
+      <TrackSection name="Member Results">
+        <MemberResults />
+      </TrackSection>
 
-      <TierPricing showOnlyTier={showBasicOnly ? 'basic' : undefined} />
+      <TrackSection name="Pricing / Plans">
+        <TierPricing showOnlyTier={showBasicOnly ? 'basic' : undefined} />
+      </TrackSection>
 
       {/* FAQ & Closing */}
-      <FAQSection />
+      <TrackSection name="FAQ Section">
+        <FAQSection />
+      </TrackSection>
 
-      <RegistrationForm showBasicOnly={showBasicOnly} />
+      <TrackSection name="Registration Form">
+        <RegistrationForm showBasicOnly={showBasicOnly} />
+      </TrackSection>
 
       <FloatingToast />
-      <footer className="py-8 text-center text-slate-500 bg-slate-950 border-t border-slate-900">
+      <footer className="py-8 text-center border-t text-slate-500 bg-slate-950 border-slate-900">
         <p>&copy; {new Date().getFullYear()} Digital Squad. All rights reserved. This site is not part of the Facebook website or Facebook Inc</p>
         <p>Tempat Belajar & Platform Bisnis - Disclaimer: Bahwa hasil setiap orang berbeda-beda</p>
         <p><a href="/privacy-policy.md">Privacy Policy</a> | <a href="/terms-of-service.md">Terms of Service</a></p>
@@ -177,3 +205,4 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
     </div>
   )
 }
+
