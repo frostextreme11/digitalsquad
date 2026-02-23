@@ -112,7 +112,11 @@ export default function TierPricing({ showOnlyTier }: TierPricingProps) {
     const scrollToRegister = (tierKey: string) => {
         const registerSection = document.getElementById('register')
         if (registerSection) {
-            sessionStorage.setItem('selectedTier', tierKey)
+            try {
+                sessionStorage.setItem('selectedTier', tierKey)
+            } catch (e) {
+                console.warn('sessionStorage access denied', e)
+            }
             // Dispatch custom event for already mounted components
             window.dispatchEvent(new CustomEvent('tierSelected', { detail: tierKey }))
             registerSection.scrollIntoView({ behavior: 'smooth' })

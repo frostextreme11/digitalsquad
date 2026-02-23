@@ -61,10 +61,14 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
     loadSnap()
 
     // Check if tier was pre-selected from TierPricing section
-    const preSelectedTier = sessionStorage.getItem('selectedTier')
-    if (preSelectedTier === 'basic' || preSelectedTier === 'pro') {
-      setSelectedTier(preSelectedTier)
-      sessionStorage.removeItem('selectedTier')
+    try {
+      const preSelectedTier = sessionStorage.getItem('selectedTier')
+      if (preSelectedTier === 'basic' || preSelectedTier === 'pro') {
+        setSelectedTier(preSelectedTier)
+        sessionStorage.removeItem('selectedTier')
+      }
+    } catch (e) {
+      console.warn('sessionStorage access denied', e)
     }
 
     // Listen for custom tier selection event (for when component is already mounted)
@@ -159,8 +163,13 @@ export default function RegistrationForm({ showBasicOnly }: RegistrationFormProp
         if (data) effectiveTierId = data.id;
       }
 
-      // 1. Get Referral from localStorage
-      const referredByCode = localStorage.getItem('affiliate_ref')
+      // 1. Get Referral from localStorage safely
+      let referredByCode = null;
+      try {
+        referredByCode = localStorage.getItem('affiliate_ref')
+      } catch (e) {
+        console.warn('localStorage access denied', e)
+      }
       let referrerId = null
 
       if (referredByCode) {

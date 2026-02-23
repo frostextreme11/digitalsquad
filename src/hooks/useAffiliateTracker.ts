@@ -8,11 +8,21 @@ export function useAffiliateTracker() {
       const ref = params.get('ref')
 
       if (ref) {
-        // Save to localStorage
-        localStorage.setItem('affiliate_ref', ref)
+        // Save to localStorage safely
+        try {
+          localStorage.setItem('affiliate_ref', ref)
+        } catch (e) {
+          console.warn('localStorage access denied')
+        }
 
-        // Log visit
-        const sessionLogged = sessionStorage.getItem('visit_logged_' + ref)
+        // Log visit safely
+        let sessionLogged = false
+        try {
+          sessionLogged = !!sessionStorage.getItem('visit_logged_' + ref)
+        } catch (e) {
+          console.warn('sessionStorage access denied')
+        }
+
         if (!sessionLogged) {
           try {
             // Get IP and Location
@@ -28,7 +38,7 @@ export function useAffiliateTracker() {
               location: location
             })
 
-            sessionStorage.setItem('visit_logged_' + ref, 'true')
+            try { sessionStorage.setItem('visit_logged_' + ref, 'true') } catch (e) { }
           } catch (error) {
             // Fallback if IP/Location fetch fails
             console.error('Error tracking visit:', error)
@@ -36,7 +46,7 @@ export function useAffiliateTracker() {
               affiliate_code: ref,
               user_agent: navigator.userAgent
             })
-            sessionStorage.setItem('visit_logged_' + ref, 'true')
+            try { sessionStorage.setItem('visit_logged_' + ref, 'true') } catch (e) { }
           }
         }
       }
