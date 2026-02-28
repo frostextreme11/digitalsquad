@@ -144,13 +144,6 @@ function generateBlogPostHTML(post: any, baseUrl: string): string {
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-    
-    <!-- Redirect real users to SPA -->
-    <script>
-        if (!navigator.userAgent.match(/Googlebot|bingbot|Baiduspider|yandex|facebookexternalhit|Twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest/i)) {
-            window.location.replace('${canonicalUrl}');
-        }
-    </script>
 </head>
 <body>
     <h1>${safeTitle}</h1>
@@ -198,12 +191,6 @@ function generateBlogListHTML(posts: any[], baseUrl: string): string {
     <meta property="og:site_name" content="Digital Squad">
     
     <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-    
-    <script>
-        if (!navigator.userAgent.match(/Googlebot|bingbot|Baiduspider|yandex|facebookexternalhit|Twitterbot|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest/i)) {
-            window.location.replace('${baseUrl}/blog');
-        }
-    </script>
 </head>
 <body>
     <h1>Blog Digital Squad</h1>
