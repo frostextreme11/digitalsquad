@@ -1,5 +1,5 @@
 # Digital Squad - Robots.txt
-# https://digitalsquad.id
+# https://www.digitalsquad.id
 
 User-agent: *
 Allow: /

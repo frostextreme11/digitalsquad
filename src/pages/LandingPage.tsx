@@ -107,8 +107,7 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
         <meta name="description" content="Ubah modal 50 ribu jadi solusi lunas hutang & bebas teror pinjol bersama Digital Squad. Cara termudah hasilkan jutaan rupiah dari strategi digital marketing." />
         <meta name="keywords" content="bebas hutang, lunas pinjol, bisnis modal kecil, digital marketing, bisnis online, digital squad, affiliate marketing, cari uang online, peluang usaha, kerja sampingan" />
 
-        {/* Canonical URL */}
-        <link rel="canonical" href={showBasicOnly ? `${baseUrl}/50` : baseUrl} />
+        {/* Canonical URL is managed in index.html, removing this line to avoid conflicts */}
 
         {/* Open Graph */}
         <meta property="og:title" content="Digital Squad - Solusi Bebas Hutang & Bisnis Online Modal Kecil" />
