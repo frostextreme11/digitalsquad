@@ -1,24 +1,24 @@
 import { lazy, Suspense } from 'react'
 import { Helmet } from 'react-helmet-async'
 
-// 1. Lazy load the heavy 3D component
+// 1. Lazy load the heavy 3D component and below-the-fold sections
 const Hero3D = lazy(() => import('../components/landing/Hero3D'))
+const Testimonials = lazy(() => import('../components/landing/Testimonials'))
+const ProductShowcase = lazy(() => import('../components/landing/ProductShowcase'))
+const TierPricing = lazy(() => import('../components/landing/TierPricing'))
+const PlatformAccess = lazy(() => import('../components/landing/PlatformAccess'))
+const Benefits = lazy(() => import('../components/landing/Benefits'))
+const FAQSection = lazy(() => import('../components/landing/FAQSection').then(m => ({ default: m.default })))
+const RegistrationForm = lazy(() => import('../components/landing/RegistrationForm'))
+const FloatingToast = lazy(() => import('../components/landing/FloatingToast'))
+const ValueComparison = lazy(() => import('../components/landing/ValueComparison'))
+const RealityCheck = lazy(() => import('../components/landing/RealityCheck'))
+const SneakPeek = lazy(() => import('../components/landing/SneakPeek'))
+const BonusProducts = lazy(() => import('../components/landing/BonusProducts'))
+const MemberResults = lazy(() => import('../components/landing/MemberResults'))
 
-import Testimonials from '../components/landing/Testimonials'
-// import HowItWorks from '../components/landing/HowItWorks'
-// import HowItWorks from '../components/landing/HowItWorks' 
-import ProductShowcase from '../components/landing/ProductShowcase'
-import TierPricing from '../components/landing/TierPricing'
-import PlatformAccess from '../components/landing/PlatformAccess'
-import Benefits from '../components/landing/Benefits'
-import FAQSection, { faqs } from '../components/landing/FAQSection'
-import RegistrationForm from '../components/landing/RegistrationForm'
-import FloatingToast from '../components/landing/FloatingToast'
-import ValueComparison from '../components/landing/ValueComparison'
-import RealityCheck from '../components/landing/RealityCheck'
-import SneakPeek from '../components/landing/SneakPeek'
-import BonusProducts from '../components/landing/BonusProducts'
-import MemberResults from '../components/landing/MemberResults'
+// We still need faqs for the structured data
+import { faqs } from '../components/landing/FAQSection'
 import { TrackSection } from '../components/landing/TrackSection';
 
 // Fallback component while 3D engine loads
@@ -138,65 +138,67 @@ export default function LandingPage({ showBasicOnly }: LandingPageProps) {
         </Suspense>
       </TrackSection>
 
-      {/* New Flow: Reality Check Phase */}
-      <TrackSection name="Reality Check">
-        <RealityCheck />
-      </TrackSection>
+      <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+        {/* New Flow: Reality Check Phase */}
+        <TrackSection name="Reality Check">
+          <RealityCheck />
+        </TrackSection>
 
-      {/* Social Proof */}
-      <TrackSection name="Testimonials (Social Proof)">
-        <Testimonials />
-      </TrackSection>
+        {/* Social Proof */}
+        <TrackSection name="Testimonials (Social Proof)">
+          <Testimonials />
+        </TrackSection>
 
-      {/* Logic/Mechanism Phase */}
-      <TrackSection name="Sneak Peek (Logic)">
-        <SneakPeek />
-      </TrackSection>
+        {/* Logic/Mechanism Phase */}
+        <TrackSection name="Sneak Peek (Logic)">
+          <SneakPeek />
+        </TrackSection>
 
-      {/* Product Showcase */}
-      <TrackSection name="Product Showcase">
-        <ProductShowcase />
-      </TrackSection>
+        {/* Product Showcase */}
+        <TrackSection name="Product Showcase">
+          <ProductShowcase />
+        </TrackSection>
 
-      {/* Rationalization Phase */}
-      <TrackSection name="Value Comparison (50k Challenge)">
-        <ValueComparison />
-      </TrackSection>
+        {/* Rationalization Phase */}
+        <TrackSection name="Value Comparison (50k Challenge)">
+          <ValueComparison />
+        </TrackSection>
 
-      {/* Benefits */}
-      <TrackSection name="Benefits">
-        <Benefits />
-      </TrackSection>
+        {/* Benefits */}
+        <TrackSection name="Benefits">
+          <Benefits />
+        </TrackSection>
 
-      {/* Interactive/Hook Phase - Conditional Render */}
-      <TrackSection name="Platform Access (Interactive)">
-        <PlatformAccess />
-      </TrackSection>
+        {/* Interactive/Hook Phase - Conditional Render */}
+        <TrackSection name="Platform Access (Interactive)">
+          <PlatformAccess />
+        </TrackSection>
 
-      {/* FOMO Bonuses */}
-      <TrackSection name="FOMO Bonuses">
-        <BonusProducts />
-      </TrackSection>
+        {/* FOMO Bonuses */}
+        <TrackSection name="FOMO Bonuses">
+          <BonusProducts />
+        </TrackSection>
 
-      {/* Member Results / Social Proof */}
-      <TrackSection name="Member Results">
-        <MemberResults />
-      </TrackSection>
+        {/* Member Results / Social Proof */}
+        <TrackSection name="Member Results">
+          <MemberResults />
+        </TrackSection>
 
-      <TrackSection name="Pricing / Plans">
-        <TierPricing showOnlyTier={showBasicOnly ? 'basic' : undefined} />
-      </TrackSection>
+        <TrackSection name="Pricing / Plans">
+          <TierPricing showOnlyTier={showBasicOnly ? 'basic' : undefined} />
+        </TrackSection>
 
-      {/* FAQ & Closing */}
-      <TrackSection name="FAQ Section">
-        <FAQSection />
-      </TrackSection>
+        {/* FAQ & Closing */}
+        <TrackSection name="FAQ Section">
+          <FAQSection />
+        </TrackSection>
 
-      <TrackSection name="Registration Form">
-        <RegistrationForm showBasicOnly={showBasicOnly} />
-      </TrackSection>
+        <TrackSection name="Registration Form">
+          <RegistrationForm showBasicOnly={showBasicOnly} />
+        </TrackSection>
 
-      <FloatingToast />
+        <FloatingToast />
+      </Suspense>
       <footer className="py-8 text-center border-t text-slate-500 bg-slate-950 border-slate-900">
         <p>&copy; {new Date().getFullYear()} Digital Squad. All rights reserved. This site is not part of the Facebook website or Facebook Inc</p>
         <p>Tempat Belajar & Platform Bisnis - Disclaimer: Bahwa hasil setiap orang berbeda-beda</p>
