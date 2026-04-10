@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
+// Simple helper to enforce a maximum timeout to prevent Lambda from crashing with 504
+const withTimeout = <T>(promise: Promise<T>, ms: number = 7000): Promise<T> => {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Supabase query timed out')), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || ''
 
@@ -30,12 +39,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (path.startsWith('/blog/')) {
             const slug = path.replace('/blog/', '')
 
-            const { data: post, error } = await supabase
+            const { data: post, error } = await withTimeout(supabase
                 .from('posts')
                 .select('*')
                 .eq('slug', slug)
                 .eq('is_published', true)
-                .single()
+                .single())
 
             if (error || !post) {
                 res.status(404).send(generateNotFoundHTML())
@@ -51,11 +60,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Handle blog list page
         if (path === '/blog') {
-            const { data: posts } = await supabase
+            const { data: posts } = await withTimeout(supabase
                 .from('posts')
                 .select('id, title, slug, meta_description, reading_time, featured_image, created_at, author_name')
                 .eq('is_published', true)
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: false }))
 
             const html = generateBlogListHTML(posts || [], baseUrl)
             res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -64,12 +73,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return
         }
 
-        // Default: redirect to SPA
-        res.status(302).setHeader('Location', path).end()
+        // Default: redirect to SPA if crawler accesses unknown path directly
+        res.status(200).send(generateGenericSPAHTML(path, baseUrl))
     } catch (err) {
         console.error('Prerender error:', err)
-        res.status(500).send('Internal server error')
+        // Fallback gracefully so GSC doesn't record a 500 error
+        res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+        res.status(200).send(generateGenericSPAHTML(req.query.path as string, 'https://www.digitalsquad.id'))
     }
+}
+
+function generateGenericSPAHTML(path: string, baseUrl: string): string {
+    return `<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="${baseUrl}${path}" />
+  <title>Digital Squad</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>`
 }
 
 function escapeHtml(text: string): string {
