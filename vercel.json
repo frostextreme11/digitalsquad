@@ -1,53 +1,97 @@
 {
     "cleanUrls": true,
     "trailingSlash": false,
-    "rewrites": {
-        "beforeFiles": [
-            {
-                "source": "/sitemap.xml",
-                "destination": "/api/sitemap.xml"
-            },
-            {
-                "source": "/blog/:slug*",
-                "has": [
-                    {
-                        "type": "header",
-                        "key": "user-agent",
-                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                    }
-                ],
-                "destination": "/api/prerender?path=/blog/:slug*"
-            },
-            {
-                "source": "/blog",
-                "has": [
-                    {
-                        "type": "header",
-                        "key": "user-agent",
-                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                    }
-                ],
-                "destination": "/api/prerender?path=/blog"
-            },
-            {
-                "source": "/50",
-                "has": [
-                    {
-                        "type": "header",
-                        "key": "user-agent",
-                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                    }
-                ],
-                "destination": "/api/prerender?path=/50"
-            }
-        ],
-        "fallback": [
-            {
-                "source": "/(.*)",
-                "destination": "/index.html"
-            }
-        ]
-    },
+    "rewrites": [
+        {
+            "source": "/sitemap.xml",
+            "destination": "/api/sitemap.xml"
+        },
+        {
+            "source": "/blog/:slug*",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                }
+            ],
+            "destination": "/api/prerender?path=/blog/:slug*"
+        },
+        {
+            "source": "/blog",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                }
+            ],
+            "destination": "/api/prerender?path=/blog"
+        },
+        {
+            "source": "/50",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                }
+            ],
+            "destination": "/api/prerender?path=/50"
+        },
+        {
+            "source": "/blog",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/blog/:slug*",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/50",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/login",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/forgot-password",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/update-password",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/payment",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/payment-success",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/dashboard/:path*",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/buy/:path*",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/maintenance",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/access-denied",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/admin/:path*",
+            "destination": "/index.html"
+        }
+    ],
     "headers": [
         {
             "source": "/sitemap.xml",
