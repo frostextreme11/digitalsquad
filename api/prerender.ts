@@ -73,13 +73,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return
         }
 
+        // Handle /50 landing page
+        if (path === '/50') {
+            const html = generateLanding50HTML(baseUrl)
+            res.setHeader('Content-Type', 'text/html; charset=utf-8')
+            res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600')
+            res.status(200).send(html)
+            return
+        }
+
         // Default: redirect to SPA if crawler accesses unknown path directly
         res.status(200).send(generateGenericSPAHTML(path, baseUrl))
     } catch (err) {
         console.error('Prerender error:', err)
         // Fallback gracefully so GSC doesn't record a 500 error
         res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
-        res.status(200).send(generateGenericSPAHTML(req.query.path as string, 'https://www.digitalsquad.id'))
+        res.status(200).send(generateGenericSPAHTML(req.query.path as string, baseUrl))
     }
 }
 
@@ -91,11 +100,67 @@ function generateGenericSPAHTML(path: string, baseUrl: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="${baseUrl}${path}" />
-  <title>Digital Squad</title>
+  <title>Digital Squad - Solusi Bisnis Online Modal Kecil</title>
+  <meta name="description" content="Platform Belajar Digital Marketing & Bisnis Online Terbaik. Ubah modal kecil jadi solusi lunas hutang & bisnis online bersama Digital Squad.">
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
+  <div id="root">
+    <h1>Digital Squad</h1>
+    <p>Loading application...</p>
+    <p>Digital Squad adalah platform belajar digital marketing dan bisnis online terbaik.</p>
+  </div>
+  <!-- Note: We don't include the JS script here because this is for bots. 
+       If a human somehow lands here, they will just see the static content. -->
+</body>
+</html>`
+}
+
+function generateLanding50HTML(baseUrl: string): string {
+    const canonicalUrl = `${baseUrl}/50`
+    const ogImage = `${baseUrl}/android-chrome-512x512.png`
+
+    return `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo Khusus 50rb | Digital Squad - Solusi Bebas Hutang</title>
+    <meta name="description" content="Hanya dengan modal 50 ribu, dapatkan akses ke materi digital marketing premium, produk digital PLR, dan sistem affiliate yang menghasilkan. Solusi lunas hutang & bebas pinjol.">
+    <meta name="keywords" content="bebas hutang, lunas pinjol, bisnis modal 50rb, digital marketing, bisnis online, affiliate marketing">
+    
+    <link rel="canonical" href="${canonicalUrl}">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Digital Squad - Promo Spesial 50 Ribu">
+    <meta property="og:description" content="Ubah 50 ribu jadi sumber penghasilan. Bergabung dengan Digital Squad dan mulai bisnis online Anda sekarang.">
+    <meta property="og:image" content="${ogImage}">
+    <meta property="og:url" content="${canonicalUrl}">
+    <meta property="og:site_name" content="Digital Squad">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Digital Squad - Promo Spesial 50 Ribu">
+    <meta name="twitter:description" content="Ubah 50 ribu jadi sumber penghasilan.">
+    <meta name="twitter:image" content="${ogImage}">
+</head>
+<body>
+    <main>
+        <h1>Digital Squad - Tantangan 50 Ribu</h1>
+        <section>
+            <h2>Ubah Modal 50 Ribu Jadi Solusi Lunas Hutang</h2>
+            <p>Bergabunglah dengan komunitas Digital Squad. Dapatkan akses ke:</p>
+            <ul>
+                <li>Materi Digital Marketing Terlengkap</li>
+                <li>Produk Digital PLR Siap Jual</li>
+                <li>Sistem Affiliate Komisi Tinggi</li>
+                <li>Bimbingan Eksklusif</li>
+            </ul>
+            <p>Hanya dengan investasi satu kali sebesar Rp 50.000,-</p>
+        </section>
+        <p><a href="${baseUrl}/login">Daftar Sekarang</a></p>
+    </main>
+    <footer>© ${new Date().getFullYear()} Digital Squad. All rights reserved.</footer>
 </body>
 </html>`
 }

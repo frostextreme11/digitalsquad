@@ -29,7 +29,18 @@
             "destination": "/api/prerender?path=/blog"
         },
         {
-            "source": "/((?!api/).*)",
+            "source": "/50",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                }
+            ],
+            "destination": "/api/prerender?path=/50"
+        },
+        {
+            "source": "/((?!api/|assets/|.*\\..*).*)",
             "destination": "/index.html"
         }
     ],
