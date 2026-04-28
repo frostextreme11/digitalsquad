@@ -1,49 +1,53 @@
 {
     "cleanUrls": true,
     "trailingSlash": false,
-    "rewrites": [
-        {
-            "source": "/sitemap.xml",
-            "destination": "/api/sitemap.xml"
-        },
-        {
-            "source": "/blog/:slug*",
-            "has": [
-                {
-                    "type": "header",
-                    "key": "user-agent",
-                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                }
-            ],
-            "destination": "/api/prerender?path=/blog/:slug*"
-        },
-        {
-            "source": "/blog",
-            "has": [
-                {
-                    "type": "header",
-                    "key": "user-agent",
-                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                }
-            ],
-            "destination": "/api/prerender?path=/blog"
-        },
-        {
-            "source": "/50",
-            "has": [
-                {
-                    "type": "header",
-                    "key": "user-agent",
-                    "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
-                }
-            ],
-            "destination": "/api/prerender?path=/50"
-        },
-        {
-            "source": "/((?!api/|assets/|.*\\..*).*)",
-            "destination": "/index.html"
-        }
-    ],
+    "rewrites": {
+        "beforeFiles": [
+            {
+                "source": "/sitemap.xml",
+                "destination": "/api/sitemap.xml"
+            },
+            {
+                "source": "/blog/:slug*",
+                "has": [
+                    {
+                        "type": "header",
+                        "key": "user-agent",
+                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                    }
+                ],
+                "destination": "/api/prerender?path=/blog/:slug*"
+            },
+            {
+                "source": "/blog",
+                "has": [
+                    {
+                        "type": "header",
+                        "key": "user-agent",
+                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                    }
+                ],
+                "destination": "/api/prerender?path=/blog"
+            },
+            {
+                "source": "/50",
+                "has": [
+                    {
+                        "type": "header",
+                        "key": "user-agent",
+                        "value": "(?i).*(googlebot|bingbot|baiduspider|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|slackbot|pinterest).*"
+                    }
+                ],
+                "destination": "/api/prerender?path=/50"
+            }
+        ],
+        "fallback": [
+            {
+                "source": "/(.*)",
+                "destination": "/index.html"
+            }
+        ]
+    },
     "headers": [
         {
             "source": "/sitemap.xml",
