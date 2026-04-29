@@ -40,56 +40,8 @@
             "destination": "/api/prerender?path=/50"
         },
         {
-            "source": "/blog",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/blog/:slug*",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/50",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/login",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/forgot-password",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/update-password",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/payment",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/payment-success",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/dashboard/:path*",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/buy/:path*",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/maintenance",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/access-denied",
-            "destination": "/index.html"
-        },
-        {
-            "source": "/admin/:path*",
-            "destination": "/index.html"
+            "source": "/(.*)",
+            "destination": "/"
         }
     ],
     "headers": [
